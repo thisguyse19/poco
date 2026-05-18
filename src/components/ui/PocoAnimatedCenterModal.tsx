@@ -51,7 +51,7 @@ export function PocoAnimatedCenterModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[var(--poco-z-dialog-backdrop)] flex items-end justify-center p-4 max-md:pb-[var(--poco-mobile-nav-height)] md:items-center md:p-6"
+      className="fixed inset-0 z-[var(--poco-z-dialog-backdrop)] flex items-center justify-center p-4 max-md:pb-[var(--poco-mobile-nav-height)] md:p-6"
       role="presentation"
     >
       <button

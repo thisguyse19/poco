@@ -173,10 +173,10 @@ export function TaskItem({
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        <div className="flex items-start gap-2">
+        <div className="flex items-center gap-2">
           <button
             type="button"
-            className="poco-press mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-none border border-[var(--border-default)] bg-[var(--bg-elevated)]"
+            className="poco-press flex h-8 w-8 shrink-0 items-center justify-center rounded-none border border-[var(--border-default)] bg-[var(--bg-elevated)]"
             aria-label={task.completed ? 'Mark incomplete' : 'Mark complete'}
             onClick={(e) => {
               e.stopPropagation()
@@ -190,9 +190,7 @@ export function TaskItem({
               <span className="flex h-4 w-4 items-center justify-center bg-[var(--accent)] text-[var(--text-inverse)]">
                 <Icon name="check" size={10} />
               </span>
-            ) : (
-              <span className="h-4 w-4 rounded-none border border-[var(--border-default)]" />
-            )}
+            ) : null}
           </button>
 
           <div
@@ -264,7 +262,7 @@ export function TaskItem({
             )}
           </div>
 
-          <div className="flex shrink-0 flex-col gap-1 pt-0.5">
+          <div className="flex shrink-0 flex-col justify-center">
             {editMode ? (
               <button
                 type="button"

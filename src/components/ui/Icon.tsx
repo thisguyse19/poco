@@ -20,6 +20,7 @@ type IconName =
   | 'more-h'
   | 'flame'
   | 'search'
+  | 'tag'
 
 export function Icon({
   name,
@@ -75,8 +76,8 @@ export function Icon({
     case 'focus':
       return (
         <svg viewBox="0 0 24 24" style={s} className={className} aria-hidden>
-          <path {...common} d="M8 4H4v4M20 4h-4v4M8 20H4v-4M20 20h-4v-4" />
-          <circle cx="12" cy="12" r="3" {...common} />
+          <circle cx="12" cy="12" r="9" {...common} />
+          <path fill={stroke} stroke="none" d="M10 8.5L16 12l-6 3.5V8.5z" />
         </svg>
       )
     case 'settings':
@@ -173,6 +174,13 @@ export function Icon({
         <svg viewBox="0 0 24 24" style={s} className={className} aria-hidden>
           <circle cx="10.5" cy="10.5" r="6.5" {...common} />
           <path {...common} d="M15 15l6 6" />
+        </svg>
+      )
+    case 'tag':
+      return (
+        <svg viewBox="0 0 24 24" style={s} className={className} aria-hidden>
+          <path {...common} d="M3 5a2 2 0 012-2h4l10 10v6l-4 4H9l-6-6V5z" />
+          <circle cx="8" cy="8" r="1.25" fill={stroke} stroke="none" />
         </svg>
       )
     default:
