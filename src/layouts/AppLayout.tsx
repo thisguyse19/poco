@@ -85,7 +85,7 @@ export function AppLayout() {
             to="/"
             end
             className={({ isActive }) =>
-              `flex min-h-[3.5rem] flex-col items-center justify-center gap-1 text-[11px] font-medium tracking-wide ${
+              `poco-nav-tab flex min-h-[3.5rem] flex-col items-center justify-center gap-1 text-[11px] font-medium tracking-wide ${
                 isActive ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]'
               }`
             }
@@ -98,7 +98,7 @@ export function AppLayout() {
           <NavLink
             to="/focus"
             className={({ isActive }) =>
-              `flex min-h-[3.5rem] flex-col items-center justify-center gap-1 text-[11px] font-medium tracking-wide ${
+              `poco-nav-tab flex min-h-[3.5rem] flex-col items-center justify-center gap-1 text-[11px] font-medium tracking-wide ${
                 isActive ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]'
               }`
             }
@@ -111,7 +111,7 @@ export function AppLayout() {
           <NavLink
             to="/settings"
             className={({ isActive }) =>
-              `flex min-h-[3.5rem] flex-col items-center justify-center gap-1 text-[11px] font-medium tracking-wide ${
+              `poco-nav-tab flex min-h-[3.5rem] flex-col items-center justify-center gap-1 text-[11px] font-medium tracking-wide ${
                 isActive ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]'
               }`
             }

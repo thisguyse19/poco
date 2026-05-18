@@ -1,9 +1,10 @@
-import { createPortal } from 'react-dom'
 import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { PageHeader } from '../components/tasks/PageHeader'
 import { TimerControls } from '../components/focus/TimerControls'
 import { FocusStats } from '../components/focus/FocusStats'
+import { PocoBottomSheet } from '../components/ui/PocoBottomSheet'
+import { Icon } from '../components/ui/Icon'
 import { useTimer } from '../hooks/useTimer'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useTaskStore } from '../stores/taskStore'
@@ -100,54 +101,43 @@ export function FocusPage() {
         <FocusStats />
       </div>
 
-      {pickerOpen
-        ? createPortal(
-            <div className="fixed inset-0 z-[110] flex animate-fadeIn flex-col justify-end">
-              <button
-                type="button"
-                aria-label="Close"
-                className="absolute left-0 right-0 top-0 max-md:bottom-[var(--poco-mobile-nav-height)] md:bottom-0 bg-black/30 backdrop-blur-[1px]"
-                onClick={() => setPickerOpen(false)}
-              />
-              <div className="relative z-[1] mx-auto max-h-[60dvh] w-full max-w-lg overflow-y-auto rounded-t-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-elevated)] p-4 shadow-xl animate-slideUp max-md:mb-[var(--poco-mobile-nav-height)]">
-                <div className="mb-3 flex items-center justify-between">
-                  <p className="font-serif text-lg">Choose task</p>
-                  <button type="button" className="poco-press p-2 text-[var(--text-tertiary)]" onClick={() => setPickerOpen(false)}>
-                    ✕
-                  </button>
-                </div>
-                <div className="flex flex-col gap-1">
-                  {tasks
-                    .filter((t) => !t.completed)
-                    .map((t) => (
-                      <button
-                        key={t.id}
-                        type="button"
-                        className="poco-press rounded-[var(--radius-sm)] border border-[var(--border-subtle)] px-3 py-3 text-left text-sm font-medium"
-                        onClick={() => {
-                          setCurrentTask(t.id)
-                          setPickerOpen(false)
-                        }}
-                      >
-                        {t.title}
-                      </button>
-                    ))}
-                </div>
+      <PocoBottomSheet open={pickerOpen} onBackdropClick={() => setPickerOpen(false)}>
+        <div className="max-md:pb-[calc(var(--poco-mobile-nav-height)+0.5rem)] p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="font-serif text-lg">Choose task</p>
+            <button type="button" className="poco-press p-2 text-[var(--text-tertiary)]" aria-label="Close" onClick={() => setPickerOpen(false)}>
+              <Icon name="x" size={20} />
+            </button>
+          </div>
+          <div className="flex max-h-[50dvh] flex-col gap-1 overflow-y-auto">
+            {tasks
+              .filter((t) => !t.completed)
+              .map((t) => (
                 <button
+                  key={t.id}
                   type="button"
-                  className="poco-press mt-3 w-full rounded-[var(--radius-sm)] border border-dashed border-[var(--border-default)] py-2 text-xs font-semibold text-[var(--text-secondary)]"
+                  className="poco-press rounded-[var(--radius-sm)] border border-[var(--border-subtle)] px-3 py-3 text-left text-sm font-medium"
                   onClick={() => {
-                    setCurrentTask(null)
+                    setCurrentTask(t.id)
                     setPickerOpen(false)
                   }}
                 >
-                  No linked task
+                  {t.title}
                 </button>
-              </div>
-            </div>,
-            document.body,
-          )
-        : null}
+              ))}
+          </div>
+          <button
+            type="button"
+            className="poco-press mt-3 w-full rounded-[var(--radius-sm)] border border-dashed border-[var(--border-default)] py-2 text-xs font-semibold text-[var(--text-secondary)]"
+            onClick={() => {
+              setCurrentTask(null)
+              setPickerOpen(false)
+            }}
+          >
+            No linked task
+          </button>
+        </div>
+      </PocoBottomSheet>
     </div>
   )
 }

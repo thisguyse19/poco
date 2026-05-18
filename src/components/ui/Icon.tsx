@@ -75,8 +75,8 @@ export function Icon({
     case 'focus':
       return (
         <svg viewBox="0 0 24 24" style={s} className={className} aria-hidden>
+          <path {...common} d="M8 4H4v4M20 4h-4v4M8 20H4v-4M20 20h-4v-4" />
           <circle cx="12" cy="12" r="3" {...common} />
-          <path {...common} d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2" />
         </svg>
       )
     case 'settings':

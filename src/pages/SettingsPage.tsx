@@ -3,6 +3,7 @@ import { PageHeader } from '../components/tasks/PageHeader'
 import { Icon } from '../components/ui/Icon'
 import { PocoConfirmDialog } from '../components/ui/PocoConfirmDialog'
 import { PocoMessageDialog } from '../components/ui/PocoMessageDialog'
+import { PocoHourCarousel } from '../components/ui/PocoHourCarousel'
 import { useSettingsStore, DEFAULT_SETTINGS } from '../stores/settingsStore'
 import { storage } from '../services/storage'
 import type { DensityName, ThemeName } from '../types'
@@ -191,15 +192,14 @@ export function SettingsPage() {
             />
           </label>
           <label className="block text-sm">
-            End-of-day review hour (0–23)
-            <input
-              type="number"
-              min={0}
-              max={23}
-              className="poco-input mt-1 w-full rounded-none border border-[var(--border-default)] bg-[var(--bg-input)] px-3 py-2 text-sm"
-              value={settings.endOfDayReviewHour}
-              onChange={(e) => updateSettings({ endOfDayReviewHour: Number(e.target.value) || 20 })}
-            />
+            <span className="flex items-center gap-2">
+              <Icon name="timer" size={16} className="text-[var(--text-tertiary)]" />
+              End-of-day review time
+            </span>
+            <span className="mt-2 block text-xs text-[var(--text-tertiary)]">After this hour, the home review sheet may appear.</span>
+            <div className="mt-2 overflow-hidden rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-2">
+              <PocoHourCarousel hour0to23={settings.endOfDayReviewHour} onChange={(h) => updateSettings({ endOfDayReviewHour: h })} />
+            </div>
           </label>
         </section>
 

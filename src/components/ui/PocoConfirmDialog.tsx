@@ -1,5 +1,5 @@
 import { useId } from 'react'
-import { PocoModal } from './PocoModal'
+import { PocoAnimatedCenterModal } from './PocoAnimatedCenterModal'
 import { PocoDialogPanel } from './PocoDialogPanel'
 import { pocoDialogTheme } from './pocoDialogTheme'
 
@@ -29,12 +29,7 @@ export function PocoConfirmDialog({
   const descId = `${id}-desc`
 
   return (
-    <PocoModal
-      open={open}
-      align="center"
-      clearBottomNavOnMobile
-      onBackdropClick={onCancel}
-    >
+    <PocoAnimatedCenterModal open={open} onBackdropClick={onCancel}>
       <PocoDialogPanel role="alertdialog" labelledBy={titleId} describedBy={descId}>
         <h2 id={titleId} className={pocoDialogTheme.title}>
           {title}
@@ -55,6 +50,6 @@ export function PocoConfirmDialog({
           </button>
         </div>
       </PocoDialogPanel>
-    </PocoModal>
+    </PocoAnimatedCenterModal>
   )
 }

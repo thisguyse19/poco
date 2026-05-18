@@ -1,7 +1,7 @@
 /** Literal class strings for dialog panels (spec) */
 export const pocoDialogTheme = {
   panel:
-    'relative z-[1] w-full max-w-sm rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-elevated)] p-5 shadow-xl animate-scaleIn',
+    'relative z-[1] w-full max-w-sm rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-elevated)] p-5 shadow-xl',
   title: 'text-base font-semibold tracking-tight text-[var(--text-primary)]',
   description: 'mt-2 text-sm leading-relaxed text-[var(--text-secondary)]',
   actions: 'mt-6 flex flex-wrap justify-end gap-2',

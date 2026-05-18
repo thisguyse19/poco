@@ -188,7 +188,6 @@ export function TaskList({ searchQuery = '' }: { searchQuery?: string }) {
       {detailTask ? (
         <TaskDetailSheet
           task={detailTask}
-          open
           onClose={() => setDetailTask(null)}
             onRequestDelete={(id) => {
             setDetailTask(null)

@@ -1,15 +1,14 @@
-import { createPortal } from 'react-dom'
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Priority, RecurrenceRule, ScheduledFor, Task } from '../../types'
-import { toLocalISODate } from '../../services/storage'
 import { formatTaskDueDisplay } from '../../utils/formatTaskDue'
 import { triggerHaptic } from '../../utils/haptics'
 import { useTaskStore } from '../../stores/taskStore'
 import { useTimerStore } from '../../stores/timerStore'
 import { Icon } from '../ui/Icon'
-import { PocoScrollPicker } from '../ui/PocoScrollPicker'
+import { PocoBottomSheet } from '../ui/PocoBottomSheet'
 import { PocoConfirmDialog } from '../ui/PocoConfirmDialog'
+import { PocoDueDateTimeRow } from '../ui/PocoDateTimeCarousel'
 
 type Draft = {
   title: string
@@ -63,12 +62,10 @@ function buildPatch(orig: Task, d: Draft): Partial<Task> {
 
 export function TaskDetailSheet({
   task,
-  open,
   onClose,
   onRequestDelete,
 }: {
   task: Task
-  open: boolean
   onClose: () => void
   onRequestDelete: (id: string) => void
 }) {
@@ -80,9 +77,8 @@ export function TaskDetailSheet({
   const [draft, setDraft] = useState(() => taskToDraft(task))
   const [baseline, setBaseline] = useState(() => taskToDraft(task))
   const [sheetOpen, setSheetOpen] = useState(false)
-  const [dragY, setDragY] = useState(0)
-  const dragStart = useRef(0)
   const [unsavedOpen, setUnsavedOpen] = useState(false)
+  const exitDeletes = useRef(false)
 
   useLayoutEffect(() => {
     const id = requestAnimationFrame(() => {
@@ -94,22 +90,26 @@ export function TaskDetailSheet({
   }, [task.id])
 
   useEffect(() => {
-    if (open) {
-      const id = requestAnimationFrame(() => setSheetOpen(true))
-      return () => cancelAnimationFrame(id)
-    }
-    queueMicrotask(() => {
-      setSheetOpen(false)
-      setDragY(0)
+    const id = requestAnimationFrame(() => {
+      requestAnimationFrame(() => setSheetOpen(true))
     })
-  }, [open])
+    return () => cancelAnimationFrame(id)
+  }, [task.id])
 
   const dirty = !draftsEqual(draft, baseline)
 
   const performDiscardClose = useCallback(() => {
     setSheetOpen(false)
-    window.setTimeout(onClose, 280)
-  }, [onClose])
+  }, [])
+
+  const handleSheetExitComplete = useCallback(() => {
+    if (exitDeletes.current) {
+      exitDeletes.current = false
+      onRequestDelete(task.id)
+    } else {
+      onClose()
+    }
+  }, [onClose, onRequestDelete, task.id])
 
   const attemptClose = useCallback(() => {
     if (dirty) setUnsavedOpen(true)
@@ -132,66 +132,27 @@ export function TaskDetailSheet({
     performDiscardClose()
   }, [draft, performDiscardClose, task, updateTask])
 
-  if (!open) return null
-
-  const reduceMotion = document.documentElement.dataset.reduceMotion === 'true'
-  const yTransform = sheetOpen ? `translateY(${dragY}px)` : 'translateY(100%)'
-
-  const y = new Date().getFullYear()
-  const years = Array.from({ length: 5 }, (_, i) => String(y - 2 + i))
-  const months = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'))
-  const [dy, dm, dd] = (draft.dueDate ?? toLocalISODate()).split('-').map((x) => x.padStart(2, '0'))
-  const dim = new Date(Number(dy), Number(dm), 0).getDate()
-  const days = Array.from({ length: dim }, (_, i) => String(i + 1).padStart(2, '0'))
-
-  const monthLabel = (m: string) =>
-    new Date(2000, Number(m) - 1, 1).toLocaleDateString(undefined, { month: 'short' })
-
-  return createPortal(
+  return (
     <>
-      <div
-        className={`fixed left-0 right-0 top-0 z-30 max-md:bottom-[var(--poco-mobile-nav-height)] md:bottom-0 md:inset-0 md:z-[100] bg-black/30 backdrop-blur-[1px] transition-opacity ${
-          reduceMotion ? 'duration-0' : 'duration-[280ms]'
-        } ${sheetOpen ? 'opacity-100' : 'opacity-0'}`}
-        aria-hidden
-        onClick={attemptClose}
-      />
-      <div
-        className={`fixed inset-x-0 bottom-0 z-[31] mx-auto flex max-h-[90dvh] max-w-lg flex-col rounded-t-[var(--radius-lg)] border border-b-0 border-[var(--border-default)] bg-[var(--bg-elevated)] shadow-xl transition-transform ${
-          reduceMotion ? 'duration-0' : 'duration-200'
-        } max-md:pb-[calc(var(--poco-mobile-nav-height)+0.75rem)] md:rounded-[var(--radius-lg)] md:border-b`}
-        style={{ transform: yTransform }}
-        role="dialog"
-        aria-labelledby={`${uid}-title`}
+      <PocoBottomSheet
+        open={sheetOpen}
+        onBackdropClick={attemptClose}
+        onExitComplete={handleSheetExitComplete}
+        sheetClassName="max-md:rounded-none md:rounded-[var(--radius-lg)]"
       >
-        <div
-          className="flex cursor-grab touch-none justify-center py-3 active:cursor-grabbing"
-          onPointerDown={(e) => {
-            e.currentTarget.setPointerCapture(e.pointerId)
-            dragStart.current = e.clientY
-            setDragY(0)
-          }}
-          onPointerMove={(e) => {
-            if (!e.currentTarget.hasPointerCapture(e.pointerId)) return
-            const d = e.clientY - dragStart.current
-            if (d > 0) setDragY(d)
-          }}
-          onPointerUp={(e) => {
-            if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-              e.currentTarget.releasePointerCapture(e.pointerId)
-            }
-            if (dragY > 72) attemptClose()
-            setDragY(0)
-          }}
-        >
-          <span className="h-1 w-10 rounded-none bg-[var(--border-default)]" />
-        </div>
-
         <div className="grid grid-cols-3 items-center gap-2 border-b border-[var(--border-subtle)] px-3 pb-3">
-          <button type="button" className="poco-press justify-self-start text-sm font-semibold text-[var(--text-secondary)]" onClick={attemptClose}>
+          <button
+            type="button"
+            className="poco-press justify-self-start text-sm font-semibold text-[var(--text-secondary)]"
+            onClick={attemptClose}
+          >
             Cancel
           </button>
-          <button type="button" className="poco-press justify-self-center text-sm font-semibold text-[var(--accent)]" onClick={saveAndClose}>
+          <button
+            type="button"
+            className="poco-press justify-self-center text-sm font-semibold text-[var(--accent)]"
+            onClick={saveAndClose}
+          >
             Done
           </button>
           <div className="justify-self-end">
@@ -222,7 +183,7 @@ export function TaskDetailSheet({
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 max-md:pb-[calc(var(--poco-mobile-nav-height)+0.75rem)]">
           <h2 id={`${uid}-title`} className="sr-only">
             Task details
           </h2>
@@ -269,85 +230,30 @@ export function TaskDetailSheet({
             ))}
           </div>
 
-          <div className="mt-4 flex items-center justify-between">
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
             <span className="text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Due</span>
             {draft.dueDate || draft.dueTime ? (
               <span className="text-xs text-[var(--text-secondary)]">{formatTaskDueDisplay(draft.dueDate, draft.dueTime)}</span>
-            ) : null}
-          </div>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {!draft.dueDate ? (
-              <button
-                type="button"
-                className="poco-press rounded-[var(--radius-sm)] border border-dashed border-[var(--border-default)] px-3 py-2 text-xs font-semibold text-[var(--text-secondary)]"
-                onClick={() => setDraft((d) => ({ ...d, dueDate: toLocalISODate() }))}
-              >
-                Add date
-              </button>
             ) : (
-              <div className="flex w-full gap-2">
-                <PocoScrollPicker
-                  value={dy}
-                  options={years}
-                  onChange={(v) => {
-                    const dim2 = new Date(Number(v), Number(dm) - 1, 0).getDate()
-                    const day = Math.min(Number(dd), dim2)
-                    setDraft((d) => ({ ...d, dueDate: `${v}-${dm}-${String(day).padStart(2, '0')}` }))
-                  }}
-                />
-                <PocoScrollPicker value={dm} options={months} onChange={(v) => {
-                    const dim2 = new Date(Number(dy), Number(v) - 1, 0).getDate()
-                    const day = Math.min(Number(dd), dim2)
-                    setDraft((d) => ({ ...d, dueDate: `${dy}-${v}-${String(day).padStart(2, '0')}` }))
-                  }} format={monthLabel} />
-                <PocoScrollPicker
-                  value={dd}
-                  options={days}
-                  onChange={(v) => setDraft((d) => ({ ...d, dueDate: `${dy}-${dm}-${v}` }))}
-                  format={(x) => String(Number(x))}
-                />
-              </div>
-            )}
-            {draft.dueDate && !draft.dueTime ? (
-              <button
-                type="button"
-                className="poco-press mt-2 rounded-[var(--radius-sm)] border border-dashed border-[var(--border-default)] px-3 py-2 text-xs font-semibold text-[var(--text-secondary)]"
-                onClick={() => setDraft((d) => ({ ...d, dueTime: '09:00' }))}
-              >
-                Add time (09:00)
-              </button>
-            ) : null}
-            {draft.dueDate && draft.dueTime ? (
-              <div className="mt-2 flex w-full items-center gap-1">
-                <PocoScrollPicker
-                  value={draft.dueTime.split(':')[0] ?? '09'}
-                  options={Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'))}
-                  onChange={(h) => {
-                    const m = draft.dueTime?.split(':')[1] ?? '00'
-                    setDraft((d) => ({ ...d, dueTime: `${h}:${m}` }))
-                  }}
-                />
-                <span className="pt-6 text-lg font-semibold">:</span>
-                <PocoScrollPicker
-                  value={draft.dueTime.split(':')[1] ?? '00'}
-                  options={Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'))}
-                  onChange={(m) => {
-                    const h = draft.dueTime?.split(':')[0] ?? '09'
-                    setDraft((d) => ({ ...d, dueTime: `${h}:${m}` }))
-                  }}
-                />
-              </div>
-            ) : null}
-            {(draft.dueDate || draft.dueTime) && (
-              <button
-                type="button"
-                className="mt-2 text-xs font-semibold text-[var(--priority-high)]"
-                onClick={() => setDraft((d) => ({ ...d, dueDate: null, dueTime: null }))}
-              >
-                Clear due
-              </button>
+              <span className="text-xs text-[var(--text-tertiary)]">None</span>
             )}
           </div>
+          <div className="mt-2">
+            <PocoDueDateTimeRow
+              dueDate={draft.dueDate}
+              dueTime={draft.dueTime}
+              onChange={({ dueDate, dueTime }) => setDraft((d) => ({ ...d, dueDate, dueTime }))}
+            />
+          </div>
+          {(draft.dueDate || draft.dueTime) && (
+            <button
+              type="button"
+              className="poco-press mt-2 text-xs font-semibold text-[var(--priority-high)]"
+              onClick={() => setDraft((d) => ({ ...d, dueDate: null, dueTime: null }))}
+            >
+              Clear due
+            </button>
+          )}
 
           <label className="mb-1 mt-4 block text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
             Description
@@ -421,12 +327,15 @@ export function TaskDetailSheet({
           <button
             type="button"
             className="poco-press mt-6 w-full rounded-[var(--radius-sm)] border border-[var(--priority-high)]/40 py-3 text-sm font-semibold text-[var(--priority-high)]"
-            onClick={() => onRequestDelete(task.id)}
+            onClick={() => {
+              exitDeletes.current = true
+              setSheetOpen(false)
+            }}
           >
             Delete task
           </button>
         </div>
-      </div>
+      </PocoBottomSheet>
 
       <PocoConfirmDialog
         open={unsavedOpen}
@@ -441,7 +350,6 @@ export function TaskDetailSheet({
           performDiscardClose()
         }}
       />
-    </>,
-    document.body,
+    </>
   )
 }

@@ -30,6 +30,13 @@
   --transition-press: 140ms var(--ease-out-soft);
   --poco-page-header-min: 5.5rem;
   --poco-mobile-nav-height: calc(0.5rem + 3.5rem + max(0.5rem, env(safe-area-inset-bottom, 0px)));
+  /* Bottom sheets slide under the tab bar; dialogs sit above chrome */
+  --poco-z-sheet-backdrop: 32;
+  --poco-z-sheet-panel: 33;
+  --poco-z-sheet-backdrop-md: 100;
+  --poco-z-sheet-panel-md: 101;
+  --poco-z-dialog-backdrop: 120;
+  --poco-z-dialog-panel: 121;
   --task-py: 0.625rem;
   --section-gap: 1.5rem;
 }
@@ -197,6 +204,18 @@ textarea {
 .poco-press:active {
   transform: scale(0.97);
   opacity: 0.92;
+}
+
+.poco-nav-tab {
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color 0.18s var(--ease-ios),
+    transform 0.18s var(--ease-ios),
+    color 0.18s var(--ease-ios);
+}
+.poco-nav-tab:active {
+  background-color: var(--bg-subtle);
+  transform: scale(0.96);
 }
 
 .poco-content-max {
