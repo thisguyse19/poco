@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useShallow } from 'zustand/react/shallow'
 import { Icon } from '../ui/Icon'
 import { PocoMessageDialog } from '../ui/PocoMessageDialog'
 import { pocoDevLab } from '../../utils/pocoDevLab'
@@ -12,12 +13,15 @@ export function SettingsDevLab() {
   const [state, setState] = useState(() => pocoDevLab.get())
   const [msg, setMsg] = useState<string | null>(null)
   const addTask = useTaskStore((s) => s.addTask)
-  const timerSnap = useTimerStore((s) => ({
-    mode: s.mode,
-    isRunning: s.isRunning,
-    remainingMs: s.remainingMs,
-    currentTaskId: s.currentTaskId,
-  }))
+  /** Plain object selector must be shallow-stable for React 19 + useSyncExternalStore (see Settings page crash). */
+  const timerSnap = useTimerStore(
+    useShallow((s) => ({
+      mode: s.mode,
+      isRunning: s.isRunning,
+      remainingMs: s.remainingMs,
+      currentTaskId: s.currentTaskId,
+    })),
+  )
 
   useEffect(() => {
     const unsub = pocoDevLab.subscribe(() => setState(pocoDevLab.get()))
