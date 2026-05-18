@@ -17,7 +17,7 @@ export function FocusStats() {
   }, [sessionsCompleted])
 
   return (
-    <div className="poco-content-max w-full px-4 py-6 text-sm text-[var(--text-secondary)]">
+    <div className="w-full shrink-0 border-t border-[var(--border-subtle)] py-6 text-sm text-[var(--text-secondary)]">
       <p className="font-serif text-lg text-[var(--text-primary)]">Focus log</p>
       <p className="mt-2">
         Logged focus time (approx.): <strong className="text-[var(--text-primary)]">{totalMin}</strong> minutes across{' '}
