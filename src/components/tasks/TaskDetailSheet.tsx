@@ -140,7 +140,8 @@ export function TaskDetailSheet({
         onExitComplete={handleSheetExitComplete}
         sheetClassName="max-md:rounded-none md:rounded-[var(--radius-lg)]"
       >
-        <div className="grid grid-cols-3 items-center gap-2 border-b border-[var(--border-subtle)] px-3 pb-3">
+        <div data-task-detail-sheet className="flex min-h-0 flex-1 flex-col">
+          <div className="grid grid-cols-3 items-center gap-2 border-b border-[var(--border-subtle)] px-3 pb-3">
           <button
             type="button"
             className="poco-press justify-self-start text-sm font-semibold text-[var(--text-secondary)]"
@@ -181,9 +182,9 @@ export function TaskDetailSheet({
               <span className="w-8" />
             )}
           </div>
-        </div>
+          </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 pb-6">
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 pb-6">
           <h2 id={`${uid}-title`} className="sr-only">
             Task details
           </h2>
@@ -334,6 +335,7 @@ export function TaskDetailSheet({
           >
             Delete task
           </button>
+          </div>
         </div>
       </PocoBottomSheet>
 

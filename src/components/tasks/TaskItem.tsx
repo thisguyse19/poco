@@ -9,7 +9,36 @@ import { useTimerStore } from '../../stores/timerStore'
 
 import { pocoDevLab } from '../../utils/pocoDevLab'
 
-const SW = 160
+const W_LATER = 100
+const W_TOM = 100
+const W_DEL = 82
+const DIV = 2
+/** Total width of swipe tray (px) */
+const SWIPE_BASE = W_LATER + DIV + W_TOM + DIV + W_DEL
+
+function rubber(extra: number) {
+  if (extra <= 0) return 0
+  return Math.min(52, extra * 0.48 + (extra * extra) / 200)
+}
+
+function txClosed(delta: number) {
+  let t = Math.min(0, delta)
+  if (t < -SWIPE_BASE) {
+    const over = -t - SWIPE_BASE
+    t = -(SWIPE_BASE + rubber(over))
+  }
+  return t
+}
+
+function txOpenDrag(delta: number) {
+  let t = -SWIPE_BASE + delta
+  if (t > 0) t = 0
+  if (t < -SWIPE_BASE) {
+    const over = -t - SWIPE_BASE
+    t = -(SWIPE_BASE + rubber(over))
+  }
+  return t
+}
 
 const toolBtn =
   'poco-press flex h-9 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 border-0 bg-[var(--bg-subtle)] px-1 py-1 text-[var(--text-secondary)] transition-colors duration-200 [transition-timing-function:var(--ease-ios)] active:bg-[var(--accent-soft)] active:text-[var(--accent)]'
@@ -50,10 +79,14 @@ export function TaskItem({
   task,
   onOpenDetail,
   onRequestDelete,
+  swipeOpenId,
+  onSwipeOpenChange,
 }: {
   task: Task
   onOpenDetail: (t: Task) => void
   onRequestDelete: (id: string) => void
+  swipeOpenId: string | null
+  onSwipeOpenChange: (id: string | null) => void
 }) {
   const navigate = useNavigate()
   const updateTask = useTaskStore((s) => s.updateTask)
@@ -74,13 +107,26 @@ export function TaskItem({
   const [editMode, setEditMode] = useState(false)
   const [titleDraft, setTitleDraft] = useState(task.title)
   const [flowPanel, setFlowPanel] = useState<Flow>(null)
-  const [swipeOpen, setSwipeOpen] = useState(false)
   const [dragDelta, setDragDelta] = useState(0)
   const [dragOriginOpen, setDragOriginOpen] = useState(false)
   const startX = useRef(0)
   const dragDeltaRef = useRef(0)
+  const maxOvershootRef = useRef(0)
   const suppressNextClick = useRef(false)
   const [justCompleted, setJustCompleted] = useState(false)
+
+  const rowSwipeOpen = swipeOpenId === task.id
+
+  const closeSwipe = useCallback(() => {
+    if (swipeOpenId === task.id) onSwipeOpenChange(null)
+  }, [onSwipeOpenChange, swipeOpenId, task.id])
+
+  const openSwipe = useCallback(() => {
+    setOptionsOpen(false)
+    setEditMode(false)
+    setFlowPanel(null)
+    onSwipeOpenChange(task.id)
+  }, [onSwipeOpenChange, task.id])
 
   const closeOptions = useCallback(() => {
     setOptionsOpen(false)
@@ -102,77 +148,115 @@ export function TaskItem({
 
   const displayTranslate = (() => {
     if (dragDelta !== 0) {
-      return dragOriginOpen ? Math.max(-SW, -SW + dragDelta) : Math.min(0, dragDelta)
+      return dragOriginOpen ? txOpenDrag(dragDelta) : txClosed(dragDelta)
     }
-    return swipeOpen ? -SW : 0
+    return rowSwipeOpen ? -SWIPE_BASE : 0
   })()
+
+  const deleteCharge = Math.min(1, Math.max(0, (-displayTranslate - SWIPE_BASE) / 40))
 
   const onTouchStart = (e: React.TouchEvent) => {
     if (task.completed) return
     suppressNextClick.current = false
     startX.current = e.touches[0].clientX
-    setDragOriginOpen(swipeOpen)
+    setDragOriginOpen(rowSwipeOpen)
     setDragDelta(0)
     dragDeltaRef.current = 0
+    maxOvershootRef.current = 0
   }
+
   const onTouchMove = (e: React.TouchEvent) => {
     if (task.completed) return
     const delta = e.touches[0].clientX - startX.current
     dragDeltaRef.current = delta
     setDragDelta(delta)
     if (Math.abs(delta) > 14) suppressNextClick.current = true
+    const tx = dragOriginOpen ? txOpenDrag(delta) : txClosed(delta)
+    maxOvershootRef.current = Math.max(maxOvershootRef.current, Math.max(0, -tx - SWIPE_BASE))
   }
+
   const onTouchEnd = () => {
     if (task.completed) return
     const d = dragDeltaRef.current
-    const tx = dragOriginOpen ? Math.max(-SW, -SW + d) : Math.min(0, d)
-    if (!dragOriginOpen) {
-      setSwipeOpen(tx <= -SW / 2)
+    const finalTx = dragOriginOpen ? txOpenDrag(d) : txClosed(d)
+
+    if (maxOvershootRef.current > 22) {
+      onRequestDelete(task.id)
+      triggerHaptic([30, 40, 30])
+      closeSwipe()
+    } else if (!dragOriginOpen) {
+      if (finalTx <= -SWIPE_BASE * 0.35) openSwipe()
+      else closeSwipe()
     } else {
-      setSwipeOpen(!(tx > -SW / 2))
+      if (finalTx > -SWIPE_BASE * 0.38) closeSwipe()
+      else openSwipe()
     }
     setDragDelta(0)
     dragDeltaRef.current = 0
+    maxOvershootRef.current = 0
     window.setTimeout(() => {
       suppressNextClick.current = false
     }, 32)
   }
 
   return (
-    <div className="group relative touch-pan-y overflow-hidden rounded-none border border-transparent transition-colors duration-200 [transition-timing-function:var(--ease-ios)] hover:border-[var(--border-subtle)] hover:bg-[var(--bg-subtle)] focus-within:border-[var(--border-default)] animate-fadeIn">
+    <div
+      data-task-swipe-row
+      className="group relative touch-pan-y overflow-hidden rounded-none border border-transparent transition-colors duration-200 [transition-timing-function:var(--ease-ios)] hover:border-[var(--border-subtle)] hover:bg-[var(--bg-subtle)] focus-within:border-[var(--border-default)] animate-fadeIn"
+    >
       {!task.completed ? (
         <div
-          className="pointer-events-none absolute inset-y-0 right-0 z-0 flex w-[10rem] border-l border-[var(--border-subtle)]"
+          data-task-actions
+          className="pointer-events-none absolute inset-y-0 right-0 z-0 flex border-l border-[var(--border-subtle)] bg-[var(--bg-subtle)]"
+          style={{ width: SWIPE_BASE }}
           aria-hidden
         >
           <button
             type="button"
             tabIndex={-1}
-            className="pointer-events-auto flex flex-1 items-center justify-center bg-[var(--bg-subtle)] text-[11px] font-semibold text-[var(--text-secondary)]"
+            style={{ width: W_LATER }}
+            className="pointer-events-auto flex shrink-0 items-center justify-center bg-[var(--bg-subtle)] text-[11px] font-semibold text-[var(--text-secondary)]"
             onClick={() => {
               rescheduleLaterToday(task.id)
               triggerHaptic(12)
-              setSwipeOpen(false)
+              closeSwipe()
             }}
           >
             Later today
           </button>
+          <div className="w-px shrink-0 bg-[var(--border-default)]" />
           <button
             type="button"
             tabIndex={-1}
-            className="pointer-events-auto flex flex-1 items-center justify-center bg-[var(--bg-subtle)] text-[11px] font-semibold text-[var(--text-secondary)]"
+            style={{ width: W_TOM }}
+            className="pointer-events-auto flex shrink-0 items-center justify-center bg-[var(--bg-subtle)] text-[11px] font-semibold text-[var(--text-secondary)]"
             onClick={() => {
               rescheduleTomorrow(task.id)
               triggerHaptic(12)
-              setSwipeOpen(false)
+              closeSwipe()
             }}
           >
             Tomorrow
           </button>
+          <div className="w-px shrink-0 bg-[var(--border-default)]" />
+          <div
+            style={{ width: W_DEL }}
+            className={`pointer-events-none flex shrink-0 flex-col items-center justify-center border-l border-transparent text-[10px] font-bold uppercase tracking-wide transition-colors duration-150 ${
+              deleteCharge > 0.55
+                ? 'bg-[var(--priority-high)]/25 text-[var(--priority-high)]'
+                : deleteCharge > 0.12
+                  ? 'bg-[var(--priority-high)]/12 text-[var(--text-secondary)]'
+                  : 'text-[var(--text-tertiary)]'
+            }`}
+          >
+            <Icon name="trash" size={14} className="mb-0.5 opacity-80" />
+            Delete
+          </div>
         </div>
       ) : null}
 
       <div
+        data-swipe-open={rowSwipeOpen || dragDelta !== 0 ? task.id : undefined}
         className={`relative z-[1] bg-[var(--bg-elevated)] px-2 py-[var(--task-py)] transition-transform duration-200 [transition-timing-function:var(--ease-ios)] ${
           task.completed ? 'opacity-60' : ''
         } ${justCompleted ? 'animate-taskCompleteSoft' : ''}`}
@@ -205,6 +289,7 @@ export function TaskItem({
             className="min-w-0 flex-1 cursor-pointer"
             role="button"
             tabIndex={0}
+            data-task-options-anchor
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault()
@@ -311,6 +396,7 @@ export function TaskItem({
         {optionsOpen && !task.completed ? (
           <div
             className="poco-task-options-enter mt-2 border-t border-[var(--border-subtle)] pt-2"
+            data-task-options
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-2 flex gap-1">

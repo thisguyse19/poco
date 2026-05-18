@@ -88,7 +88,19 @@ export function FocusPage() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <PageHeader title="Focus" subtitle={subtitle} />
+      <div
+        className={`grid shrink-0 transition-[grid-template-rows] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+          isRunning ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]'
+        }`}
+      >
+        <div
+          className={`min-h-0 overflow-hidden transition-opacity duration-500 ease-out ${
+            isRunning ? 'pointer-events-none opacity-0' : 'opacity-100'
+          }`}
+        >
+          <PageHeader title="Focus" subtitle={subtitle} />
+        </div>
+      </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch]">
         <div className="mx-auto flex w-full max-w-lg flex-col items-stretch px-4 pb-[calc(var(--poco-mobile-nav-height)+1rem)] pt-3">

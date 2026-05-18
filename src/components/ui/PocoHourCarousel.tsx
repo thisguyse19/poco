@@ -30,7 +30,7 @@ export function PocoHourCarousel({
     />
   )
   if (variant === 'toolbar') {
-    return <div className="flex h-[2.75rem] max-w-[6.5rem] min-w-[5.25rem] items-stretch justify-end">{picker}</div>
+    return <div className="flex h-[72px] max-w-[6.5rem] min-w-[5.25rem] shrink-0 items-stretch justify-end">{picker}</div>
   }
   return <div className="min-h-[4.5rem]">{picker}</div>
 }
