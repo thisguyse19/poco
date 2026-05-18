@@ -1,11 +1,19 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { HomeSearchControl } from '../components/tasks/HomeSearchControl'
 import { QuickAdd } from '../components/tasks/QuickAdd'
-import { TaskList } from '../components/tasks/TaskList'
+import { TaskList, type TaskListScrum } from '../components/tasks/TaskList'
 import { ReviewModal } from '../components/reviews/ReviewModal'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useTaskStore } from '../stores/taskStore'
-import { toLocalISODate } from '../services/storage'
+import { storage, toLocalISODate } from '../services/storage'
+import {
+  getScrumBanner,
+  isStandDownCollectionWindow,
+  isStandUpCollectionWindow,
+  SCRUM_MASTER_CATEGORY,
+} from '../utils/scrumMaster'
+import { effectiveScrumFlatToday, writeScrumFlatPreference } from '../utils/scrumFlatStorage'
+import { clearStandSessions, getScrumSession, setStandDownLive, setStandUpLive } from '../utils/scrumSession'
 
 function shouldShowReview(hour: number, dismissed: string | null, thresholdHour: number): boolean {
   if (hour < thresholdHour) return false
@@ -21,6 +29,43 @@ export function HomePage() {
   const tasks = useTaskStore((s) => s.tasks)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [clock, setClock] = useState(0)
+  const [sessTick, setSessTick] = useState(0)
+  const [taskListKey, setTaskListKey] = useState(0)
+
+  const sm = settings.scrumMaster
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setClock((c) => c + 1)
+    }, 30000)
+    return () => window.clearInterval(id)
+  }, [])
+
+  const session = useMemo(() => {
+    void sessTick
+    return getScrumSession()
+  }, [sessTick])
+
+  const banner = useMemo(() => {
+    void clock
+    return getScrumBanner(sm)
+  }, [sm, clock])
+  const standUpColl = useMemo(() => {
+    void clock
+    return isStandUpCollectionWindow(sm)
+  }, [sm, clock])
+  const standDownColl = useMemo(() => {
+    void clock
+    return isStandDownCollectionWindow(sm)
+  }, [sm, clock])
+  const flatToday = useMemo(() => {
+    void clock
+    return effectiveScrumFlatToday(sm)
+  }, [sm, clock])
+
+  const standUpLive = Boolean(session.standUpLive)
+  const standDownLive = Boolean(session.standDownLive)
 
   const showReview = useMemo(
     () => shouldShowReview(new Date().getHours(), settings.reviewDismissedAt, settings.endOfDayReviewHour),
@@ -28,13 +73,17 @@ export function HomePage() {
   )
 
   const greeting = useMemo(() => {
+    if (standUpLive) return 'Stand up has started.'
+    if (standDownLive) return 'Stand down has started.'
     const h = new Date().getHours()
     const seg = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'
     const n = settings.profileName?.trim()
     return n ? `${seg}, ${n}` : seg
-  }, [settings.profileName])
+  }, [settings.profileName, standUpLive, standDownLive])
 
   const subtitle = useMemo(() => {
+    if (standUpLive) return 'What will you be completing today?'
+    if (standDownLive) return 'What did you finish today — and what carries to tomorrow?'
     const line = new Intl.DateTimeFormat(undefined, {
       weekday: 'long',
       month: 'long',
@@ -43,9 +92,74 @@ export function HomePage() {
     }).format(new Date())
     const n = tasks.filter((t) => !t.completed && t.scheduledFor === 'today').length
     return `${line} · ${n} ${n === 1 ? 'task' : 'tasks'} today`
-  }, [tasks])
+  }, [tasks, standUpLive, standDownLive])
 
   const headerDimmed = searchOpen || searchQuery.trim().length > 0
+
+  const scrumQuick: {
+    categoryLock: string | null
+    placeholderOverride?: string
+    scrumGlow: boolean
+    showEndScrum: boolean
+    endScrumLabel: string
+    onEndScrum: () => void
+  } = standUpLive
+    ? {
+        categoryLock: SCRUM_MASTER_CATEGORY,
+        placeholderOverride: 'What will you be completing today?',
+        scrumGlow: true,
+        showEndScrum: true,
+        endScrumLabel: 'End stand up',
+        onEndScrum: () => {
+          clearStandSessions()
+          setSessTick((x) => x + 1)
+        },
+      }
+    : standDownLive
+      ? {
+          categoryLock: SCRUM_MASTER_CATEGORY,
+          placeholderOverride: 'What wraps up today?',
+          scrumGlow: true,
+          showEndScrum: true,
+          endScrumLabel: 'End stand down',
+          onEndScrum: () => {
+            clearStandSessions()
+            setSessTick((x) => x + 1)
+          },
+        }
+      : {
+          categoryLock: null,
+          scrumGlow: false,
+          showEndScrum: false,
+          endScrumLabel: 'End',
+          onEndScrum: () => {},
+        }
+
+  const scrumList: TaskListScrum | null = sm.enabled
+    ? {
+        enabled: true,
+        masterName: sm.name,
+        banner,
+        onBannerTap: () => {
+          if (!banner.visible) return
+          if (banner.kind === 'standUp') setStandUpLive(true)
+          else setStandDownLive(true)
+          setSessTick((x) => x + 1)
+        },
+        standUpCollection: standUpColl,
+        standDownCollection: standDownColl,
+        flatToday,
+        onReconcileFlat: () => {
+          writeScrumFlatPreference(toLocalISODate(), false)
+          const m = storage.getCategoryExpanded()
+          storage.saveCategoryExpanded({ ...m, [SCRUM_MASTER_CATEGORY]: true })
+          setTaskListKey((k) => k + 1)
+          setClock((c) => c + 1)
+        },
+        standUpLive,
+        standDownLive,
+      }
+    : null
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col overflow-x-hidden">
@@ -69,8 +183,15 @@ export function HomePage() {
           </div>
         </div>
       </header>
-      <QuickAdd />
-      <TaskList searchQuery={searchQuery} />
+      <QuickAdd
+        categoryLock={scrumQuick.categoryLock}
+        placeholderOverride={scrumQuick.placeholderOverride}
+        scrumGlow={scrumQuick.scrumGlow}
+        showEndScrum={scrumQuick.showEndScrum}
+        endScrumLabel={scrumQuick.endScrumLabel}
+        onEndScrum={scrumQuick.onEndScrum}
+      />
+      <TaskList key={taskListKey} searchQuery={searchQuery} scrum={scrumList} />
       {showReview ? <ReviewModal /> : null}
     </div>
   )

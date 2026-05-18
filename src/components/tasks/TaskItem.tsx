@@ -81,12 +81,15 @@ export function TaskItem({
   onRequestDelete,
   swipeOpenId,
   onSwipeOpenChange,
+  scrumMark = false,
 }: {
   task: Task
   onOpenDetail: (t: Task) => void
   onRequestDelete: (id: string) => void
   swipeOpenId: string | null
   onSwipeOpenChange: (id: string | null) => void
+  /** Multicolour Scrum Master accent on the row */
+  scrumMark?: boolean
 }) {
   const navigate = useNavigate()
   const updateTask = useTaskStore((s) => s.updateTask)
@@ -354,6 +357,11 @@ export function TaskItem({
             ) : (
               <div>
                 <div className="flex items-center gap-1.5">
+                  {scrumMark ? (
+                    <span className="shrink-0 text-[10px] font-bold leading-none text-[var(--accent)]" title="Scrum Master">
+                      <span className="poco-scrum-text-gradient">◆</span>
+                    </span>
+                  ) : null}
                   {priorityDot(task.priority)}
                   <p className="text-sm font-medium leading-snug text-[var(--text-primary)]">
                     {task.title}
