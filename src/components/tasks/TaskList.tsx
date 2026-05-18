@@ -86,7 +86,7 @@ export function TaskList({ searchQuery = '' }: { searchQuery?: string }) {
       {inbox.length > 0 ? (
         <section className="mb-[var(--section-gap)]">
           {sectionTitle('Inbox')}
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-[var(--list-row-gap)]">
             {inbox.map((t) => (
               <TaskItem key={t.id} task={t} onOpenDetail={setDetailTask} onRequestDelete={handleRequestDelete} />
             ))}
@@ -104,16 +104,24 @@ export function TaskList({ searchQuery = '' }: { searchQuery?: string }) {
                 <div key={cat}>
                   <button
                     type="button"
-                    className="poco-press mb-1 flex w-full items-center justify-between rounded-none px-1 py-2 text-left"
+                    className="poco-press mb-1 flex w-full items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--border-default)] bg-[var(--bg-subtle)] px-3 py-2.5 text-left shadow-sm"
                     onClick={() => toggle(cat)}
                   >
-                    <span className="text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
-                      {cat}
+                    <span
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-none border border-[var(--border-default)] bg-[var(--bg-elevated)] text-sm font-bold text-[var(--accent)]"
+                      aria-hidden
+                    >
+                      {expanded ? '−' : '+'}
                     </span>
-                    <span className="text-[var(--text-tertiary)]">{expanded ? '−' : '+'}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-semibold capitalize text-[var(--text-primary)]">{cat}</span>
+                      <span className="mt-0.5 block text-[11px] font-medium text-[var(--text-tertiary)]">
+                        {items.length} {items.length === 1 ? 'task' : 'tasks'} · tap to {expanded ? 'collapse' : 'expand'}
+                      </span>
+                    </span>
                   </button>
                   {expanded ? (
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-[var(--list-row-gap)]">
                       {items.map((t) => (
                         <TaskItem key={t.id} task={t} onOpenDetail={setDetailTask} onRequestDelete={handleRequestDelete} />
                       ))}
@@ -129,7 +137,7 @@ export function TaskList({ searchQuery = '' }: { searchQuery?: string }) {
       {tomorrow.length > 0 ? (
         <section className="mb-[var(--section-gap)]">
           {sectionTitle('Tomorrow')}
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-[var(--list-row-gap)]">
             {tomorrow.map((t) => (
               <TaskItem key={t.id} task={t} onOpenDetail={setDetailTask} onRequestDelete={handleRequestDelete} />
             ))}
@@ -140,7 +148,7 @@ export function TaskList({ searchQuery = '' }: { searchQuery?: string }) {
       {someday.length > 0 ? (
         <section className="mb-[var(--section-gap)]">
           {sectionTitle('Someday')}
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-[var(--list-row-gap)]">
             {someday.map((t) => (
               <TaskItem key={t.id} task={t} onOpenDetail={setDetailTask} onRequestDelete={handleRequestDelete} />
             ))}
@@ -151,7 +159,7 @@ export function TaskList({ searchQuery = '' }: { searchQuery?: string }) {
       {completed.length > 0 ? (
         <section className="mb-[var(--section-gap)]">
           {sectionTitle('Done')}
-          <div className="flex flex-col gap-1 opacity-90">
+          <div className="flex flex-col gap-[var(--list-row-gap)] opacity-90">
             {completed.map((t) => (
               <TaskItem key={t.id} task={t} onOpenDetail={setDetailTask} onRequestDelete={handleRequestDelete} />
             ))}

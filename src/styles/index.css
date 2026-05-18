@@ -38,8 +38,9 @@
   --poco-z-sheet-panel-md: 101;
   --poco-z-dialog-backdrop: 120;
   --poco-z-dialog-panel: 121;
-  --task-py: 0.625rem;
+  --task-py: 0.5rem;
   --section-gap: 1.5rem;
+  --list-row-gap: 0.25rem;
 }
 
 [data-theme='dark'] {
@@ -85,18 +86,30 @@
 [data-density='compact'] {
   --task-py: 0.375rem;
   --section-gap: 1rem;
+  --list-row-gap: 0.125rem;
 }
 [data-density='default'] {
-  --task-py: 0.625rem;
+  --task-py: 0.5rem;
   --section-gap: 1.5rem;
+  --list-row-gap: 0.25rem;
 }
 [data-density='relaxed'] {
-  --task-py: 0.875rem;
+  --task-py: 0.75rem;
   --section-gap: 2rem;
+  --list-row-gap: 0.375rem;
+}
+
+[data-font-scale='sm'] {
+  font-size: 15px;
+}
+[data-font-scale='md'] {
+  font-size: 16px;
+}
+[data-font-scale='lg'] {
+  font-size: 18px;
 }
 
 html {
-  font-size: 16px;
   touch-action: manipulation;
   overscroll-behavior: none;
   height: 100%;

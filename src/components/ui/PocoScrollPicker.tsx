@@ -17,6 +17,8 @@ type PocoScrollPickerProps<T extends string | number> = {
   compact?: boolean
   /** Larger label + compact wheel (e.g. task due pickers) */
   prominent?: boolean
+  /** Toolbar pickers: labels align toward the start */
+  align?: 'center' | 'start'
 }
 
 export function PocoScrollPicker<T extends string | number>({
@@ -26,6 +28,7 @@ export function PocoScrollPicker<T extends string | number>({
   format = (v) => String(v),
   compact = false,
   prominent = false,
+  align = 'center',
 }: PocoScrollPickerProps<T>) {
   const row = prominent ? ROW_PROMINENT : compact ? ROW_COMPACT : ROW_DEFAULT
   const visibleH = prominent ? VISIBLE_PROMINENT : compact ? VISIBLE_COMPACT : VISIBLE_DEFAULT
@@ -84,7 +87,9 @@ export function PocoScrollPicker<T extends string | number>({
             <button
               key={`${uid}-${i}`}
               type="button"
-              className={`flex w-full items-center justify-center font-semibold ${
+              className={`flex w-full items-center font-semibold ${
+                align === 'start' ? 'justify-start pl-2 text-left' : 'justify-center text-center'
+              } ${
                 prominent
                   ? 'text-base leading-none'
                   : compact

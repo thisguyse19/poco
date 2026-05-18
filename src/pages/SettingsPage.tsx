@@ -1,12 +1,15 @@
-import { useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { PageHeader } from '../components/tasks/PageHeader'
 import { Icon } from '../components/ui/Icon'
 import { PocoConfirmDialog } from '../components/ui/PocoConfirmDialog'
 import { PocoMessageDialog } from '../components/ui/PocoMessageDialog'
 import { PocoHourCarousel } from '../components/ui/PocoHourCarousel'
+import { PocoFocusMinutesCarousel } from '../components/ui/PocoFocusMinutesCarousel'
+import { SettingsDevLab } from '../components/settings/SettingsDevLab'
 import { useSettingsStore, DEFAULT_SETTINGS } from '../stores/settingsStore'
 import { storage } from '../services/storage'
-import type { DensityName, ThemeName } from '../types'
+import type { DensityName, FontScaleName, ThemeName } from '../types'
+import { pocoDevLab } from '../utils/pocoDevLab'
 
 function themeIcon(t: ThemeName) {
   if (t === 'light') return <Icon name="sun" size={20} />
@@ -26,6 +29,18 @@ function DensityPreview({ d }: { d: DensityName }) {
   )
 }
 
+function FontPreview({ f }: { f: FontScaleName }) {
+  const cls = f === 'sm' ? 'text-[10px]' : f === 'md' ? 'text-xs' : 'text-sm'
+  return (
+    <span className={`font-semibold uppercase tracking-wide ${cls}`} aria-hidden>
+      Aa
+    </span>
+  )
+}
+
+const triBase =
+  'poco-press flex h-11 min-h-[2.75rem] flex-row items-center justify-center gap-2 px-2 text-xs font-semibold capitalize transition-colors duration-200 [transition-timing-function:var(--ease-ios)]'
+
 export function SettingsPage() {
   const { settings, updateSettings, resetSettings } = useSettingsStore()
   const [clearOpen, setClearOpen] = useState(false)
@@ -33,6 +48,19 @@ export function SettingsPage() {
   const [msgOpen, setMsgOpen] = useState(false)
   const [msg, setMsg] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
+  const devLastRef = useRef(0)
+  const devTapRef = useRef(0)
+
+  const onSettingsTitleTap = useCallback(() => {
+    const now = Date.now()
+    const gap = now - devLastRef.current
+    devLastRef.current = now
+    devTapRef.current = gap > 4000 ? 1 : devTapRef.current + 1
+    if (devTapRef.current >= 7) {
+      pocoDevLab.set({ unlocked: true })
+      devTapRef.current = 0
+    }
+  }, [])
 
   const exportJson = () => {
     const blob = new Blob([JSON.stringify(storage.exportAll(), null, 2)], { type: 'application/json' })
@@ -65,13 +93,13 @@ export function SettingsPage() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <PageHeader title="Settings" subtitle="Tune appearance, focus, and data." />
+      <PageHeader title="Settings" subtitle="Tune appearance, focus, and data." onTitleClick={onSettingsTitleTap} />
       <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-[calc(var(--poco-mobile-nav-height)+1rem)] pt-2 md:px-6">
         <section className="mb-8 space-y-3">
           <h3 className="font-serif text-lg">Appearance</h3>
 
           <div className="overflow-hidden rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)]">
-            <div className="flex items-center gap-2 border-b border-[var(--border-subtle)] px-3 py-2.5">
+            <div className="flex h-9 items-center gap-2 border-b border-[var(--border-subtle)] px-3">
               <Icon name="sun" size={16} className="text-[var(--text-tertiary)]" />
               <span className="text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Theme</span>
             </div>
@@ -80,10 +108,8 @@ export function SettingsPage() {
                 <button
                   key={t}
                   type="button"
-                  className={`poco-press flex flex-col items-center gap-2 px-2 py-4 text-xs font-semibold capitalize transition-colors duration-200 [transition-timing-function:var(--ease-ios)] ${
-                    settings.theme === t
-                      ? 'bg-[var(--accent-soft)] text-[var(--accent)]'
-                      : 'text-[var(--text-secondary)]'
+                  className={`${triBase} ${
+                    settings.theme === t ? 'bg-[var(--accent-soft)] text-[var(--accent)]' : 'text-[var(--text-secondary)]'
                   }`}
                   onClick={() => updateSettings({ theme: t })}
                 >
@@ -95,7 +121,7 @@ export function SettingsPage() {
           </div>
 
           <div className="overflow-hidden rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)]">
-            <div className="flex items-center gap-2 border-b border-[var(--border-subtle)] px-3 py-2.5">
+            <div className="flex h-9 items-center gap-2 border-b border-[var(--border-subtle)] px-3">
               <Icon name="tasks" size={16} className="text-[var(--text-tertiary)]" />
               <span className="text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Compactness</span>
             </div>
@@ -104,10 +130,8 @@ export function SettingsPage() {
                 <button
                   key={d}
                   type="button"
-                  className={`poco-press flex flex-col items-center gap-2 px-2 py-4 text-xs font-semibold capitalize transition-colors duration-200 [transition-timing-function:var(--ease-ios)] ${
-                    settings.density === d
-                      ? 'bg-[var(--accent-soft)] text-[var(--accent)]'
-                      : 'text-[var(--text-secondary)]'
+                  className={`${triBase} ${
+                    settings.density === d ? 'bg-[var(--accent-soft)] text-[var(--accent)]' : 'text-[var(--text-secondary)]'
                   }`}
                   onClick={() => updateSettings({ density: d })}
                 >
@@ -115,6 +139,29 @@ export function SettingsPage() {
                     <DensityPreview d={d} />
                   </span>
                   {d}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="overflow-hidden rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)]">
+            <div className="flex h-9 items-center gap-2 border-b border-[var(--border-subtle)] px-3">
+              <span className="text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Font size</span>
+            </div>
+            <div className="grid grid-cols-3 divide-x divide-[var(--border-subtle)]">
+              {(['sm', 'md', 'lg'] as FontScaleName[]).map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  className={`${triBase} ${
+                    settings.fontScale === f ? 'bg-[var(--accent-soft)] text-[var(--accent)]' : 'text-[var(--text-secondary)]'
+                  }`}
+                  onClick={() => updateSettings({ fontScale: f })}
+                >
+                  <span className="text-[var(--text-primary)]">
+                    <FontPreview f={f} />
+                  </span>
+                  {f}
                 </button>
               ))}
             </div>
@@ -138,19 +185,21 @@ export function SettingsPage() {
           </label>
         </section>
 
+        <SettingsDevLab />
+
         <section className="mb-8 space-y-3">
           <h3 className="font-serif text-lg">Focus</h3>
-          <label className="block text-sm">
-            Focus minutes
-            <input
-              type="number"
-              min={5}
-              max={120}
-              className="poco-input mt-1 w-full rounded-none border border-[var(--border-default)] bg-[var(--bg-input)] px-3 py-2 text-sm"
-              value={settings.focusDurationMinutes}
-              onChange={(e) => updateSettings({ focusDurationMinutes: Number(e.target.value) || 25 })}
+          <div className="flex min-h-[2.75rem] flex-row items-center gap-3 rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-1">
+            <div className="min-w-0 flex-1 py-1">
+              <span className="text-sm font-medium">Focus minutes</span>
+              <p className="text-xs text-[var(--text-tertiary)]">Length of each focus phase (5–120).</p>
+            </div>
+            <PocoFocusMinutesCarousel
+              variant="toolbar"
+              minutes={settings.focusDurationMinutes}
+              onChange={(m) => updateSettings({ focusDurationMinutes: m })}
             />
-          </label>
+          </div>
           <label className={rowClass}>
             <span>Auto-start breaks</span>
             <input
@@ -191,16 +240,17 @@ export function SettingsPage() {
               onChange={(e) => updateSettings({ confirmDelete: e.target.checked })}
             />
           </label>
-          <label className="block text-sm">
-            <span className="flex items-center gap-2">
-              <Icon name="timer" size={16} className="text-[var(--text-tertiary)]" />
-              End-of-day review time
-            </span>
-            <span className="mt-2 block text-xs text-[var(--text-tertiary)]">After this hour, the home review sheet may appear.</span>
-            <div className="mt-2 overflow-hidden rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-2">
-              <PocoHourCarousel hour0to23={settings.endOfDayReviewHour} onChange={(h) => updateSettings({ endOfDayReviewHour: h })} />
+          <div className="flex min-h-[2.75rem] flex-row items-center gap-3 rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-1">
+            <div className="min-w-0 flex-1 py-1">
+              <span className="text-sm font-medium">End-of-day review time</span>
+              <p className="text-xs text-[var(--text-tertiary)]">After this hour, the home review sheet may appear.</p>
             </div>
-          </label>
+            <PocoHourCarousel
+              variant="toolbar"
+              hour0to23={settings.endOfDayReviewHour}
+              onChange={(h) => updateSettings({ endOfDayReviewHour: h })}
+            />
+          </div>
         </section>
 
         <section className="mb-8 space-y-3">

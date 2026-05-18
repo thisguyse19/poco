@@ -63,12 +63,16 @@ export type ThemeName = 'light' | 'dark' | 'shrouded'
 
 export type DensityName = 'compact' | 'default' | 'relaxed'
 
+export type FontScaleName = 'sm' | 'md' | 'lg'
+
 export type LandingView = 'tasks' | 'focus'
 
 export interface Settings {
   onboardingComplete: boolean
   theme: ThemeName
   density: DensityName
+  /** Root rem scale for body copy */
+  fontScale: FontScaleName
   reduceMotion: boolean
   haptics: boolean
   ambientSound: AmbientSoundType

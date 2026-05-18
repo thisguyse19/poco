@@ -143,6 +143,7 @@ const DEFAULT_EXPORT_SETTINGS: Settings = {
   onboardingComplete: true,
   theme: 'light',
   density: 'default',
+  fontScale: 'md',
   reduceMotion: false,
   haptics: true,
   ambientSound: 'off',
