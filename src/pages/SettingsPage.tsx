@@ -10,6 +10,7 @@ import { useSettingsStore, DEFAULT_SETTINGS } from '../stores/settingsStore'
 import { storage } from '../services/storage'
 import type { DensityName, FontScaleName, ThemeName } from '../types'
 import { pocoDevLab } from '../utils/pocoDevLab'
+import { triggerHaptic } from '../utils/haptics'
 
 function themeIcon(t: ThemeName) {
   if (t === 'light') return <Icon name="sun" size={20} />
@@ -57,9 +58,15 @@ export function SettingsPage() {
     devLastRef.current = now
     devTapRef.current = gap > 4000 ? 1 : devTapRef.current + 1
     if (devTapRef.current >= 7) {
-      pocoDevLab.set({ unlocked: true })
+      pocoDevLab.unlock()
+      triggerHaptic([12, 24, 12])
       devTapRef.current = 0
     }
+  }, [])
+
+  const onSubtitleLongPress = useCallback(() => {
+    pocoDevLab.unlock()
+    triggerHaptic([18, 32, 18])
   }, [])
 
   const exportJson = () => {
@@ -93,7 +100,12 @@ export function SettingsPage() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <PageHeader title="Settings" subtitle="Tune appearance, focus, and data." onTitleClick={onSettingsTitleTap} />
+      <PageHeader
+        title="Settings"
+        subtitle="Tune appearance, focus, and data."
+        onTitleClick={onSettingsTitleTap}
+        onSubtitleLongPress={onSubtitleLongPress}
+      />
       <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-[calc(var(--poco-mobile-nav-height)+1rem)] pt-2 md:px-6">
         <section className="mb-8 space-y-3">
           <h3 className="font-serif text-lg">Appearance</h3>
