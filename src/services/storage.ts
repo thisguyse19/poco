@@ -159,4 +159,11 @@ const DEFAULT_EXPORT_SETTINGS: Settings = {
   autoStartBreaks: false,
   autoStartNext: false,
   keepScreenAwake: false,
+  scrumMaster: {
+    enabled: true,
+    gender: 'female',
+    name: 'Maya',
+    standUpTime: '09:00',
+    standDownTime: '17:30',
+  },
 }

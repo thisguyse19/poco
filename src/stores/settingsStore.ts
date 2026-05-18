@@ -22,10 +22,21 @@ export const DEFAULT_SETTINGS: Settings = {
   autoStartBreaks: false,
   autoStartNext: false,
   keepScreenAwake: false,
+  scrumMaster: {
+    enabled: true,
+    gender: 'female',
+    name: 'Maya',
+    standUpTime: '09:00',
+    standDownTime: '17:30',
+  },
 }
 
 const saved = storage.getSettings()
-const initial: Settings = { ...DEFAULT_SETTINGS, ...saved }
+const initial: Settings = {
+  ...DEFAULT_SETTINGS,
+  ...saved,
+  scrumMaster: { ...DEFAULT_SETTINGS.scrumMaster, ...saved.scrumMaster },
+}
 
 type SettingsState = {
   settings: Settings
@@ -37,7 +48,11 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   settings: initial,
 
   updateSettings(patch) {
-    let next = { ...get().settings, ...patch }
+    const prev = get().settings
+    let next: Settings = { ...prev, ...patch }
+    if (patch.scrumMaster) {
+      next = { ...next, scrumMaster: { ...prev.scrumMaster, ...patch.scrumMaster } }
+    }
 
     if (patch.oledOptimisation === true) {
       next = { ...next, theme: 'shrouded' as ThemeName }
@@ -56,6 +71,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       ...DEFAULT_SETTINGS,
       onboardingComplete: prev.onboardingComplete,
       profileName: prev.profileName,
+      scrumMaster: prev.scrumMaster,
     }
     set({ settings: next })
     storage.saveSettings(next)

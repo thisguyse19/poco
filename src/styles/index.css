@@ -456,3 +456,61 @@ input[type='number']::-webkit-outer-spin-button {
 [data-reduce-motion='true'] .poco-onboard-ring-arc {
   animation: none !important;
 }
+
+/* Scrum Master: calm iridescent accent (not noisy) */
+@property --poco-scrum-a {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+@keyframes poco-scrum-spin {
+  to {
+    --poco-scrum-a: 360deg;
+  }
+}
+.poco-scrum-glow-border {
+  --poco-scrum-a: 0deg;
+  border: 1.5px solid transparent;
+  background:
+    linear-gradient(var(--bg-base), var(--bg-base)) padding-box,
+    conic-gradient(from var(--poco-scrum-a), #6b8cae, #8a7daa, #7a9f8a, #c4a574, #6b8cae) border-box;
+  animation: poco-scrum-spin 14s linear infinite;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 12%, transparent), 0 0 24px color-mix(in srgb, #8a7daa 18%, transparent);
+}
+[data-reduce-motion='true'] .poco-scrum-glow-border {
+  animation: none;
+  background:
+    linear-gradient(var(--bg-base), var(--bg-base)) padding-box,
+    linear-gradient(135deg, #6b8cae, #8a7daa, #7a9f8a) border-box;
+}
+.poco-scrum-banner {
+  background:
+    linear-gradient(var(--bg-base), var(--bg-base)) padding-box,
+    conic-gradient(from var(--poco-scrum-a, 0deg), #6b8cae55, #8a7daa55, #7a9f8a55, #c4a57455, #6b8cae55) border-box;
+  border: 1.5px solid transparent;
+  animation: poco-scrum-spin 18s linear infinite;
+}
+[data-reduce-motion='true'] .poco-scrum-banner {
+  animation: none;
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border-subtle));
+  background: var(--bg-base);
+}
+.poco-scrum-text-gradient {
+  background: linear-gradient(120deg, #5a7a92, #7d6f9a, #5f8a6a, #b89a68);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.poco-scrum-placeholder-glow textarea::placeholder {
+  background: linear-gradient(120deg, #5a7a92, #7d6f9a, #5f8a6a);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  opacity: 0.95;
+}
+.poco-scrum-row-pulse {
+  animation: poco-scrum-spin 12s linear infinite;
+}
+[data-reduce-motion='true'] .poco-scrum-row-pulse {
+  animation: none;
+}

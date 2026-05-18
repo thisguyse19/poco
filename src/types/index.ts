@@ -67,6 +67,18 @@ export type FontScaleName = 'sm' | 'md' | 'lg'
 
 export type LandingView = 'tasks' | 'focus'
 
+export type ScrumMasterGender = 'male' | 'female'
+
+export interface ScrumMasterSettings {
+  enabled: boolean
+  gender: ScrumMasterGender
+  /** Display name (chosen from presets or customised in settings) */
+  name: string
+  /** Local day wall time "HH:mm" */
+  standUpTime: string
+  standDownTime: string
+}
+
 export interface Settings {
   onboardingComplete: boolean
   theme: ThemeName
@@ -91,6 +103,7 @@ export interface Settings {
   autoStartBreaks: boolean
   autoStartNext: boolean
   keepScreenAwake: boolean
+  scrumMaster: ScrumMasterSettings
 }
 
 export type TimerMode = 'focus' | 'shortBreak' | 'longBreak'
