@@ -8,6 +8,7 @@ type TaskState = {
   addTask: (partial: Partial<Task> & Pick<Task, 'title'>) => Task
   updateTask: (id: string, patch: Partial<Task>) => void
   deleteTask: (id: string) => void
+  restoreTask: (task: Task) => void
   setSchedule: (id: string, horizon: ScheduledFor) => void
   setPriority: (id: string, priority: Priority) => void
   pinTask: (id: string) => void
@@ -73,6 +74,13 @@ export const useTaskStore = create<TaskState>((set, get) => ({
           }
         : t,
     )
+    set({ tasks })
+    storage.saveTasks(tasks)
+  },
+
+  restoreTask(task: Task) {
+    const others = get().tasks.filter((t) => t.id !== task.id)
+    const tasks = [task, ...others]
     set({ tasks })
     storage.saveTasks(tasks)
   },

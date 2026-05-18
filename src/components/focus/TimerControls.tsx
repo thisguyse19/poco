@@ -24,7 +24,8 @@ function modeLabel(mode: TimerMode) {
   return 'Long break'
 }
 
-function modeTint(mode: TimerMode) {
+/** Stroke + glow accents per phase — uses theme tokens so light/dark stay coherent */
+function phaseRing(mode: TimerMode): string {
   if (mode === 'focus') return 'var(--accent)'
   if (mode === 'shortBreak') return 'var(--priority-low)'
   return 'var(--pin-color)'
@@ -46,8 +47,14 @@ export function TimerControls({
   const reduceMotion = useSettingsStore((s) => s.settings.reduceMotion)
   const ambient = useSettingsStore((s) => s.settings.ambientSound)
   const updateSettings = useSettingsStore((s) => s.updateSettings)
-  const tint = modeTint(mode)
+  const ring = phaseRing(mode)
   const ringClass = isRunning && !reduceMotion ? 'poco-timer-ring-running' : ''
+  const ringGlow =
+    isRunning && !reduceMotion
+      ? `drop-shadow(0 0 2px color-mix(in srgb, ${ring} 55%, transparent)) drop-shadow(0 0 14px color-mix(in srgb, ${ring} 40%, transparent)) drop-shadow(0 0 28px color-mix(in srgb, ${ring} 22%, transparent))`
+      : isRunning
+        ? `drop-shadow(0 0 6px color-mix(in srgb, ${ring} 35%, transparent))`
+        : undefined
 
   const r = 52
   const c = 2 * Math.PI * r
@@ -55,19 +62,29 @@ export function TimerControls({
 
   return (
     <div className="flex w-full flex-col items-center gap-4">
-      <div className="flex gap-2">
-        {[0, 1, 2, 3].map((i) => (
-          <span
-            key={i}
-            className={`h-2 w-2 rounded-none ${
-              i <= focusSessionsInCycle && mode === 'focus'
-                ? 'bg-[var(--accent)]'
-                : 'bg-[var(--border-default)]'
-            }`}
-          />
-        ))}
+      <div className="flex gap-2.5" aria-hidden>
+        {[0, 1, 2, 3].map((i) => {
+          const filled = i <= focusSessionsInCycle
+          const current = filled && i === focusSessionsInCycle
+          return (
+            <span
+              key={i}
+              className={`h-2 w-2 rounded-none transition-[opacity,transform,box-shadow] duration-300 ${
+                current && isRunning && !reduceMotion ? 'scale-110' : 'scale-100'
+              }`}
+              style={{
+                background: filled ? ring : 'transparent',
+                opacity: filled ? (current ? 1 : 0.82) : 0.38,
+                boxShadow: filled ? `0 0 0 1px color-mix(in srgb, ${ring} 45%, transparent)` : `inset 0 0 0 1.5px color-mix(in srgb, ${ring} 38%, var(--border-default))`,
+              }}
+            />
+          )
+        })}
       </div>
-      <p className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-tertiary)]">
+      <p
+        className="text-center text-xs font-semibold uppercase tracking-[0.2em] transition-colors duration-300"
+        style={{ color: `color-mix(in srgb, ${ring} 52%, var(--text-tertiary))` }}
+      >
         {modeLabel(mode)}
       </p>
 
@@ -77,13 +94,13 @@ export function TimerControls({
         <div
           className={`pointer-events-none absolute inset-0 rounded-none blur-3xl ${isRunning && !reduceMotion ? 'poco-timer-glow-pulse' : ''}`}
           style={{
-            background: `radial-gradient(circle, ${tint}55 0%, transparent 65%)`,
-            opacity: isRunning ? 0.45 : 0.2,
+            background: `radial-gradient(circle, color-mix(in srgb, ${ring} 50%, transparent) 0%, transparent 68%)`,
+            opacity: isRunning ? 0.5 : 0.18,
           }}
         />
         <svg
           viewBox="0 0 140 140"
-          className={`relative z-[1] aspect-square w-[min(88vw,220px)] max-w-[220px] shrink-0 ${ringClass}`}
+          className={`relative z-[1] aspect-square w-[min(88vw,220px)] max-w-[220px] shrink-0 transition-[filter] duration-500 ${ringClass}`}
           aria-hidden
         >
           <g transform="translate(70 70) rotate(-90) translate(-70 -70)">
@@ -93,12 +110,13 @@ export function TimerControls({
               cx="70"
               cy="70"
               r={r}
-              stroke={tint}
+              stroke={ring}
               strokeWidth="8"
               fill="none"
               strokeDasharray={c}
               strokeDashoffset={offset}
               strokeLinecap="round"
+              style={{ filter: ringGlow }}
             />
           </g>
         </svg>
@@ -111,17 +129,19 @@ export function TimerControls({
         </div>
       </div>
 
-      <div className="flex w-full max-w-md shrink-0 items-center justify-between gap-4 px-1">
-        <button type="button" className="poco-press text-[var(--text-secondary)]" aria-label="Reset" onClick={onReset}>
-          <Icon name="circle" size={18} />
-        </button>
-        <button type="button" className="poco-press text-sm font-semibold text-[var(--accent)]" onClick={onSkip}>
-          Skip
-        </button>
+      <div className="grid w-full max-w-md shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-2 px-1">
+        <div className="flex min-w-0 items-center justify-start gap-3">
+          <button type="button" className="poco-press shrink-0 text-[var(--text-secondary)]" aria-label="Reset" onClick={onReset}>
+            <Icon name="circle" size={18} />
+          </button>
+          <button type="button" className="poco-press shrink-0 text-sm font-semibold text-[var(--accent)]" onClick={onSkip}>
+            Skip
+          </button>
+        </div>
         <button
           type="button"
           aria-label={isRunning ? 'Pause' : 'Start'}
-          className="poco-press flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-none bg-[var(--accent)] text-[var(--text-inverse)] shadow-lg"
+          className="poco-press flex h-[52px] w-[52px] shrink-0 items-center justify-center justify-self-center rounded-none bg-[var(--accent)] text-[var(--text-inverse)] shadow-lg"
           onClick={onToggle}
         >
           <span className="flex h-6 w-6 items-center justify-center">
@@ -135,7 +155,7 @@ export function TimerControls({
             )}
           </span>
         </button>
-        <div className="text-right text-xs text-[var(--text-tertiary)]">
+        <div className="min-w-0 justify-self-end text-right text-xs text-[var(--text-tertiary)]">
           <div className="font-semibold text-[var(--text-primary)]">{sessionsCompleted}</div>
           sessions
         </div>

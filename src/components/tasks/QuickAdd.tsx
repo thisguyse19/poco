@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Icon } from '../ui/Icon'
 import { parseQuickAdd, type NlpPreviewChip } from '../../utils/nlp'
 import { formatNlpDateChipDisplay } from '../../utils/formatNlpChip'
@@ -47,8 +47,15 @@ export function QuickAdd() {
   const addTask = useTaskStore((s) => s.addTask)
   const [open, setOpen] = useState(false)
   const [text, setText] = useState('')
+  const inputRef = useRef<HTMLTextAreaElement>(null)
 
   const parsed = useMemo(() => parseQuickAdd(text), [text])
+
+  useEffect(() => {
+    if (!open) return
+    const id = requestAnimationFrame(() => inputRef.current?.focus())
+    return () => cancelAnimationFrame(id)
+  }, [open])
 
   const submit = () => {
     const p = parseQuickAdd(text)
@@ -67,7 +74,10 @@ export function QuickAdd() {
     })
     triggerHaptic(10)
     setText('')
-    setOpen(false)
+    // Keep quick-add open so iOS can chain adds without re-tapping the field.
+    requestAnimationFrame(() => {
+      inputRef.current?.focus()
+    })
   }
 
   return (
@@ -88,6 +98,7 @@ export function QuickAdd() {
               <Icon name="plus" size={18} />
             </span>
             <textarea
+              ref={inputRef}
               className="poco-input max-h-[2.75rem] min-h-0 flex-1 resize-none rounded-none border-0 bg-transparent px-1 py-1 text-sm leading-snug outline-none"
               placeholder={PLACEHOLDER}
               value={text}
