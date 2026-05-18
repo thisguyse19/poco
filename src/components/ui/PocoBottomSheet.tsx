@@ -54,6 +54,16 @@ export function PocoBottomSheet({
     setEntered(false)
   }, [open])
 
+  const duration = reduceMotion ? 1 : SHEET_MS
+
+  /** Same class of bug as center modals: opacity-0 backdrops must not keep capturing taps (e.g. iOS / reduced motion skipping transitionend). */
+  useEffect(() => {
+    if (!open && mounted) {
+      const t = window.setTimeout(() => setMounted(false), duration + 200)
+      return () => window.clearTimeout(t)
+    }
+  }, [open, mounted, duration])
+
   const onSheetTransitionEnd = useCallback(
     (e: React.TransitionEvent<HTMLDivElement>) => {
       if (e.propertyName !== 'transform') return
@@ -76,7 +86,6 @@ export function PocoBottomSheet({
   if (!mounted) return null
 
   const showOpen = entered && open
-  const duration = reduceMotion ? 1 : SHEET_MS
 
   let transform: string
   if (!showOpen) {
@@ -95,14 +104,18 @@ export function PocoBottomSheet({
         type="button"
         aria-label="Close sheet"
         className={`fixed left-0 right-0 top-0 z-[var(--poco-z-sheet-backdrop)] max-md:bottom-[var(--poco-mobile-nav-height)] md:bottom-0 md:inset-0 md:z-[var(--poco-z-sheet-backdrop-md)] bg-black/35 backdrop-blur-[1px] transition-opacity ${showOpen ? 'opacity-100' : 'opacity-0'}`}
-        style={{ transitionDuration: `${duration}ms`, transitionTimingFunction: EASE }}
+        style={{
+          transitionDuration: `${duration}ms`,
+          transitionTimingFunction: EASE,
+          pointerEvents: showOpen ? 'auto' : 'none',
+        }}
         onClick={() => onBackdropClick?.()}
       />
       <div
         ref={sheetRef}
         role="dialog"
         aria-modal="true"
-        className={`fixed inset-x-0 z-[var(--poco-z-sheet-panel)] mx-auto flex max-h-[min(76dvh,calc(100dvh-var(--poco-mobile-nav-height)-max(0.75rem,env(safe-area-inset-top))))] max-w-lg flex-col border border-[var(--border-default)] bg-[var(--bg-elevated)] shadow-[0_-8px_32px_rgba(0,0,0,0.12)] max-md:bottom-[var(--poco-mobile-nav-height)] md:bottom-4 md:z-[var(--poco-z-sheet-panel-md)] md:max-h-[90dvh] md:shadow-xl ${sheetClassName}`}
+        className={`fixed inset-x-0 z-[var(--poco-z-sheet-panel)] mx-auto flex max-h-[min(76dvh,calc(100dvh-var(--poco-mobile-nav-height)-max(0.75rem,env(safe-area-inset-top))))] max-w-lg flex-col border border-[var(--border-default)] bg-[var(--bg-elevated)] shadow-[0_-8px_32px_rgba(0,0,0,0.12)] max-md:bottom-[var(--poco-mobile-nav-height)] md:bottom-4 md:z-[var(--poco-z-sheet-panel-md)] md:max-h-[90dvh] md:shadow-xl ${sheetClassName} ${showOpen ? '' : 'pointer-events-none'}`}
         style={{
           transform,
           transition,
