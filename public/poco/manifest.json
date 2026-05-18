@@ -1,0 +1,24 @@
+{
+  "name": "poco",
+  "short_name": "poco",
+  "description": "Local-first tasks and Pomodoro",
+  "start_url": "/poco/",
+  "scope": "/poco/",
+  "display": "standalone",
+  "background_color": "#f5f2ed",
+  "theme_color": "#f5f2ed",
+  "icons": [
+    {
+      "src": "/poco/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/poco/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

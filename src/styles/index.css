@@ -1,0 +1,307 @@
+@import 'tailwindcss';
+
+:root {
+  --bg-base: #f5f2ed;
+  --bg-elevated: #ffffff;
+  --bg-subtle: #edeae4;
+  --bg-input: #f0ede8;
+  --text-primary: #2c2c2a;
+  --text-secondary: #6b6864;
+  --text-tertiary: #a09d99;
+  --text-inverse: #f5f2ed;
+  --border-default: #dddad5;
+  --border-subtle: #e8e5e0;
+  --accent: #4a6741;
+  --accent-soft: #d6e4d2;
+  --accent-hover: #3d5636;
+  --priority-low: #8ea8b8;
+  --priority-medium: #c5a55a;
+  --priority-high: #b85c5c;
+  --pin-color: #7a6fa8;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  --font-sans: 'Manrope', system-ui, sans-serif;
+  --ease-out-soft: cubic-bezier(0.33, 1, 0.68, 1);
+  --transition-fast: 160ms var(--ease-out-soft);
+  --transition-normal: 200ms var(--ease-out-soft);
+  --transition-press: 140ms var(--ease-out-soft);
+  --poco-page-header-min: 5.5rem;
+  --poco-mobile-nav-height: calc(0.5rem + 3.5rem + max(0.5rem, env(safe-area-inset-bottom, 0px)));
+  --task-py: 0.625rem;
+  --section-gap: 1.5rem;
+}
+
+[data-theme='dark'] {
+  --bg-base: #1e1c1a;
+  --bg-elevated: #252320;
+  --bg-subtle: #2a2825;
+  --bg-input: #2f2d2a;
+  --text-primary: #e8e4dd;
+  --text-secondary: #9e9a95;
+  --text-tertiary: #757270;
+  --text-inverse: #1e1c1a;
+  --border-default: #363330;
+  --border-subtle: #2e2c29;
+  --accent: #7aaa6e;
+  --accent-soft: #2a3d27;
+  --accent-hover: #8dc080;
+  --priority-low: #8db4c4;
+  --priority-medium: #d4b86e;
+  --priority-high: #d07070;
+  --pin-color: #9b91c8;
+}
+
+[data-theme='shrouded'] {
+  --bg-base: #000000;
+  --bg-elevated: #0d0d0d;
+  --bg-subtle: #141414;
+  --bg-input: #1a1a1a;
+  --text-primary: #e6e2db;
+  --text-secondary: #8f8b86;
+  --text-tertiary: #5c5a57;
+  --text-inverse: #000000;
+  --border-default: #242424;
+  --border-subtle: #181818;
+  --accent: #6f9f64;
+  --accent-soft: #152018;
+  --accent-hover: #7fb872;
+  --priority-low: #6a8fa0;
+  --priority-medium: #b89a5a;
+  --priority-high: #a85a5a;
+  --pin-color: #8a82b0;
+}
+
+[data-density='compact'] {
+  --task-py: 0.375rem;
+  --section-gap: 1rem;
+}
+[data-density='default'] {
+  --task-py: 0.625rem;
+  --section-gap: 1.5rem;
+}
+[data-density='relaxed'] {
+  --task-py: 0.875rem;
+  --section-gap: 2rem;
+}
+
+html {
+  font-size: 16px;
+  touch-action: manipulation;
+  overscroll-behavior: none;
+  height: 100%;
+}
+
+body {
+  min-height: 100dvh;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+[data-theme='dark'] body,
+[data-theme='shrouded'] body {
+  font-weight: 500;
+}
+
+#root {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: 0.035em;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+p,
+span,
+label,
+button,
+input,
+textarea {
+  font-family: var(--font-sans);
+}
+
+*::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 2px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.poco-input:focus {
+  outline: none;
+}
+.poco-input:focus-visible {
+  outline: none;
+}
+.poco-input:focus {
+  background-color: var(--bg-elevated);
+  box-shadow: 0 1px 0 0 var(--border-subtle);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+[data-reduce-motion='true'] *,
+[data-reduce-motion='true'] *::before,
+[data-reduce-motion='true'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+.poco-press {
+  transition:
+    transform var(--transition-press),
+    opacity var(--transition-press);
+}
+.poco-press:active {
+  transform: scale(0.97);
+  opacity: 0.92;
+}
+
+.poco-content-max {
+  width: 100%;
+  max-width: min(100%, 42rem);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@keyframes poco-fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fadeIn {
+  animation: poco-fadeIn var(--transition-normal) var(--ease-out-soft) both;
+}
+
+@keyframes poco-slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-slideUp {
+  animation: poco-slideUp 240ms var(--ease-out-soft) both;
+}
+
+@keyframes poco-scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.animate-scaleIn {
+  animation: poco-scaleIn var(--transition-normal) var(--ease-out-soft) both;
+}
+
+@keyframes poco-searchExpand {
+  from {
+    width: 2.5rem;
+  }
+  to {
+    width: 100%;
+  }
+}
+.animate-searchExpand {
+  animation: poco-searchExpand 280ms var(--ease-out-soft) both;
+}
+
+@keyframes poco-taskCompleteSoft {
+  0% {
+    opacity: 1;
+  }
+  40% {
+    opacity: 0.45;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+.animate-taskCompleteSoft {
+  animation: poco-taskCompleteSoft 420ms var(--ease-out-soft);
+}
+
+@keyframes poco-timer-ring-pulse {
+  0%,
+  100% {
+    stroke-opacity: 1;
+  }
+  50% {
+    stroke-opacity: 0.55;
+  }
+}
+.poco-timer-ring-running .poco-timer-progress {
+  animation: poco-timer-ring-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes poco-timer-glow-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.65;
+    transform: scale(1.04);
+  }
+}
+.poco-timer-glow-pulse {
+  animation: poco-timer-glow-pulse 3.2s ease-in-out infinite;
+}
+
+[data-reduce-motion='true'] .poco-timer-glow-pulse,
+[data-reduce-motion='true'] .poco-timer-ring-running .poco-timer-progress {
+  animation: none !important;
+}
+
+.poco-scrollbar-none {
+  scrollbar-width: none;
+}
+.poco-scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
