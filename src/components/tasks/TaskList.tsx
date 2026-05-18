@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react'
 import type { Task } from '../../types'
 import { storage } from '../../services/storage'
 import { sortTodayTasks, useTaskStore } from '../../stores/taskStore'
+import { useSettingsStore } from '../../stores/settingsStore'
 import { TaskItem } from './TaskItem'
 import { PocoConfirmDialog } from '../ui/PocoConfirmDialog'
 import { TaskDetailSheet } from './TaskDetailSheet'
@@ -28,9 +29,18 @@ function useCategoryExpanded() {
 export function TaskList() {
   const tasks = useTaskStore((s) => s.tasks)
   const deleteTask = useTaskStore((s) => s.deleteTask)
+  const confirmDelete = useSettingsStore((s) => s.settings.confirmDelete)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [detailTask, setDetailTask] = useState<Task | null>(null)
   const { map, toggle } = useCategoryExpanded()
+
+  const handleRequestDelete = useCallback(
+    (id: string) => {
+      if (confirmDelete) setConfirmDeleteId(id)
+      else deleteTask(id)
+    },
+    [confirmDelete, deleteTask],
+  )
 
   const { inbox, today, tomorrow, someday, completed } = useMemo(() => {
     const inbox: Task[] = []
@@ -70,7 +80,7 @@ export function TaskList() {
           {sectionTitle('Inbox')}
           <div className="flex flex-col gap-1">
             {inbox.map((t) => (
-              <TaskItem key={t.id} task={t} onOpenDetail={setDetailTask} onRequestDelete={setConfirmDeleteId} />
+              <TaskItem key={t.id} task={t} onOpenDetail={setDetailTask} onRequestDelete={handleRequestDelete} />
             ))}
           </div>
         </section>
@@ -97,7 +107,7 @@ export function TaskList() {
                   {expanded ? (
                     <div className="flex flex-col gap-1">
                       {items.map((t) => (
-                        <TaskItem key={t.id} task={t} onOpenDetail={setDetailTask} onRequestDelete={setConfirmDeleteId} />
+                        <TaskItem key={t.id} task={t} onOpenDetail={setDetailTask} onRequestDelete={handleRequestDelete} />
                       ))}
                     </div>
                   ) : null}
@@ -113,7 +123,7 @@ export function TaskList() {
           {sectionTitle('Tomorrow')}
           <div className="flex flex-col gap-1">
             {tomorrow.map((t) => (
-              <TaskItem key={t.id} task={t} onOpenDetail={setDetailTask} onRequestDelete={setConfirmDeleteId} />
+              <TaskItem key={t.id} task={t} onOpenDetail={setDetailTask} onRequestDelete={handleRequestDelete} />
             ))}
           </div>
         </section>
@@ -124,7 +134,7 @@ export function TaskList() {
           {sectionTitle('Someday')}
           <div className="flex flex-col gap-1">
             {someday.map((t) => (
-              <TaskItem key={t.id} task={t} onOpenDetail={setDetailTask} onRequestDelete={setConfirmDeleteId} />
+              <TaskItem key={t.id} task={t} onOpenDetail={setDetailTask} onRequestDelete={handleRequestDelete} />
             ))}
           </div>
         </section>
@@ -135,7 +145,7 @@ export function TaskList() {
           {sectionTitle('Done')}
           <div className="flex flex-col gap-1 opacity-90">
             {completed.map((t) => (
-              <TaskItem key={t.id} task={t} onOpenDetail={setDetailTask} onRequestDelete={setConfirmDeleteId} />
+              <TaskItem key={t.id} task={t} onOpenDetail={setDetailTask} onRequestDelete={handleRequestDelete} />
             ))}
           </div>
         </section>
@@ -163,9 +173,9 @@ export function TaskList() {
           task={detailTask}
           open
           onClose={() => setDetailTask(null)}
-          onRequestDelete={(id) => {
+            onRequestDelete={(id) => {
             setDetailTask(null)
-            setConfirmDeleteId(id)
+            handleRequestDelete(id)
           }}
         />
       ) : null}
