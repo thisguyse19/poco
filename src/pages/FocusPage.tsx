@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useLocation } from 'react-router-dom'
 import { PageHeader } from '../components/tasks/PageHeader'
 import { TimerControls } from '../components/focus/TimerControls'
 import { FocusStats } from '../components/focus/FocusStats'
@@ -19,7 +18,6 @@ const FOCUS_HINTS = [
 ] as const
 
 export function FocusPage() {
-  const location = useLocation()
   const tasks = useTaskStore((s) => s.tasks)
   const settings = useSettingsStore((s) => s.settings)
   const {
@@ -73,50 +71,45 @@ export function FocusPage() {
     }
   }, [settings.keepScreenAwake, isRunning, mode])
 
-  const hideHeader = location.pathname === '/focus' && isRunning
-
   const pickControl = (
     <button
       type="button"
       onClick={() => setPickerOpen(true)}
-      className={`poco-press flex max-w-[13rem] min-h-10 items-center gap-2 rounded-[var(--radius-sm)] border px-3 py-2 text-left text-xs font-semibold ${
+      className={`poco-press flex w-full min-h-10 items-center gap-2 rounded-[var(--radius-sm)] border px-3 py-2.5 text-left text-sm font-semibold ${
         active
           ? 'border-[var(--accent)]/70 bg-[var(--accent-soft)] text-[var(--accent)]'
           : 'border-dashed border-[var(--border-default)] bg-[var(--bg-elevated)] text-[var(--text-secondary)]'
       }`}
     >
-      <Icon name="plus" size={16} className={active ? 'opacity-80' : 'text-[var(--accent)]'} />
+      <Icon name="plus" size={18} className={`shrink-0 ${active ? 'opacity-80' : 'text-[var(--accent)]'}`} />
       <span className="min-w-0 truncate">{active?.title ?? 'Pick task'}</span>
     </button>
   )
 
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
-      {!hideHeader ? (
-        <PageHeader title="Focus" subtitle={subtitle} rightSlot={pickControl} />
-      ) : (
-        <div className="pointer-events-none absolute right-4 top-[max(1rem,env(safe-area-inset-top,0px))] z-20 md:right-6">
-          <div className="pointer-events-auto">{pickControl}</div>
-        </div>
-      )}
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <PageHeader title="Focus" subtitle={subtitle} />
 
-      <div className="flex min-h-0 flex-1 flex-col items-center overflow-y-auto pb-[calc(var(--poco-mobile-nav-height)+0.5rem)] pt-4">
-        <TimerControls
-          mode={mode}
-          isRunning={isRunning}
-          progress={progress}
-          formatted={formatted}
-          sessionsCompleted={sessionsCompleted}
-          focusSessionsInCycle={focusSessionsInCycle}
-          compact={compactTimer}
-          onToggle={() => {
-            if (isRunning) pause()
-            else start()
-          }}
-          onReset={reset}
-          onSkip={skipToNextPhase}
-        />
-        <FocusStats />
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch]">
+        <div className="mx-auto flex w-full max-w-lg flex-col items-stretch px-4 pb-[calc(var(--poco-mobile-nav-height)+1rem)] pt-3">
+          <TimerControls
+            topSlot={pickControl}
+            mode={mode}
+            isRunning={isRunning}
+            progress={progress}
+            formatted={formatted}
+            sessionsCompleted={sessionsCompleted}
+            focusSessionsInCycle={focusSessionsInCycle}
+            compact={compactTimer}
+            onToggle={() => {
+              if (isRunning) pause()
+              else start()
+            }}
+            onReset={reset}
+            onSkip={skipToNextPhase}
+          />
+          <FocusStats />
+        </div>
       </div>
 
       <PocoBottomSheet open={pickerOpen} onBackdropClick={() => setPickerOpen(false)}>

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { useSettingsStore } from '../../stores/settingsStore'
 import type { TimerMode } from '../../types'
 import { Icon } from '../ui/Icon'
@@ -10,6 +11,8 @@ type Props = {
   sessionsCompleted: number
   focusSessionsInCycle: number
   compact?: boolean
+  /** Rendered directly above the timer ring (e.g. task picker chip) */
+  topSlot?: ReactNode
   onToggle: () => void
   onReset: () => void
   onSkip: () => void
@@ -35,6 +38,7 @@ export function TimerControls({
   sessionsCompleted,
   focusSessionsInCycle,
   compact,
+  topSlot,
   onToggle,
   onReset,
   onSkip,
@@ -50,7 +54,7 @@ export function TimerControls({
   const offset = c * (1 - progress)
 
   return (
-    <div className="flex flex-col items-center gap-6 px-4">
+    <div className="flex w-full flex-col items-center gap-4">
       <div className="flex gap-2">
         {[0, 1, 2, 3].map((i) => (
           <span
@@ -67,7 +71,9 @@ export function TimerControls({
         {modeLabel(mode)}
       </p>
 
-      <div className="relative flex items-center justify-center">
+      {topSlot ? <div className="w-full shrink-0 px-0">{topSlot}</div> : null}
+
+      <div className="relative flex shrink-0 items-center justify-center">
         <div
           className={`pointer-events-none absolute inset-0 rounded-none blur-3xl ${isRunning && !reduceMotion ? 'poco-timer-glow-pulse' : ''}`}
           style={{
@@ -75,7 +81,11 @@ export function TimerControls({
             opacity: isRunning ? 0.45 : 0.2,
           }}
         />
-        <svg width="220" height="220" viewBox="0 0 140 140" className={`relative z-[1] ${ringClass}`}>
+        <svg
+          viewBox="0 0 140 140"
+          className={`relative z-[1] aspect-square w-[min(88vw,220px)] max-w-[220px] shrink-0 ${ringClass}`}
+          aria-hidden
+        >
           <g transform="translate(70 70) rotate(-90) translate(-70 -70)">
             <circle cx="70" cy="70" r={r} stroke="var(--border-subtle)" strokeWidth="8" fill="none" />
             <circle
@@ -101,7 +111,7 @@ export function TimerControls({
         </div>
       </div>
 
-      <div className="flex w-full max-w-xs items-center justify-between gap-4">
+      <div className="flex w-full max-w-md shrink-0 items-center justify-between gap-4 px-1">
         <button type="button" className="poco-press text-[var(--text-secondary)]" aria-label="Reset" onClick={onReset}>
           <Icon name="circle" size={18} />
         </button>
@@ -111,17 +121,19 @@ export function TimerControls({
         <button
           type="button"
           aria-label={isRunning ? 'Pause' : 'Start'}
-          className="poco-press flex h-[52px] w-[52px] items-center justify-center rounded-none bg-[var(--accent)] text-[var(--text-inverse)] shadow-lg"
+          className="poco-press flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-none bg-[var(--accent)] text-[var(--text-inverse)] shadow-lg"
           onClick={onToggle}
         >
-          {isRunning ? (
-            <span className="flex gap-1">
-              <span className="h-5 w-1 rounded-none bg-current" />
-              <span className="h-5 w-1 rounded-none bg-current" />
-            </span>
-          ) : (
-            <span className="ml-1 border-y-[10px] border-l-[16px] border-y-transparent border-l-current" />
-          )}
+          <span className="flex h-6 w-6 items-center justify-center">
+            {isRunning ? (
+              <span className="flex gap-1">
+                <span className="h-5 w-1 rounded-none bg-current" />
+                <span className="h-5 w-1 rounded-none bg-current" />
+              </span>
+            ) : (
+              <span className="ml-0.5 border-y-[10px] border-l-[16px] border-y-transparent border-l-current" />
+            )}
+          </span>
         </button>
         <div className="text-right text-xs text-[var(--text-tertiary)]">
           <div className="font-semibold text-[var(--text-primary)]">{sessionsCompleted}</div>
@@ -130,7 +142,7 @@ export function TimerControls({
       </div>
 
       {!compact ? (
-        <div className="w-full max-w-xs">
+        <div className="w-full max-w-md shrink-0">
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-tertiary)]">
             Ambient
           </p>
