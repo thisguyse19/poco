@@ -38,6 +38,14 @@ export function PocoAnimatedCenterModal({
     setEntered(false)
   }, [open])
 
+  /** If transitionend never fires (e.g. reduced-motion / iOS), avoid a full-screen invisible layer blocking the app. */
+  useEffect(() => {
+    if (!open && mounted) {
+      const t = window.setTimeout(() => setMounted(false), ms + 150)
+      return () => window.clearTimeout(t)
+    }
+  }, [open, mounted, ms])
+
   const onPanelTransitionEnd = (e: React.TransitionEvent<HTMLDivElement>) => {
     if (e.target !== panelRef.current) return
     if (e.propertyName !== 'opacity' && e.propertyName !== 'transform') return
@@ -51,7 +59,9 @@ export function PocoAnimatedCenterModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[var(--poco-z-dialog-backdrop)] flex items-center justify-center p-4 max-md:pb-[var(--poco-mobile-nav-height)] md:p-6"
+      className={`fixed inset-0 z-[var(--poco-z-dialog-backdrop)] flex items-center justify-center p-4 max-md:pb-[var(--poco-mobile-nav-height)] md:p-6 ${
+        show ? 'pointer-events-auto' : 'pointer-events-none'
+      }`}
       role="presentation"
     >
       <button
@@ -62,6 +72,7 @@ export function PocoAnimatedCenterModal({
           opacity: show ? 1 : 0,
           transition,
           transitionTimingFunction: EASE,
+          pointerEvents: show ? 'auto' : 'none',
         }}
         onClick={onBackdropClick}
       />
