@@ -102,7 +102,7 @@ export function PocoBottomSheet({
         ref={sheetRef}
         role="dialog"
         aria-modal="true"
-        className={`fixed inset-x-0 z-[var(--poco-z-sheet-panel)] mx-auto flex max-h-[min(92dvh,calc(100dvh-env(safe-area-inset-top)))] max-w-lg flex-col border border-[var(--border-default)] bg-[var(--bg-elevated)] shadow-[0_-8px_32px_rgba(0,0,0,0.12)] max-md:bottom-[var(--poco-mobile-nav-height)] md:bottom-4 md:z-[var(--poco-z-sheet-panel-md)] md:max-h-[90dvh] md:shadow-xl ${sheetClassName}`}
+        className={`fixed inset-x-0 z-[var(--poco-z-sheet-panel)] mx-auto flex max-h-[min(76dvh,calc(100dvh-var(--poco-mobile-nav-height)-max(0.75rem,env(safe-area-inset-top))))] max-w-lg flex-col border border-[var(--border-default)] bg-[var(--bg-elevated)] shadow-[0_-8px_32px_rgba(0,0,0,0.12)] max-md:bottom-[var(--poco-mobile-nav-height)] md:bottom-4 md:z-[var(--poco-z-sheet-panel-md)] md:max-h-[90dvh] md:shadow-xl ${sheetClassName}`}
         style={{
           transform,
           transition,

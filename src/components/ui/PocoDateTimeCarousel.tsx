@@ -32,10 +32,10 @@ export function PocoDueDateTimeRow({
   const [th, tm] = timeStr.split(':').map((x) => (x ?? '00').padStart(2, '0'))
 
   return (
-    <div className="flex max-md:flex-col md:items-stretch gap-3">
-      <div className="flex min-h-[4.5rem] min-w-0 flex-[1.1] gap-0.5">
+    <div className="flex min-h-0 flex-row items-stretch gap-2">
+      <div className="flex min-h-0 min-w-0 flex-[1.12] gap-0.5">
         <PocoScrollPicker
-          compact
+          prominent
           value={dd}
           options={days}
           onChange={(v) => {
@@ -45,7 +45,7 @@ export function PocoDueDateTimeRow({
           format={(x) => String(Number(x))}
         />
         <PocoScrollPicker
-          compact
+          prominent
           value={dm}
           options={months}
           format={monthMmm}
@@ -56,7 +56,7 @@ export function PocoDueDateTimeRow({
           }}
         />
         <PocoScrollPicker
-          compact
+          prominent
           value={dy}
           options={years}
           onChange={(v) => {
@@ -66,9 +66,9 @@ export function PocoDueDateTimeRow({
           }}
         />
       </div>
-      <div className="flex min-h-[4.5rem] w-full min-w-0 flex-1 items-stretch gap-0.5 border-[var(--border-subtle)] max-md:border-t max-md:pt-2 md:border-l md:pl-3">
+      <div className="flex min-h-0 min-w-0 flex-1 items-stretch gap-0.5 border-l border-[var(--border-subtle)] pl-2">
         <PocoScrollPicker
-          compact
+          prominent
           value={th}
           options={Array.from({ length: 24 }, (_, i) => pad2(i))}
           onChange={(h) =>
@@ -78,11 +78,11 @@ export function PocoDueDateTimeRow({
             })
           }
         />
-        <span className="flex w-3 shrink-0 items-center justify-center pb-1 text-lg font-semibold leading-none text-[var(--text-tertiary)]">
+        <span className="flex w-3 shrink-0 items-center justify-center pb-0.5 text-lg font-semibold leading-none text-[var(--text-tertiary)]">
           :
         </span>
         <PocoScrollPicker
-          compact
+          prominent
           value={tm}
           options={Array.from({ length: 60 }, (_, i) => pad2(i))}
           onChange={(m) =>

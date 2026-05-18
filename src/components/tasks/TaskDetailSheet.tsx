@@ -183,7 +183,7 @@ export function TaskDetailSheet({
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 max-md:pb-[calc(var(--poco-mobile-nav-height)+0.75rem)]">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 pb-6">
           <h2 id={`${uid}-title`} className="sr-only">
             Task details
           </h2>
@@ -255,6 +255,28 @@ export function TaskDetailSheet({
             </button>
           )}
 
+          <p className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Repeat</p>
+          <div className="flex min-h-10 w-full gap-1.5">
+            {[
+              { label: 'None', rule: null },
+              { label: 'Daily', rule: { label: 'Daily', intervalDays: 1 } },
+              { label: 'Weekly', rule: { label: 'Weekly', intervalDays: 7 } },
+            ].map((opt) => (
+              <button
+                key={opt.label}
+                type="button"
+                className={`poco-press flex min-h-9 flex-1 items-center justify-center rounded-[var(--radius-sm)] border text-[11px] font-semibold ${
+                  JSON.stringify(draft.recurrence) === JSON.stringify(opt.rule)
+                    ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]'
+                    : 'border-[var(--border-default)] bg-[var(--bg-base)] text-[var(--text-secondary)]'
+                }`}
+                onClick={() => setDraft((d) => ({ ...d, recurrence: opt.rule }))}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
           <label className="mb-1 mt-4 block text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
             Description
           </label>
@@ -291,28 +313,6 @@ export function TaskDetailSheet({
                 onChange={(e) => setDraft((d) => ({ ...d, estimatedPomodoros: Number(e.target.value) || 0 }))}
               />
             </div>
-          </div>
-
-          <p className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Repeat</p>
-          <div className="flex flex-wrap gap-2">
-            {[
-              { label: 'None', rule: null },
-              { label: 'Daily', rule: { label: 'Daily', intervalDays: 1 } },
-              { label: 'Weekly', rule: { label: 'Weekly', intervalDays: 7 } },
-            ].map((opt) => (
-              <button
-                key={opt.label}
-                type="button"
-                className={`poco-press rounded-[var(--radius-sm)] border px-3 py-2 text-xs font-semibold ${
-                  JSON.stringify(draft.recurrence) === JSON.stringify(opt.rule)
-                    ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]'
-                    : 'border-[var(--border-default)] bg-[var(--bg-base)] text-[var(--text-secondary)]'
-                }`}
-                onClick={() => setDraft((d) => ({ ...d, recurrence: opt.rule }))}
-              >
-                {opt.label}
-              </button>
-            ))}
           </div>
 
           <label className="mt-4 flex items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] px-3 py-3 text-sm">

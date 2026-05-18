@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Icon } from '../components/ui/Icon'
 import { useSettingsStore } from '../stores/settingsStore'
@@ -74,55 +75,60 @@ export function AppLayout() {
         </main>
       </div>
 
-      <nav
-        className={`fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border-subtle)] bg-[var(--bg-base)] transition-transform duration-200 md:hidden ${
-          hideNav ? 'translate-y-full pointer-events-none' : ''
-        }`}
-        aria-hidden={hideNav}
-      >
-        <div className="grid grid-cols-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]">
-          <NavLink
-            to="/"
-            end
-            className={({ isActive }) =>
-              `poco-nav-tab flex min-h-[3.5rem] flex-col items-center justify-center gap-1 text-[11px] font-medium tracking-wide ${
-                isActive ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]'
-              }`
-            }
-          >
-            <span className="flex h-5 w-5 items-center justify-center">
-              <Icon name="tasks" size={20} />
-            </span>
-            Tasks
-          </NavLink>
-          <NavLink
-            to="/focus"
-            className={({ isActive }) =>
-              `poco-nav-tab flex min-h-[3.5rem] flex-col items-center justify-center gap-1 text-[11px] font-medium tracking-wide ${
-                isActive ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]'
-              }`
-            }
-          >
-            <span className="flex h-5 w-5 items-center justify-center">
-              <Icon name="focus" size={20} />
-            </span>
-            Focus
-          </NavLink>
-          <NavLink
-            to="/settings"
-            className={({ isActive }) =>
-              `poco-nav-tab flex min-h-[3.5rem] flex-col items-center justify-center gap-1 text-[11px] font-medium tracking-wide ${
-                isActive ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]'
-              }`
-            }
-          >
-            <span className="flex h-5 w-5 items-center justify-center">
-              <Icon name="settings" size={20} />
-            </span>
-            Settings
-          </NavLink>
-        </div>
-      </nav>
+      {typeof document !== 'undefined'
+        ? createPortal(
+            <nav
+              className={`fixed inset-x-0 bottom-0 z-[var(--poco-z-mobile-nav)] border-t border-[var(--border-subtle)] bg-[var(--bg-base)] transition-transform duration-200 md:hidden ${
+                hideNav ? 'translate-y-full pointer-events-none' : ''
+              }`}
+              aria-hidden={hideNav}
+            >
+              <div className="grid grid-cols-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]">
+                <NavLink
+                  to="/"
+                  end
+                  className={({ isActive }) =>
+                    `poco-nav-tab flex min-h-[3.5rem] flex-col items-center justify-center gap-1 text-[11px] font-medium tracking-wide ${
+                      isActive ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]'
+                    }`
+                  }
+                >
+                  <span className="flex h-5 w-5 items-center justify-center">
+                    <Icon name="tasks" size={20} />
+                  </span>
+                  Tasks
+                </NavLink>
+                <NavLink
+                  to="/focus"
+                  className={({ isActive }) =>
+                    `poco-nav-tab flex min-h-[3.5rem] flex-col items-center justify-center gap-1 text-[11px] font-medium tracking-wide ${
+                      isActive ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]'
+                    }`
+                  }
+                >
+                  <span className="flex h-5 w-5 items-center justify-center">
+                    <Icon name="focus" size={20} />
+                  </span>
+                  Focus
+                </NavLink>
+                <NavLink
+                  to="/settings"
+                  className={({ isActive }) =>
+                    `poco-nav-tab flex min-h-[3.5rem] flex-col items-center justify-center gap-1 text-[11px] font-medium tracking-wide ${
+                      isActive ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]'
+                    }`
+                  }
+                >
+                  <span className="flex h-5 w-5 items-center justify-center">
+                    <Icon name="settings" size={20} />
+                  </span>
+                  Settings
+                </NavLink>
+              </div>
+            </nav>,
+            document.body,
+          )
+        : null}
     </div>
   )
 }
