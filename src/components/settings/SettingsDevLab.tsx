@@ -147,6 +147,32 @@ export function SettingsDevLab() {
         >
           Copy viewport
         </button>
+        <button
+          type="button"
+          className="poco-press rounded-none border border-[var(--border-default)] px-3 py-2 text-xs font-semibold"
+          onClick={async () => {
+            if (!('Notification' in window)) {
+              setMsg('Notifications API is not available in this environment.')
+              return
+            }
+            const perm = await Notification.requestPermission()
+            if (perm !== 'granted') {
+              setMsg(`Notification permission was not granted (${perm}).`)
+              return
+            }
+            try {
+              new Notification('poco', {
+                body: 'Local notification test from Developer lab.',
+                tag: 'poco-dev-notification-test',
+              })
+              setMsg('A local notification was sent. If you do not see a banner, check system notification settings for this browser.')
+            } catch (e) {
+              setMsg(`Could not show notification: ${e instanceof Error ? e.message : String(e)}`)
+            }
+          }}
+        >
+          Test notification
+        </button>
       </div>
 
       <label className="flex items-center justify-between gap-3 rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm">
