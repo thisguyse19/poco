@@ -22,7 +22,7 @@ function chipStyles(kind: NlpPreviewChip['kind']) {
 function chipIcon(kind: NlpPreviewChip['kind']) {
   switch (kind) {
     case 'category':
-      return 'pin' as const
+      return 'tag' as const
     case 'date':
       return 'calendar' as const
     case 'time':
@@ -33,6 +33,8 @@ function chipIcon(kind: NlpPreviewChip['kind']) {
       return 'tasks' as const
   }
 }
+
+const PLACEHOLDER = 'Try "Send an email for @work tomorrow"'
 
 export function QuickAdd() {
   const addTask = useTaskStore((s) => s.addTask)
@@ -63,19 +65,19 @@ export function QuickAdd() {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="poco-press flex w-full items-center gap-2 rounded-none border border-dashed border-[var(--border-default)] bg-[var(--bg-elevated)] px-3 py-2.5 text-left text-sm text-[var(--text-secondary)] transition-opacity duration-300 [transition-timing-function:var(--ease-ios)]"
+          className="poco-press flex h-[2.75rem] w-full items-center gap-2 rounded-none border border-dashed border-[var(--border-default)] bg-[var(--bg-elevated)] px-3 text-left text-sm text-[var(--text-secondary)] transition-opacity duration-300 [transition-timing-function:var(--ease-ios)]"
         >
           <Icon name="plus" size={18} />
-          add a task
+          <span className="min-w-0 truncate">{PLACEHOLDER}</span>
         </button>
       ) : (
-        <div className="poco-quickadd-open rounded-none border border-[var(--border-default)] bg-[var(--bg-elevated)] p-2 shadow-sm">
-          <div className="flex items-start gap-2">
+        <div className="poco-quickadd-open rounded-none border border-[var(--border-default)] bg-[var(--bg-elevated)] px-3 py-0 shadow-sm">
+          <div className="flex h-[2.75rem] items-center gap-2">
             <textarea
-              className="poco-input min-h-[2.75rem] flex-1 resize-none rounded-none border-0 bg-transparent px-2 py-2 text-sm outline-none"
-              placeholder="add a task"
+              className="poco-input max-h-[2.75rem] min-h-0 flex-1 resize-none rounded-none border-0 bg-transparent px-2 py-1 text-sm leading-snug outline-none"
+              placeholder={PLACEHOLDER}
               value={text}
-              rows={2}
+              rows={1}
               onChange={(e) => setText(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -87,7 +89,7 @@ export function QuickAdd() {
             />
             <button
               type="button"
-              className="poco-press mt-0.5 rounded-none bg-[var(--accent)] p-2 text-[var(--text-inverse)]"
+              className="poco-press shrink-0 rounded-none bg-[var(--accent)] p-2 text-[var(--text-inverse)]"
               aria-label="Add task"
               onClick={submit}
             >
@@ -95,7 +97,7 @@ export function QuickAdd() {
             </button>
             <button
               type="button"
-              className="poco-press mt-0.5 p-2 text-[var(--text-tertiary)]"
+              className="poco-press shrink-0 p-2 text-[var(--text-tertiary)]"
               aria-label="Close"
               onClick={() => {
                 setOpen(false)
@@ -106,7 +108,7 @@ export function QuickAdd() {
             </button>
           </div>
           {parsed.chips.length > 0 ? (
-            <div className="mt-2 flex flex-wrap gap-1.5">
+            <div className="flex max-h-20 flex-wrap gap-1.5 overflow-y-auto border-t border-[var(--border-subtle)] px-0 py-2">
               {parsed.chips.map((c, i) => (
                 <span
                   key={`${c.label}-${i}`}

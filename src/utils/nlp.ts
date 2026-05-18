@@ -43,6 +43,8 @@ const MONTH_MAP: Record<string, string> = {
   dec: '12',
 }
 
+const MONTH_WORD = '(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)\\.?'
+
 function pad2(n: number) {
   return String(n).padStart(2, '0')
 }
@@ -83,25 +85,32 @@ export function parseQuickAdd(raw: string): NlpResult {
   let scheduledFor: ScheduledFor | undefined
   let priority: Priority | undefined
 
-  const endCat = s.match(/\s@([^\s@]+)\s*$/i)
-  if (endCat && endCat.index !== undefined) {
+  // Category: only explicit "for @tag" or trailing "@tag" — never a lone @ in the middle (avoids "July @cat 9" → July 9)
+  const forCat = s.match(/\bfor\s+@([A-Za-z0-9_]+)\b/i)
+  if (forCat && forCat.index !== undefined) {
+    category = forCat[1].replace(/_/g, ' ')
+    chips.push({ label: `@${forCat[1]}`, kind: 'category' })
+    s = (s.slice(0, forCat.index) + s.slice(forCat.index + forCat[0].length)).replace(/\s+/g, ' ').trim()
+  }
+  const endCat = s.match(/\s@([A-Za-z0-9_]+)\s*$/i)
+  if (!category && endCat && endCat.index !== undefined) {
     category = endCat[1].replace(/_/g, ' ')
     chips.push({ label: `@${endCat[1]}`, kind: 'category' })
     s = s.slice(0, endCat.index).trim()
-  } else {
-    const anyCat = s.match(/@([^\s@]+)/)
-    if (anyCat && anyCat.index !== undefined) {
-      category = anyCat[1].replace(/_/g, ' ')
-      chips.push({ label: `@${anyCat[1]}`, kind: 'category' })
-      s = (s.slice(0, anyCat.index) + s.slice(anyCat.index + anyCat[0].length)).replace(/\s+/g, ' ').trim()
-    }
   }
 
+  // "on 29 May at 9.30pm" / "on 29 May at 9:30 pm" — day month or month day
   const onDayMonthAt = s.match(
-    /\s+on\s+(\d{1,2})\s+([a-z]+)\.?\s+at\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i,
+    new RegExp(
+      `\\s+on\\s+(\\d{1,2})\\s+${MONTH_WORD}\\s+at\\s+(\\d{1,2})(?:[:.](\\d{2}))?\\s*(am|pm)\\b`,
+      'i',
+    ),
   )
   const onMonthDayAt = s.match(
-    /\s+on\s+([a-z]+)\.?\s+(\d{1,2})\s+at\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i,
+    new RegExp(
+      `\\s+on\\s+${MONTH_WORD}\\s+(\\d{1,2})\\s+at\\s+(\\d{1,2})(?:[:.](\\d{2}))?\\s*(am|pm)\\b`,
+      'i',
+    ),
   )
 
   if (onDayMonthAt && onDayMonthAt.index !== undefined) {
@@ -112,17 +121,15 @@ export function parseQuickAdd(raw: string): NlpResult {
     const ap = onDayMonthAt[5]
     if (mo && day >= 1 && day <= 31) {
       const y = resolveYearForDate(mo, day)
-      dueDate = `${y}-${mo}-${pad2(day)}`
       const t = toHHmm(hh, mm, ap)
       if (t) {
+        dueDate = `${y}-${mo}-${pad2(day)}`
         dueTime = t
         chips.push({ label: `${day} ${onDayMonthAt[2]} · ${t}`, kind: 'date' })
-      } else {
-        chips.push({ label: dueDate, kind: 'date' })
+        s = (s.slice(0, onDayMonthAt.index) + s.slice(onDayMonthAt.index + onDayMonthAt[0].length))
+          .replace(/\s+/g, ' ')
+          .trim()
       }
-      s = (s.slice(0, onDayMonthAt.index) + s.slice(onDayMonthAt.index + onDayMonthAt[0].length))
-        .replace(/\s+/g, ' ')
-        .trim()
     }
   } else if (onMonthDayAt && onMonthDayAt.index !== undefined) {
     const mo = monthToNum(onMonthDayAt[1])
@@ -132,17 +139,15 @@ export function parseQuickAdd(raw: string): NlpResult {
     const ap = onMonthDayAt[5]
     if (mo && day >= 1 && day <= 31) {
       const y = resolveYearForDate(mo, day)
-      dueDate = `${y}-${mo}-${pad2(day)}`
       const t = toHHmm(hh, mm, ap)
       if (t) {
+        dueDate = `${y}-${mo}-${pad2(day)}`
         dueTime = t
         chips.push({ label: `${onMonthDayAt[1]} ${day} · ${t}`, kind: 'date' })
-      } else {
-        chips.push({ label: dueDate, kind: 'date' })
+        s = (s.slice(0, onMonthDayAt.index) + s.slice(onMonthDayAt.index + onMonthDayAt[0].length))
+          .replace(/\s+/g, ' ')
+          .trim()
       }
-      s = (s.slice(0, onMonthDayAt.index) + s.slice(onMonthDayAt.index + onMonthDayAt[0].length))
-        .replace(/\s+/g, ' ')
-        .trim()
     }
   }
 
@@ -168,12 +173,16 @@ export function parseQuickAdd(raw: string): NlpResult {
     dueTime = t
     chips.push({ label: t, kind: 'time' })
     s = s
+      .replace(/\b\d{1,2}[:.]\d{2}\s*(am|pm)?\b/gi, ' ')
       .replace(/\b\d{1,2}:\d{2}\s*(am|pm)?\b/gi, ' ')
       .replace(/\b\d{1,2}\s*(am|pm)\b/gi, ' ')
       .trim()
   }
 
   let d = parseNamedDate(s.toLowerCase())
+  if (!d && !dueDate) {
+    d = parseDayFirstMonth(s.toLowerCase())
+  }
   if (!d && !dueDate) {
     const md = parseMonthDay(s)
     if (md) {
@@ -188,13 +197,25 @@ export function parseQuickAdd(raw: string): NlpResult {
       .replace(/\btoday\b/gi, ' ')
       .replace(/\btomorrow\b/gi, ' ')
       .replace(/\bnext week\b/gi, ' ')
-      .replace(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+\d{1,2}\b/gi, ' ')
+      .replace(new RegExp(`\\b\\d{1,2}\\s+${MONTH_WORD}\\b`, 'gi'), ' ')
+      .replace(new RegExp(`\\b${MONTH_WORD}\\s+\\d{1,2}\\b`, 'gi'), ' ')
       .replace(/\d{1,2}[/-]\d{1,2}/g, ' ')
       .trim()
   }
 
   const title = s.replace(/\s+/g, ' ').trim()
   return { title, category, dueDate, dueTime, scheduledFor, priority, chips }
+}
+
+/** e.g. "9 july", "15 December" */
+function parseDayFirstMonth(lower: string): string | null {
+  const m = lower.match(new RegExp(`\\b(\\d{1,2})\\s+${MONTH_WORD}\\b`, 'i'))
+  if (!m) return null
+  const day = Number(m[1])
+  const mo = monthToNum(m[2])
+  if (!mo || day < 1 || day > 31) return null
+  const y = resolveYearForDate(mo, day)
+  return `${y}-${mo}-${pad2(day)}`
 }
 
 function parseMonthDay(s: string): { month: string; day: string } | null {
@@ -222,20 +243,32 @@ function parseNamedDate(lower: string): string | null {
     d.setDate(d.getDate() + 7)
     return toLocalISODate(d)
   }
-  const m = lower.match(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(\d{1,2})\b/)
+  const m = lower.match(new RegExp(`\\b${MONTH_WORD}\\s+(\\d{1,2})\\b`, 'i'))
   if (m) {
-    const mo = MONTH_MAP[m[1].slice(0, 3)]
+    const mo = monthToNum(m[1])
     if (mo) {
       const y = new Date().getFullYear()
       const day = String(Number(m[2])).padStart(2, '0')
-      return `${y}-${mo}-${day}`
+      const candidate = new Date(y, Number(mo) - 1, Number(m[2]))
+      const t0 = new Date()
+      t0.setHours(0, 0, 0, 0)
+      let yy = y
+      if (candidate < t0) yy = y + 1
+      return `${yy}-${mo}-${day}`
     }
   }
   return null
 }
 
 function parseTimeToken(lower: string): string | null {
-  let m = lower.match(/\b(\d{1,2}):(\d{2})\s*(am|pm)?\b/)
+  let m = lower.match(/\b(\d{1,2})[:.](\d{2})\s*(am|pm)\b/i)
+  if (m) {
+    const h = Number(m[1])
+    const min = Number(m[2])
+    const ap = m[3]
+    return toHHmm(h, min, ap) ?? null
+  }
+  m = lower.match(/\b(\d{1,2}):(\d{2})\s*(am|pm)?\b/)
   if (m) {
     const h = Number(m[1])
     const min = Number(m[2])
