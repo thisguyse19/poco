@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { PageHeader } from '../components/tasks/PageHeader'
 import { TimerControls } from '../components/focus/TimerControls'
@@ -9,6 +9,14 @@ import { useTimer } from '../hooks/useTimer'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useTaskStore } from '../stores/taskStore'
 import { ambientController } from '../utils/ambient'
+
+const FOCUS_HINTS = [
+  'Mute other apps before you start—depth beats context switching.',
+  'Use breaks to stand and look away from the screen, not to scroll feeds.',
+  'One finished block beats five half-started ones.',
+  'Let the ring be a boundary: inside it, only this.',
+  'Your backlog can wait; this slice of time cannot.',
+] as const
 
 export function FocusPage() {
   const location = useLocation()
@@ -30,7 +38,14 @@ export function FocusPage() {
   } = useTimer()
 
   const [pickerOpen, setPickerOpen] = useState(false)
-  const density = settings.density === 'compact'
+  const compactTimer = settings.density === 'compact'
+
+  const active = tasks.find((t) => t.id === currentTaskId)
+
+  const subtitle = useMemo(() => {
+    const i = sessionsCompleted % FOCUS_HINTS.length
+    return FOCUS_HINTS[i] ?? FOCUS_HINTS[0]
+  }, [sessionsCompleted])
 
   useEffect(() => {
     const on = isRunning && mode === 'focus' && settings.ambientSound !== 'off'
@@ -58,29 +73,32 @@ export function FocusPage() {
     }
   }, [settings.keepScreenAwake, isRunning, mode])
 
-  const active = tasks.find((t) => t.id === currentTaskId)
+  const hideHeader = location.pathname === '/focus' && isRunning
+
+  const pickControl = (
+    <button
+      type="button"
+      onClick={() => setPickerOpen(true)}
+      className={`poco-press flex max-w-[13rem] min-h-10 items-center gap-2 rounded-[var(--radius-sm)] border px-3 py-2 text-left text-xs font-semibold ${
+        active
+          ? 'border-[var(--accent)]/70 bg-[var(--accent-soft)] text-[var(--accent)]'
+          : 'border-dashed border-[var(--border-default)] bg-[var(--bg-elevated)] text-[var(--text-secondary)]'
+      }`}
+    >
+      <Icon name="plus" size={16} className={active ? 'opacity-80' : 'text-[var(--accent)]'} />
+      <span className="min-w-0 truncate">{active?.title ?? 'Pick task'}</span>
+    </button>
+  )
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <div
-        className={`overflow-hidden transition-all duration-200 ${
-          location.pathname === '/focus' && isRunning ? 'max-h-0 -translate-y-full opacity-0 pointer-events-none' : 'max-h-40 opacity-100'
-        }`}
-      >
-        <PageHeader
-          title="Focus"
-          subtitle="Pomodoro timer linked to your tasks."
-          rightSlot={
-            <button
-              type="button"
-              className="poco-press rounded-[var(--radius-sm)] border border-[var(--border-default)] px-3 py-2 text-xs font-semibold text-[var(--text-secondary)]"
-              onClick={() => setPickerOpen(true)}
-            >
-              {active?.title ?? 'Pick task'}
-            </button>
-          }
-        />
-      </div>
+    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+      {!hideHeader ? (
+        <PageHeader title="Focus" subtitle={subtitle} rightSlot={pickControl} />
+      ) : (
+        <div className="pointer-events-none absolute right-4 top-[max(1rem,env(safe-area-inset-top,0px))] z-20 md:right-6">
+          <div className="pointer-events-auto">{pickControl}</div>
+        </div>
+      )}
 
       <div className="flex min-h-0 flex-1 flex-col items-center overflow-y-auto pb-[calc(var(--poco-mobile-nav-height)+0.5rem)] pt-4">
         <TimerControls
@@ -90,7 +108,7 @@ export function FocusPage() {
           formatted={formatted}
           sessionsCompleted={sessionsCompleted}
           focusSessionsInCycle={focusSessionsInCycle}
-          compact={density}
+          compact={compactTimer}
           onToggle={() => {
             if (isRunning) pause()
             else start()
@@ -102,7 +120,7 @@ export function FocusPage() {
       </div>
 
       <PocoBottomSheet open={pickerOpen} onBackdropClick={() => setPickerOpen(false)}>
-        <div className="max-md:pb-[calc(var(--poco-mobile-nav-height)+0.5rem)] p-4">
+        <div className="p-4 pb-6 max-md:pb-[calc(var(--poco-mobile-nav-height)+0.5rem)]">
           <div className="mb-3 flex items-center justify-between">
             <p className="font-serif text-lg">Choose task</p>
             <button type="button" className="poco-press p-2 text-[var(--text-tertiary)]" aria-label="Close" onClick={() => setPickerOpen(false)}>

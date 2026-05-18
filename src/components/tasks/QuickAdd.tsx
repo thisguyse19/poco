@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react'
 import { Icon } from '../ui/Icon'
 import { parseQuickAdd, type NlpPreviewChip } from '../../utils/nlp'
+import { formatNlpDateChipDisplay } from '../../utils/formatNlpChip'
 import { useTaskStore } from '../../stores/taskStore'
 import { triggerHaptic } from '../../utils/haptics'
+import { pocoDevLab } from '../../utils/pocoDevLab'
 
 function chipStyles(kind: NlpPreviewChip['kind']) {
   switch (kind) {
@@ -36,6 +38,11 @@ function chipIcon(kind: NlpPreviewChip['kind']) {
 
 const PLACEHOLDER = 'Try "Send an email for @work tomorrow"'
 
+function chipLabel(c: NlpPreviewChip, parsed: ReturnType<typeof parseQuickAdd>): string {
+  if (c.kind === 'date') return formatNlpDateChipDisplay(c.label, parsed.dueDate)
+  return c.label
+}
+
 export function QuickAdd() {
   const addTask = useTaskStore((s) => s.addTask)
   const [open, setOpen] = useState(false)
@@ -46,8 +53,12 @@ export function QuickAdd() {
   const submit = () => {
     const p = parseQuickAdd(text)
     if (!p.title.trim()) return
+    let title = p.title.trim()
+    if (pocoDevLab.get().stressSeedActive) {
+      title = `[sim] ${title}`
+    }
     addTask({
-      title: p.title,
+      title,
       category: p.category,
       dueDate: p.dueDate ?? null,
       dueTime: p.dueTime ?? null,
@@ -73,11 +84,16 @@ export function QuickAdd() {
       ) : (
         <div className="poco-quickadd-open rounded-none border border-[var(--border-default)] bg-[var(--bg-elevated)] px-3 py-0 shadow-sm">
           <div className="flex h-[2.75rem] items-center gap-2">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center text-[var(--accent)]" aria-hidden>
+              <Icon name="plus" size={18} />
+            </span>
             <textarea
-              className="poco-input max-h-[2.75rem] min-h-0 flex-1 resize-none rounded-none border-0 bg-transparent px-2 py-1 text-sm leading-snug outline-none"
+              className="poco-input max-h-[2.75rem] min-h-0 flex-1 resize-none rounded-none border-0 bg-transparent px-1 py-1 text-sm leading-snug outline-none"
               placeholder={PLACEHOLDER}
               value={text}
               rows={1}
+              enterKeyHint="done"
+              inputMode="text"
               onChange={(e) => setText(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -115,7 +131,7 @@ export function QuickAdd() {
                   className={`flex items-center gap-1 rounded-none border px-2 py-1 text-xs font-semibold ${chipStyles(c.kind)}`}
                 >
                   <Icon name={chipIcon(c.kind)} size={14} className="shrink-0 opacity-90" />
-                  {c.label}
+                  {chipLabel(c, parsed)}
                 </span>
               ))}
             </div>

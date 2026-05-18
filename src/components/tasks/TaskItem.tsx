@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useRef, useState, useSyncExternalStore } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Priority, ScheduledFor, Task } from '../../types'
 import { formatTaskDueDisplay } from '../../utils/formatTaskDue'
@@ -6,6 +6,8 @@ import { triggerHaptic } from '../../utils/haptics'
 import { Icon } from '../ui/Icon'
 import { useTaskStore } from '../../stores/taskStore'
 import { useTimerStore } from '../../stores/timerStore'
+
+import { pocoDevLab } from '../../utils/pocoDevLab'
 
 const SW = 160
 
@@ -61,6 +63,12 @@ export function TaskItem({
   const rescheduleLaterToday = useTaskStore((s) => s.rescheduleLaterToday)
   const rescheduleTomorrow = useTaskStore((s) => s.rescheduleTomorrow)
   const setCurrentTask = useTimerStore((s) => s.setCurrentTask)
+
+  const showTaskIds = useSyncExternalStore(
+    (cb) => pocoDevLab.subscribe(() => cb()),
+    () => pocoDevLab.get().showTaskIds,
+    () => false,
+  )
 
   const [optionsOpen, setOptionsOpen] = useState(false)
   const [editMode, setEditMode] = useState(false)
@@ -165,7 +173,7 @@ export function TaskItem({
       ) : null}
 
       <div
-        className={`relative z-[1] bg-[var(--bg-elevated)] px-2 py-2 transition-transform duration-200 [transition-timing-function:var(--ease-ios)] ${
+        className={`relative z-[1] bg-[var(--bg-elevated)] px-2 py-[var(--task-py)] transition-transform duration-200 [transition-timing-function:var(--ease-ios)] ${
           task.completed ? 'opacity-60' : ''
         } ${justCompleted ? 'animate-taskCompleteSoft' : ''}`}
         style={{ transform: `translateX(${displayTranslate}px)` }}
@@ -235,7 +243,14 @@ export function TaskItem({
               <div>
                 <div className="flex items-center gap-1.5">
                   {priorityDot(task.priority)}
-                  <p className="text-sm font-medium leading-snug text-[var(--text-primary)]">{task.title}</p>
+                  <p className="text-sm font-medium leading-snug text-[var(--text-primary)]">
+                    {task.title}
+                    {showTaskIds ? (
+                      <span className="ml-1 align-middle font-mono text-[10px] font-normal text-[var(--text-tertiary)]">
+                        {task.id.slice(0, 8)}…
+                      </span>
+                    ) : null}
+                  </p>
                 </div>
                 {task.description ? (
                   <p className="mt-0.5 text-xs leading-snug text-[var(--text-secondary)]">{task.description}</p>

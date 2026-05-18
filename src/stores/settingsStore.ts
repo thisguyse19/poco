@@ -6,6 +6,7 @@ export const DEFAULT_SETTINGS: Settings = {
   onboardingComplete: false,
   theme: 'light',
   density: 'default',
+  fontScale: 'md',
   reduceMotion: false,
   haptics: true,
   ambientSound: 'off',
