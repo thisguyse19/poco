@@ -26,7 +26,14 @@ function useCategoryExpanded() {
   return { map, toggle }
 }
 
-export function TaskList() {
+function taskMatchesSearch(t: Task, q: string): boolean {
+  const needle = q.trim().toLowerCase()
+  if (!needle) return true
+  const blob = [t.title, t.description, t.notes, t.category].filter(Boolean).join(' ').toLowerCase()
+  return blob.includes(needle)
+}
+
+export function TaskList({ searchQuery = '' }: { searchQuery?: string }) {
   const tasks = useTaskStore((s) => s.tasks)
   const deleteTask = useTaskStore((s) => s.deleteTask)
   const confirmDelete = useSettingsStore((s) => s.settings.confirmDelete)
@@ -49,6 +56,7 @@ export function TaskList() {
     const someday: Task[] = []
     const completed: Task[] = []
     for (const t of tasks) {
+      if (!taskMatchesSearch(t, searchQuery)) continue
       if (t.completed) {
         completed.push(t)
         continue
@@ -59,7 +67,7 @@ export function TaskList() {
       else someday.push(t)
     }
     return { inbox, today, tomorrow, someday, completed }
-  }, [tasks])
+  }, [tasks, searchQuery])
 
   const todayByCategory = useMemo(() => {
     const sorted = sortTodayTasks(today)
@@ -96,7 +104,7 @@ export function TaskList() {
                 <div key={cat}>
                   <button
                     type="button"
-                    className="poco-press mb-1 flex w-full items-center justify-between rounded-[var(--radius-sm)] px-1 py-2 text-left"
+                    className="poco-press mb-1 flex w-full items-center justify-between rounded-none px-1 py-2 text-left"
                     onClick={() => toggle(cat)}
                   >
                     <span className="text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
@@ -153,6 +161,15 @@ export function TaskList() {
 
       {tasks.length === 0 ? (
         <p className="py-10 text-center text-sm text-[var(--text-secondary)]">No tasks yet. Add one above.</p>
+      ) : null}
+      {tasks.length > 0 &&
+      searchQuery.trim() &&
+      inbox.length === 0 &&
+      todayByCategory.length === 0 &&
+      tomorrow.length === 0 &&
+      someday.length === 0 &&
+      completed.length === 0 ? (
+        <p className="py-10 text-center text-sm text-[var(--text-secondary)]">No tasks match your search.</p>
       ) : null}
 
       <PocoConfirmDialog

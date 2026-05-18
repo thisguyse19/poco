@@ -18,12 +18,13 @@
   --priority-medium: #c5a55a;
   --priority-high: #b85c5c;
   --pin-color: #7a6fa8;
-  --radius-sm: 2px;
-  --radius-md: 4px;
-  --radius-lg: 6px;
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
   --font-serif: 'Instrument Serif', Georgia, serif;
   --font-sans: 'Manrope', system-ui, sans-serif;
   --ease-out-soft: cubic-bezier(0.33, 1, 0.68, 1);
+  --ease-ios: cubic-bezier(0.22, 1, 0.36, 1);
   --transition-fast: 160ms var(--ease-out-soft);
   --transition-normal: 200ms var(--ease-out-soft);
   --transition-press: 140ms var(--ease-out-soft);
@@ -142,7 +143,7 @@ textarea {
 }
 *::-webkit-scrollbar-thumb {
   background: var(--border-default);
-  border-radius: 2px;
+  border-radius: 0;
 }
 
 :focus-visible {
@@ -170,6 +171,10 @@ textarea {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+  .poco-quickadd-open,
+  .poco-task-options-enter {
+    animation: none !important;
+  }
 }
 
 [data-reduce-motion='true'] *,
@@ -178,6 +183,10 @@ textarea {
   animation-duration: 0.01ms !important;
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;
+}
+[data-reduce-motion='true'] .poco-quickadd-open,
+[data-reduce-motion='true'] .poco-task-options-enter {
+  animation: none !important;
 }
 
 .poco-press {
@@ -304,4 +313,73 @@ textarea {
 }
 .poco-scrollbar-none::-webkit-scrollbar {
   display: none;
+}
+
+input[type='search']::-webkit-search-decoration,
+input[type='search']::-webkit-search-cancel-button,
+input[type='search']::-webkit-search-results-button,
+input[type='search']::-webkit-search-results-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type='checkbox'],
+input[type='radio'] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin: 0;
+  border: 1.5px solid var(--border-default);
+  background: var(--bg-elevated);
+  border-radius: 0;
+  vertical-align: middle;
+}
+
+input[type='checkbox']:checked {
+  border-color: var(--accent);
+  background: var(--accent);
+  box-shadow: inset 0 0 0 2px var(--bg-elevated);
+}
+
+input[type='number'] {
+  appearance: textfield;
+}
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+@keyframes poco-quickadd-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.poco-quickadd-open {
+  animation: poco-quickadd-reveal 300ms var(--ease-ios) both;
+}
+
+@keyframes poco-options-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.poco-task-options-enter {
+  animation: poco-options-reveal 220ms var(--ease-ios) both;
+}
+
+[data-reduce-motion='true'] .poco-quickadd-open,
+[data-reduce-motion='true'] .poco-task-options-enter {
+  animation: none !important;
 }

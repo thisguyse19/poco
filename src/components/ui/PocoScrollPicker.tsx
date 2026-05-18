@@ -87,7 +87,15 @@ export function PocoScrollPicker<T extends string | number>({
         <div style={{ height: PAD }} aria-hidden />
       </div>
       <div
-        className="pointer-events-none absolute left-0 right-0 top-1/2 z-[1] h-[28px] -translate-y-1/2 border-y border-[var(--border-subtle)] bg-[var(--bg-base)]/50"
+        className="pointer-events-none absolute left-0 right-0 top-1/2 z-[1] h-[28px] -translate-y-1/2 border-y border-[var(--border-subtle)] bg-[var(--bg-elevated)]/55"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 z-[2] h-[26px] bg-gradient-to-b from-[var(--bg-elevated)] via-[var(--bg-elevated)]/85 to-transparent"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-[26px] bg-gradient-to-t from-[var(--bg-elevated)] via-[var(--bg-elevated)]/85 to-transparent"
         aria-hidden
       />
     </div>

@@ -19,6 +19,7 @@ type IconName =
   | 'flag'
   | 'more-h'
   | 'flame'
+  | 'search'
 
 export function Icon({
   name,
@@ -165,6 +166,13 @@ export function Icon({
             {...common}
             d="M12 22c4-2 6-5 6-9 0-4-3-7-6-10-3 3-6 6-6 10 0 4 2 7 6 9z"
           />
+        </svg>
+      )
+    case 'search':
+      return (
+        <svg viewBox="0 0 24 24" style={s} className={className} aria-hidden>
+          <circle cx="10.5" cy="10.5" r="6.5" {...common} />
+          <path {...common} d="M15 15l6 6" />
         </svg>
       )
     default:

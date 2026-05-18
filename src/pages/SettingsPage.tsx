@@ -1,10 +1,29 @@
 import { useRef, useState } from 'react'
 import { PageHeader } from '../components/tasks/PageHeader'
+import { Icon } from '../components/ui/Icon'
 import { PocoConfirmDialog } from '../components/ui/PocoConfirmDialog'
 import { PocoMessageDialog } from '../components/ui/PocoMessageDialog'
 import { useSettingsStore, DEFAULT_SETTINGS } from '../stores/settingsStore'
 import { storage } from '../services/storage'
 import type { DensityName, ThemeName } from '../types'
+
+function themeIcon(t: ThemeName) {
+  if (t === 'light') return <Icon name="sun" size={20} />
+  if (t === 'dark') return <Icon name="moon" size={20} />
+  return <Icon name="circle" size={20} />
+}
+
+function DensityPreview({ d }: { d: DensityName }) {
+  const gap = d === 'compact' ? 'gap-0.5' : d === 'default' ? 'gap-1' : 'gap-1.5'
+  const h = d === 'compact' ? 'h-0.5' : d === 'default' ? 'h-1' : 'h-1.5'
+  return (
+    <div className={`flex w-8 flex-col ${gap}`} aria-hidden>
+      <span className={`w-full bg-current ${h}`} />
+      <span className={`w-full bg-current ${h}`} />
+      <span className={`w-full bg-current ${h}`} />
+    </div>
+  )
+}
 
 export function SettingsPage() {
   const { settings, updateSettings, resetSettings } = useSettingsStore()
@@ -40,45 +59,67 @@ export function SettingsPage() {
     }
   }
 
+  const rowClass =
+    'flex items-center justify-between gap-3 rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-3 text-sm'
+
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <PageHeader title="Settings" subtitle="Tune appearance, focus, and data." />
       <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-[calc(var(--poco-mobile-nav-height)+1rem)] pt-2 md:px-6">
         <section className="mb-8 space-y-3">
           <h3 className="font-serif text-lg">Appearance</h3>
-          <div className="flex flex-wrap gap-2">
-            {(['light', 'dark', 'shrouded'] as ThemeName[]).map((t) => (
-              <button
-                key={t}
-                type="button"
-                className={`poco-press rounded-[var(--radius-sm)] border px-3 py-2 text-xs font-semibold capitalize ${
-                  settings.theme === t
-                    ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]'
-                    : 'border-[var(--border-default)] bg-[var(--bg-elevated)]'
-                }`}
-                onClick={() => updateSettings({ theme: t })}
-              >
-                {t}
-              </button>
-            ))}
+
+          <div className="overflow-hidden rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)]">
+            <div className="flex items-center gap-2 border-b border-[var(--border-subtle)] px-3 py-2.5">
+              <Icon name="sun" size={16} className="text-[var(--text-tertiary)]" />
+              <span className="text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Theme</span>
+            </div>
+            <div className="grid grid-cols-3 divide-x divide-[var(--border-subtle)]">
+              {(['light', 'dark', 'shrouded'] as ThemeName[]).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  className={`poco-press flex flex-col items-center gap-2 px-2 py-4 text-xs font-semibold capitalize transition-colors duration-200 [transition-timing-function:var(--ease-ios)] ${
+                    settings.theme === t
+                      ? 'bg-[var(--accent-soft)] text-[var(--accent)]'
+                      : 'text-[var(--text-secondary)]'
+                  }`}
+                  onClick={() => updateSettings({ theme: t })}
+                >
+                  <span className="text-[var(--text-primary)]">{themeIcon(t)}</span>
+                  {t}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {(['compact', 'default', 'relaxed'] as DensityName[]).map((d) => (
-              <button
-                key={d}
-                type="button"
-                className={`poco-press rounded-[var(--radius-sm)] border px-3 py-2 text-xs font-semibold capitalize ${
-                  settings.density === d
-                    ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]'
-                    : 'border-[var(--border-default)] bg-[var(--bg-elevated)]'
-                }`}
-                onClick={() => updateSettings({ density: d })}
-              >
-                {d}
-              </button>
-            ))}
+
+          <div className="overflow-hidden rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)]">
+            <div className="flex items-center gap-2 border-b border-[var(--border-subtle)] px-3 py-2.5">
+              <Icon name="tasks" size={16} className="text-[var(--text-tertiary)]" />
+              <span className="text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Compactness</span>
+            </div>
+            <div className="grid grid-cols-3 divide-x divide-[var(--border-subtle)]">
+              {(['compact', 'default', 'relaxed'] as DensityName[]).map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  className={`poco-press flex flex-col items-center gap-2 px-2 py-4 text-xs font-semibold capitalize transition-colors duration-200 [transition-timing-function:var(--ease-ios)] ${
+                    settings.density === d
+                      ? 'bg-[var(--accent-soft)] text-[var(--accent)]'
+                      : 'text-[var(--text-secondary)]'
+                  }`}
+                  onClick={() => updateSettings({ density: d })}
+                >
+                  <span className="text-[var(--text-primary)]">
+                    <DensityPreview d={d} />
+                  </span>
+                  {d}
+                </button>
+              ))}
+            </div>
           </div>
-          <label className="flex items-center justify-between rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-3 text-sm">
+
+          <label className={rowClass}>
             <span>Reduce motion</span>
             <input
               type="checkbox"
@@ -86,7 +127,7 @@ export function SettingsPage() {
               onChange={(e) => updateSettings({ reduceMotion: e.target.checked })}
             />
           </label>
-          <label className="flex items-center justify-between rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-3 text-sm">
+          <label className={rowClass}>
             <span>OLED optimisation</span>
             <input
               type="checkbox"
@@ -104,12 +145,12 @@ export function SettingsPage() {
               type="number"
               min={5}
               max={120}
-              className="poco-input mt-1 w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-input)] px-3 py-2 text-sm"
+              className="poco-input mt-1 w-full rounded-none border border-[var(--border-default)] bg-[var(--bg-input)] px-3 py-2 text-sm"
               value={settings.focusDurationMinutes}
               onChange={(e) => updateSettings({ focusDurationMinutes: Number(e.target.value) || 25 })}
             />
           </label>
-          <label className="flex items-center justify-between rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-3 text-sm">
+          <label className={rowClass}>
             <span>Auto-start breaks</span>
             <input
               type="checkbox"
@@ -117,7 +158,7 @@ export function SettingsPage() {
               onChange={(e) => updateSettings({ autoStartBreaks: e.target.checked })}
             />
           </label>
-          <label className="flex items-center justify-between rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-3 text-sm">
+          <label className={rowClass}>
             <span>Auto-start next focus</span>
             <input
               type="checkbox"
@@ -125,7 +166,7 @@ export function SettingsPage() {
               onChange={(e) => updateSettings({ autoStartNext: e.target.checked })}
             />
           </label>
-          <label className="flex items-center justify-between rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-3 text-sm">
+          <label className={rowClass}>
             <span>Keep screen awake</span>
             <input
               type="checkbox"
@@ -137,11 +178,11 @@ export function SettingsPage() {
 
         <section className="mb-8 space-y-3">
           <h3 className="font-serif text-lg">Behaviour</h3>
-          <label className="flex items-center justify-between rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-3 text-sm">
+          <label className={rowClass}>
             <span>Haptics</span>
             <input type="checkbox" checked={settings.haptics} onChange={(e) => updateSettings({ haptics: e.target.checked })} />
           </label>
-          <label className="flex items-center justify-between rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-3 text-sm">
+          <label className={rowClass}>
             <span>Confirm before delete</span>
             <input
               type="checkbox"
@@ -155,7 +196,7 @@ export function SettingsPage() {
               type="number"
               min={0}
               max={23}
-              className="poco-input mt-1 w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-input)] px-3 py-2 text-sm"
+              className="poco-input mt-1 w-full rounded-none border border-[var(--border-default)] bg-[var(--bg-input)] px-3 py-2 text-sm"
               value={settings.endOfDayReviewHour}
               onChange={(e) => updateSettings({ endOfDayReviewHour: Number(e.target.value) || 20 })}
             />
@@ -165,12 +206,16 @@ export function SettingsPage() {
         <section className="mb-8 space-y-3">
           <h3 className="font-serif text-lg">Data</h3>
           <div className="flex flex-wrap gap-2">
-            <button type="button" className="poco-press rounded-[var(--radius-sm)] border border-[var(--border-default)] px-4 py-2 text-sm font-semibold" onClick={exportJson}>
+            <button
+              type="button"
+              className="poco-press rounded-none border border-[var(--border-default)] px-4 py-2 text-sm font-semibold"
+              onClick={exportJson}
+            >
               Export JSON
             </button>
             <button
               type="button"
-              className="poco-press rounded-[var(--radius-sm)] border border-[var(--border-default)] px-4 py-2 text-sm font-semibold"
+              className="poco-press rounded-none border border-[var(--border-default)] px-4 py-2 text-sm font-semibold"
               onClick={() => fileRef.current?.click()}
             >
               Import JSON
@@ -188,7 +233,7 @@ export function SettingsPage() {
             />
             <button
               type="button"
-              className="poco-press rounded-[var(--radius-sm)] border border-[var(--priority-high)]/50 px-4 py-2 text-sm font-semibold text-[var(--priority-high)]"
+              className="poco-press rounded-none border border-[var(--priority-high)]/50 px-4 py-2 text-sm font-semibold text-[var(--priority-high)]"
               onClick={() => setClearOpen(true)}
             >
               Clear all data

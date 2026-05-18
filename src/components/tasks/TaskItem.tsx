@@ -7,10 +7,10 @@ import { Icon } from '../ui/Icon'
 import { useTaskStore } from '../../stores/taskStore'
 import { useTimerStore } from '../../stores/timerStore'
 
-const SW = 160 /** 10rem */
+const SW = 160
 
 const toolBtn =
-  'poco-press flex h-11 min-w-[2.5rem] flex-col items-center justify-center gap-0.5 rounded-[var(--radius-sm)] border border-[var(--border-default)] bg-[var(--bg-base)] px-0.5 py-1 text-[var(--text-secondary)] transition-colors'
+  'poco-press flex h-9 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 border-0 bg-[var(--bg-subtle)] px-1 py-1 text-[var(--text-secondary)] transition-colors duration-200 [transition-timing-function:var(--ease-ios)] active:bg-[var(--accent-soft)] active:text-[var(--accent)]'
 
 const priBg: Record<Priority, string> = {
   low: 'bg-[var(--priority-low)]',
@@ -19,7 +19,7 @@ const priBg: Record<Priority, string> = {
 }
 
 function priorityDot(p: Priority) {
-  return <span className={`h-[7px] w-[7px] shrink-0 rounded-full ${priBg[p]}`} />
+  return <span className={`h-1.5 w-1.5 shrink-0 rounded-none ${priBg[p]}`} aria-hidden />
 }
 
 function scheduleChip(s: ScheduledFor) {
@@ -27,14 +27,16 @@ function scheduleChip(s: ScheduledFor) {
     s === 'inbox' ? 'Inbox' : s === 'today' ? 'Today' : s === 'tomorrow' ? 'Tomorrow' : 'Someday'
   const cls =
     s === 'today'
-      ? 'border-[var(--accent)]/40 bg-[var(--accent-soft)] text-[var(--accent)]'
+      ? 'border-[var(--accent)]/50 bg-[var(--accent-soft)] text-[var(--accent)]'
       : s === 'tomorrow'
-        ? 'border-[var(--priority-low)]/40 bg-[var(--bg-subtle)] text-[var(--priority-low)]'
+        ? 'border-[var(--priority-low)]/50 bg-[var(--bg-subtle)] text-[var(--priority-low)]'
         : s === 'inbox'
           ? 'border-[var(--border-default)] bg-[var(--bg-subtle)] text-[var(--text-secondary)]'
-          : 'border-[var(--pin-color)]/30 bg-[var(--bg-subtle)] text-[var(--pin-color)]'
+          : 'border-[var(--pin-color)]/50 bg-[var(--bg-subtle)] text-[var(--pin-color)]'
   return (
-    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${cls}`}>
+    <span
+      className={`rounded-none border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${cls}`}
+    >
       {label}
     </span>
   )
@@ -60,6 +62,7 @@ export function TaskItem({
   const rescheduleTomorrow = useTaskStore((s) => s.rescheduleTomorrow)
   const setCurrentTask = useTimerStore((s) => s.setCurrentTask)
 
+  const [optionsOpen, setOptionsOpen] = useState(false)
   const [editMode, setEditMode] = useState(false)
   const [titleDraft, setTitleDraft] = useState(task.title)
   const [flowPanel, setFlowPanel] = useState<Flow>(null)
@@ -68,12 +71,25 @@ export function TaskItem({
   const [dragOriginOpen, setDragOriginOpen] = useState(false)
   const startX = useRef(0)
   const dragDeltaRef = useRef(0)
+  const suppressNextClick = useRef(false)
   const [justCompleted, setJustCompleted] = useState(false)
+
+  const closeOptions = useCallback(() => {
+    setOptionsOpen(false)
+    setEditMode(false)
+    setFlowPanel(null)
+  }, [])
+
+  const toggleOptions = () => {
+    if (task.completed || editMode) return
+    if (optionsOpen) closeOptions()
+    else setOptionsOpen(true)
+    triggerHaptic(6)
+  }
 
   const commitTitle = useCallback(() => {
     updateTask(task.id, { title: titleDraft })
     setEditMode(false)
-    setFlowPanel(null)
   }, [task.id, titleDraft, updateTask])
 
   const displayTranslate = (() => {
@@ -85,6 +101,7 @@ export function TaskItem({
 
   const onTouchStart = (e: React.TouchEvent) => {
     if (task.completed) return
+    suppressNextClick.current = false
     startX.current = e.touches[0].clientX
     setDragOriginOpen(swipeOpen)
     setDragDelta(0)
@@ -95,6 +112,7 @@ export function TaskItem({
     const delta = e.touches[0].clientX - startX.current
     dragDeltaRef.current = delta
     setDragDelta(delta)
+    if (Math.abs(delta) > 14) suppressNextClick.current = true
   }
   const onTouchEnd = () => {
     if (task.completed) return
@@ -107,10 +125,13 @@ export function TaskItem({
     }
     setDragDelta(0)
     dragDeltaRef.current = 0
+    window.setTimeout(() => {
+      suppressNextClick.current = false
+    }, 32)
   }
 
   return (
-    <div className="group relative animate-fadeIn overflow-hidden rounded-[var(--radius-md)] transition-colors hover:bg-[var(--bg-subtle)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] touch-pan-y">
+    <div className="group relative touch-pan-y overflow-hidden rounded-none border border-transparent transition-colors duration-200 [transition-timing-function:var(--ease-ios)] hover:border-[var(--border-subtle)] hover:bg-[var(--bg-subtle)] focus-within:border-[var(--border-default)] animate-fadeIn">
       {!task.completed ? (
         <div
           className="pointer-events-none absolute inset-y-0 right-0 z-0 flex w-[10rem] border-l border-[var(--border-subtle)]"
@@ -144,7 +165,7 @@ export function TaskItem({
       ) : null}
 
       <div
-        className={`relative z-[1] bg-[var(--bg-elevated)] px-2 py-[var(--task-py,0.625rem)] transition-transform duration-200 ease-out ${
+        className={`relative z-[1] bg-[var(--bg-elevated)] px-2 py-2 transition-transform duration-200 [transition-timing-function:var(--ease-ios)] ${
           task.completed ? 'opacity-60' : ''
         } ${justCompleted ? 'animate-taskCompleteSoft' : ''}`}
         style={{ transform: `translateX(${displayTranslate}px)` }}
@@ -152,12 +173,13 @@ export function TaskItem({
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-start gap-2">
           <button
             type="button"
-            className="poco-press flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--border-default)]"
+            className="poco-press mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-none border border-[var(--border-default)] bg-[var(--bg-elevated)]"
             aria-label={task.completed ? 'Mark incomplete' : 'Mark complete'}
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation()
               if (!task.completed) setJustCompleted(true)
               toggleComplete(task.id)
               window.setTimeout(() => setJustCompleted(false), 450)
@@ -165,23 +187,45 @@ export function TaskItem({
             }}
           >
             {task.completed ? (
-              <span className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-[var(--accent)] text-[var(--text-inverse)]">
+              <span className="flex h-4 w-4 items-center justify-center bg-[var(--accent)] text-[var(--text-inverse)]">
                 <Icon name="check" size={10} />
               </span>
             ) : (
-              <span className="h-[18px] w-[18px] rounded-full border-[1.5px] border-[var(--border-default)]" />
+              <span className="h-4 w-4 rounded-none border border-[var(--border-default)]" />
             )}
           </button>
 
-          <div className="min-w-0 flex-1">
+          <div
+            className="min-w-0 flex-1 cursor-pointer"
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                toggleOptions()
+              }
+            }}
+            onClick={() => {
+              if (suppressNextClick.current) return
+              toggleOptions()
+            }}
+          >
             {editMode ? (
               <input
-                className="poco-input h-9 w-full rounded-[var(--radius-sm)] border border-[var(--border-default)] bg-[var(--bg-input)] px-2 text-sm font-medium"
+                className="poco-input w-full rounded-none border border-[var(--border-default)] bg-[var(--bg-input)] px-2 py-1.5 text-sm font-medium"
                 value={titleDraft}
+                onClick={(e) => e.stopPropagation()}
                 onChange={(e) => setTitleDraft(e.target.value)}
-                onBlur={commitTitle}
+                onBlur={() => {
+                  commitTitle()
+                  closeOptions()
+                }}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') commitTitle()
+                  e.stopPropagation()
+                  if (e.key === 'Enter') {
+                    commitTitle()
+                    closeOptions()
+                  }
                   if (e.key === 'Escape') {
                     setTitleDraft(task.title)
                     setEditMode(false)
@@ -190,133 +234,133 @@ export function TaskItem({
                 autoFocus
               />
             ) : (
-              <button
-                type="button"
-                className="w-full text-left"
-                disabled={task.completed}
-                tabIndex={task.completed ? -1 : 0}
-                onClick={() => {
-                  if (!task.completed) {
-                    setTitleDraft(task.title)
-                    setEditMode(true)
-                  }
-                }}
-              >
-                <div className="flex items-start gap-2">
+              <div>
+                <div className="flex items-center gap-1.5">
                   {priorityDot(task.priority)}
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium leading-snug text-[var(--text-primary)]">{task.title}</p>
-                    {task.description ? (
-                      <p className="mt-0.5 pl-[15px] text-xs text-[var(--text-secondary)]">{task.description}</p>
-                    ) : null}
-                    <div className="mt-1 flex flex-wrap items-center gap-1.5 pl-[15px]">
-                      {task.pinned ? <Icon name="pin" size={12} className="text-[var(--pin-color)]" /> : null}
-                      {(task.estimatedPomodoros > 0 || task.actualPomodoros > 0) && (
-                        <span className="flex items-center gap-0.5 text-[10px] font-semibold text-[var(--text-tertiary)]">
-                          <Icon name="flame" size={12} className="text-[var(--priority-medium)]" />
-                          {task.actualPomodoros}/{task.estimatedPomodoros || '—'}
-                        </span>
-                      )}
-                      {formatTaskDueDisplay(task.dueDate, task.dueTime) ? (
-                        <span className="text-[10px] font-medium text-[var(--text-tertiary)]">
-                          {formatTaskDueDisplay(task.dueDate, task.dueTime)}
-                        </span>
-                      ) : null}
-                      {task.recurrence ? (
-                        <span className="text-[10px] text-[var(--text-tertiary)]">{task.recurrence.label}</span>
-                      ) : null}
-                      {scheduleChip(task.scheduledFor)}
-                    </div>
-                  </div>
+                  <p className="text-sm font-medium leading-snug text-[var(--text-primary)]">{task.title}</p>
                 </div>
-              </button>
+                {task.description ? (
+                  <p className="mt-0.5 text-xs leading-snug text-[var(--text-secondary)]">{task.description}</p>
+                ) : null}
+                <div className="mt-0.5 flex flex-wrap items-center gap-1">
+                  {task.pinned ? <Icon name="pin" size={12} className="text-[var(--pin-color)]" /> : null}
+                  {(task.estimatedPomodoros > 0 || task.actualPomodoros > 0) && (
+                    <span className="flex items-center gap-0.5 text-[10px] font-semibold text-[var(--text-tertiary)]">
+                      <Icon name="flame" size={12} className="text-[var(--priority-medium)]" />
+                      {task.actualPomodoros}/{task.estimatedPomodoros || '—'}
+                    </span>
+                  )}
+                  {formatTaskDueDisplay(task.dueDate, task.dueTime) ? (
+                    <span className="text-[10px] font-medium text-[var(--text-tertiary)]">
+                      {formatTaskDueDisplay(task.dueDate, task.dueTime)}
+                    </span>
+                  ) : null}
+                  {task.recurrence ? (
+                    <span className="text-[10px] text-[var(--text-tertiary)]">{task.recurrence.label}</span>
+                  ) : null}
+                  {scheduleChip(task.scheduledFor)}
+                </div>
+              </div>
             )}
           </div>
 
-          <div className="flex shrink-0 items-center gap-1">
+          <div className="flex shrink-0 flex-col gap-1 pt-0.5">
             {editMode ? (
               <button
                 type="button"
-                className="poco-press h-9 rounded-[var(--radius-sm)] bg-[var(--accent)] px-3 text-xs font-semibold text-[var(--text-inverse)]"
-                onClick={commitTitle}
+                className="poco-press rounded-none bg-[var(--accent)] px-2 py-1.5 text-xs font-semibold text-[var(--text-inverse)]"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  commitTitle()
+                  closeOptions()
+                }}
               >
                 Done
               </button>
             ) : (
               <button
                 type="button"
-                className={`poco-press flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] border border-transparent text-[var(--text-secondary)] md:opacity-0 md:transition-opacity md:group-hover:opacity-100 md:focus-within:opacity-100 ${
-                  task.completed ? 'invisible' : ''
-                }`}
+                className="poco-press flex h-8 w-8 items-center justify-center rounded-none border-0 bg-transparent text-[var(--text-secondary)] transition-opacity duration-200 [transition-timing-function:var(--ease-ios)]"
                 aria-label="Open focus with task"
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation()
                   setCurrentTask(task.id)
                   navigate('/focus')
                   triggerHaptic(10)
                 }}
               >
-                <Icon name="timer" size={15} />
+                <Icon name="timer" size={16} />
               </button>
             )}
           </div>
         </div>
 
-        {editMode && !task.completed ? (
-          <div className="mt-2 border-t border-[var(--border-subtle)] pt-2" data-no-edit onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between gap-1">
-                <button
-                  type="button"
-                  className={`${toolBtn} ${flowPanel === 'when' ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]' : ''}`}
-                  onClick={() => setFlowPanel((f) => (f === 'when' ? null : 'when'))}
-                >
-                  <Icon name="calendar" size={16} />
-                  <span className="text-[10px] font-semibold leading-tight tracking-tight">When</span>
-                </button>
-                <button
-                  type="button"
-                  className={`${toolBtn} ${flowPanel === 'priority' ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]' : ''}`}
-                  onClick={() => setFlowPanel((f) => (f === 'priority' ? null : 'priority'))}
-                >
-                  <Icon name="flag" size={16} />
-                  <span className="text-[10px] font-semibold leading-tight tracking-tight">Priority</span>
-                </button>
-                <button
-                  type="button"
-                  className={`${toolBtn} ${task.pinned ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]' : ''}`}
-                  onClick={() => {
-                    if (task.pinned) unpinTask(task.id)
-                    else pinTask(task.id)
-                    triggerHaptic(10)
-                  }}
-                >
-                  <Icon name="pin" size={16} />
-                  <span className="text-[10px] font-semibold leading-tight tracking-tight">Pin</span>
-                </button>
-                <button
-                  type="button"
-                  className={toolBtn}
-                  onClick={() => onOpenDetail(task)}
-                >
-                  <Icon name="more-h" size={16} />
-                  <span className="text-[10px] font-semibold leading-tight tracking-tight">Details</span>
-                </button>
-                <button
-                  type="button"
-                  className={`${toolBtn} border-[var(--priority-high)]/40 text-[var(--priority-high)]`}
-                  onClick={() => onRequestDelete(task.id)}
-                >
-                  <Icon name="trash" size={16} />
-                  <span className="text-[10px] font-semibold leading-tight tracking-tight">Delete</span>
-                </button>
+        {optionsOpen && !task.completed ? (
+          <div
+            className="poco-task-options-enter mt-2 border-t border-[var(--border-subtle)] pt-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-2 flex gap-1">
+              <button
+                type="button"
+                className={`${toolBtn} ${flowPanel === 'when' ? 'bg-[var(--accent-soft)] text-[var(--accent)]' : ''}`}
+                onClick={() => setFlowPanel((f) => (f === 'when' ? null : 'when'))}
+              >
+                <Icon name="calendar" size={16} />
+                <span className="text-[10px] font-semibold leading-tight">When</span>
+              </button>
+              <button
+                type="button"
+                className={`${toolBtn} ${flowPanel === 'priority' ? 'bg-[var(--accent-soft)] text-[var(--accent)]' : ''}`}
+                onClick={() => setFlowPanel((f) => (f === 'priority' ? null : 'priority'))}
+              >
+                <Icon name="flag" size={16} />
+                <span className="text-[10px] font-semibold leading-tight">Priority</span>
+              </button>
+              <button
+                type="button"
+                className={`${toolBtn} ${task.pinned ? 'bg-[var(--accent-soft)] text-[var(--accent)]' : ''}`}
+                onClick={() => {
+                  if (task.pinned) unpinTask(task.id)
+                  else pinTask(task.id)
+                  triggerHaptic(10)
+                }}
+              >
+                <Icon name="pin" size={16} />
+                <span className="text-[10px] font-semibold leading-tight">Pin</span>
+              </button>
+              <button
+                type="button"
+                className={toolBtn}
+                onClick={() => {
+                  setTitleDraft(task.title)
+                  setEditMode(true)
+                }}
+              >
+                <Icon name="edit" size={16} />
+                <span className="text-[10px] font-semibold leading-tight">Rename</span>
+              </button>
+              <button type="button" className={toolBtn} onClick={() => onOpenDetail(task)}>
+                <Icon name="more-h" size={16} />
+                <span className="text-[10px] font-semibold leading-tight">Details</span>
+              </button>
+              <button
+                type="button"
+                className={`${toolBtn} text-[var(--priority-high)] active:bg-[var(--bg-subtle)]`}
+                onClick={() => onRequestDelete(task.id)}
+              >
+                <Icon name="trash" size={16} />
+                <span className="text-[10px] font-semibold leading-tight">Delete</span>
+              </button>
             </div>
 
             {flowPanel === 'when' ? (
-              <div className="mt-2 flex min-h-10 w-full items-stretch gap-1.5 border-t border-[var(--border-subtle)] pt-2">
+              <div className="flex min-h-9 w-full items-stretch gap-1 border-t border-[var(--border-subtle)] pt-2">
                 {(['inbox', 'today', 'tomorrow', 'someday'] as ScheduledFor[]).map((h) => (
                   <button
                     key={h}
                     type="button"
-                    className={`poco-press flex min-h-9 min-w-0 flex-1 basis-0 items-center justify-center rounded-[var(--radius-sm)] border px-1 py-2 text-[11px] font-semibold leading-tight sm:text-xs ${
+                    className={`poco-press flex min-h-8 flex-1 items-center justify-center rounded-none border px-1 py-1.5 text-[11px] font-semibold capitalize leading-tight ${
                       task.scheduledFor === h
                         ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]'
                         : 'border-[var(--border-default)] bg-[var(--bg-base)] text-[var(--text-secondary)]'
@@ -330,39 +374,24 @@ export function TaskItem({
             ) : null}
 
             {flowPanel === 'priority' ? (
-              <div className="mt-2 flex min-h-10 w-full items-stretch gap-1.5 border-t border-[var(--border-subtle)] pt-2">
+              <div className="flex min-h-9 w-full items-stretch gap-1 border-t border-[var(--border-subtle)] pt-2">
                 {(['low', 'medium', 'high'] as Priority[]).map((p) => (
                   <button
                     key={p}
                     type="button"
-                    className={`poco-press flex min-h-9 min-w-0 flex-1 basis-0 items-center justify-center gap-1 rounded-[var(--radius-sm)] border px-1 py-2 text-[11px] font-semibold leading-tight sm:text-xs ${
+                    className={`poco-press flex min-h-8 flex-1 items-center justify-center gap-1 rounded-none border px-1 py-1.5 text-[11px] font-semibold capitalize leading-tight ${
                       task.priority === p
                         ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]'
                         : 'border-[var(--border-default)] bg-[var(--bg-base)] text-[var(--text-secondary)]'
                     }`}
                     onClick={() => updateTask(task.id, { priority: p })}
                   >
-                    <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${priBg[p]}`} />
-                    <span className="truncate capitalize">{p}</span>
+                    <span className={`h-1.5 w-1.5 shrink-0 rounded-none ${priBg[p]}`} />
+                    <span className="truncate">{p}</span>
                   </button>
                 ))}
               </div>
             ) : null}
-          </div>
-        ) : null}
-
-        {!task.completed && !editMode ? (
-          <div className="mt-1 flex justify-end md:opacity-0 md:transition-opacity md:group-hover:opacity-100 md:focus-within:opacity-100">
-            <button
-              type="button"
-              className="poco-press rounded-[var(--radius-sm)] px-2 py-1 text-[10px] font-semibold text-[var(--text-tertiary)]"
-              onClick={() => {
-                setTitleDraft(task.title)
-                setEditMode(true)
-              }}
-            >
-              Edit
-            </button>
           </div>
         ) : null}
       </div>

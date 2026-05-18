@@ -6,7 +6,7 @@ import { useTimerStore } from '../stores/timerStore'
 
 function navClass(active: boolean) {
   const base =
-    'flex items-center gap-3 min-h-[2.75rem] px-3 py-2 rounded-[var(--radius-md)] w-full transition-colors'
+    'flex items-center gap-3 min-h-[2.75rem] px-3 py-2 rounded-none w-full transition-colors'
   return active
     ? `${base} bg-[var(--accent-soft)] text-[var(--accent)]`
     : `${base} text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]`
@@ -49,7 +49,7 @@ export function AppLayout() {
           aria-hidden={hideNav}
         >
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 shrink-0 rounded-[var(--radius-sm)] bg-[var(--accent)]" aria-hidden />
+            <div className="h-9 w-9 shrink-0 rounded-none bg-[var(--accent)]" aria-hidden />
             <span className="font-serif text-xl tracking-wide text-[var(--text-primary)]">poco</span>
           </div>
           <nav className="flex flex-col gap-1">
@@ -60,7 +60,7 @@ export function AppLayout() {
           <div className="mt-auto pt-6">
             {profileName.trim() ? (
               <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--accent-soft)] text-xs font-semibold text-[var(--accent)]">
+                <span className="flex h-8 w-8 items-center justify-center rounded-none bg-[var(--accent-soft)] text-xs font-semibold text-[var(--accent)]">
                   {initial}
                 </span>
                 <span className="truncate font-medium">{profileName.trim()}</span>

@@ -55,7 +55,7 @@ export function TimerControls({
         {[0, 1, 2, 3].map((i) => (
           <span
             key={i}
-            className={`h-2 w-2 rounded-full ${
+            className={`h-2 w-2 rounded-none ${
               i <= focusSessionsInCycle && mode === 'focus'
                 ? 'bg-[var(--accent)]'
                 : 'bg-[var(--border-default)]'
@@ -69,7 +69,7 @@ export function TimerControls({
 
       <div className="relative flex items-center justify-center">
         <div
-          className={`pointer-events-none absolute inset-0 rounded-full blur-3xl ${isRunning && !reduceMotion ? 'poco-timer-glow-pulse' : ''}`}
+          className={`pointer-events-none absolute inset-0 rounded-none blur-3xl ${isRunning && !reduceMotion ? 'poco-timer-glow-pulse' : ''}`}
           style={{
             background: `radial-gradient(circle, ${tint}55 0%, transparent 65%)`,
             opacity: isRunning ? 0.45 : 0.2,
@@ -111,13 +111,13 @@ export function TimerControls({
         <button
           type="button"
           aria-label={isRunning ? 'Pause' : 'Start'}
-          className="poco-press flex h-[52px] w-[52px] items-center justify-center rounded-full bg-[var(--accent)] text-[var(--text-inverse)] shadow-lg"
+          className="poco-press flex h-[52px] w-[52px] items-center justify-center rounded-none bg-[var(--accent)] text-[var(--text-inverse)] shadow-lg"
           onClick={onToggle}
         >
           {isRunning ? (
             <span className="flex gap-1">
-              <span className="h-5 w-1 rounded-sm bg-current" />
-              <span className="h-5 w-1 rounded-sm bg-current" />
+              <span className="h-5 w-1 rounded-none bg-current" />
+              <span className="h-5 w-1 rounded-none bg-current" />
             </span>
           ) : (
             <span className="ml-1 border-y-[10px] border-l-[16px] border-y-transparent border-l-current" />
@@ -134,12 +134,12 @@ export function TimerControls({
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-tertiary)]">
             Ambient
           </p>
-          <div className="flex flex-wrap gap-1 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-subtle)] p-1">
+          <div className="flex flex-wrap gap-1 rounded-none border border-[var(--border-subtle)] bg-[var(--bg-subtle)] p-1">
             {(['off', 'rain', 'white', 'forest', 'cafe'] as const).map((a) => (
               <button
                 key={a}
                 type="button"
-                className={`poco-press flex-1 rounded-[var(--radius-sm)] px-2 py-2 text-[10px] font-semibold capitalize ${
+                className={`poco-press flex-1 rounded-none px-2 py-2 text-[10px] font-semibold capitalize ${
                   ambient === a ? 'bg-[var(--bg-elevated)] text-[var(--accent)] shadow-sm' : 'text-[var(--text-secondary)]'
                 }`}
                 onClick={() => {

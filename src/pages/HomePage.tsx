@@ -1,5 +1,6 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { PageHeader } from '../components/tasks/PageHeader'
+import { HomeSearchControl } from '../components/tasks/HomeSearchControl'
 import { QuickAdd } from '../components/tasks/QuickAdd'
 import { TaskList } from '../components/tasks/TaskList'
 import { ReviewModal } from '../components/reviews/ReviewModal'
@@ -17,6 +18,8 @@ function shouldShowReview(hour: number, dismissed: string | null, thresholdHour:
 
 export function HomePage() {
   const settings = useSettingsStore((s) => s.settings)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const showReview = useMemo(
     () => shouldShowReview(new Date().getHours(), settings.reviewDismissedAt, settings.endOfDayReviewHour),
@@ -24,10 +27,16 @@ export function HomePage() {
   )
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <PageHeader title="Tasks" subtitle="Everything is stored locally in this browser." />
+    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+      <PageHeader searchClearance title="Tasks" subtitle="Everything is stored locally in this browser." />
+      <HomeSearchControl
+        open={searchOpen}
+        query={searchQuery}
+        onOpenChange={setSearchOpen}
+        onQueryChange={setSearchQuery}
+      />
       <QuickAdd />
-      <TaskList />
+      <TaskList searchQuery={searchQuery} />
       {showReview ? <ReviewModal /> : null}
     </div>
   )

@@ -184,7 +184,7 @@ export function TaskDetailSheet({
             setDragY(0)
           }}
         >
-          <span className="h-1 w-10 rounded-full bg-[var(--border-default)]" />
+          <span className="h-1 w-10 rounded-none bg-[var(--border-default)]" />
         </div>
 
         <div className="grid grid-cols-3 items-center gap-2 border-b border-[var(--border-subtle)] px-3 pb-3">

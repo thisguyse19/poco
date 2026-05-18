@@ -1,8 +1,38 @@
 import { useMemo, useState } from 'react'
 import { Icon } from '../ui/Icon'
-import { parseQuickAdd } from '../../utils/nlp'
+import { parseQuickAdd, type NlpPreviewChip } from '../../utils/nlp'
 import { useTaskStore } from '../../stores/taskStore'
 import { triggerHaptic } from '../../utils/haptics'
+
+function chipStyles(kind: NlpPreviewChip['kind']) {
+  switch (kind) {
+    case 'category':
+      return 'border-[var(--pin-color)]/60 bg-[var(--bg-subtle)] text-[var(--pin-color)]'
+    case 'date':
+      return 'border-[var(--accent)]/60 bg-[var(--accent-soft)] text-[var(--accent)]'
+    case 'time':
+      return 'border-[var(--priority-medium)]/60 bg-[var(--bg-subtle)] text-[var(--priority-medium)]'
+    case 'priority':
+      return 'border-[var(--priority-high)]/50 bg-[var(--bg-subtle)] text-[var(--priority-high)]'
+    default:
+      return 'border-[var(--border-default)] bg-[var(--bg-subtle)] text-[var(--text-secondary)]'
+  }
+}
+
+function chipIcon(kind: NlpPreviewChip['kind']) {
+  switch (kind) {
+    case 'category':
+      return 'pin' as const
+    case 'date':
+      return 'calendar' as const
+    case 'time':
+      return 'timer' as const
+    case 'priority':
+      return 'flag' as const
+    default:
+      return 'tasks' as const
+  }
+}
 
 export function QuickAdd() {
   const addTask = useTaskStore((s) => s.addTask)
@@ -28,22 +58,22 @@ export function QuickAdd() {
   }
 
   return (
-    <div className="shrink-0 border-b border-[var(--border-subtle)] px-4 py-3 md:px-6">
+    <div className="shrink-0 border-b border-[var(--border-subtle)] px-4 py-2 md:px-6">
       {!open ? (
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="poco-press flex w-full items-center gap-2 rounded-[var(--radius-md)] border border-dashed border-[var(--border-default)] bg-[var(--bg-elevated)] px-3 py-3 text-left text-sm text-[var(--text-secondary)]"
+          className="poco-press flex w-full items-center gap-2 rounded-none border border-dashed border-[var(--border-default)] bg-[var(--bg-elevated)] px-3 py-2.5 text-left text-sm text-[var(--text-secondary)] transition-opacity duration-300 [transition-timing-function:var(--ease-ios)]"
         >
           <Icon name="plus" size={18} />
-          Quick add a task…
+          add a task
         </button>
       ) : (
-        <div className="animate-searchExpand overflow-hidden rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-elevated)] p-2">
+        <div className="poco-quickadd-open rounded-none border border-[var(--border-default)] bg-[var(--bg-elevated)] p-2 shadow-sm">
           <div className="flex items-start gap-2">
             <textarea
-              className="poco-input min-h-[3rem] flex-1 resize-none rounded-[var(--radius-sm)] border border-transparent bg-transparent px-2 py-2 text-sm outline-none"
-              placeholder="Try: Report @Work tomorrow 9am"
+              className="poco-input min-h-[2.75rem] flex-1 resize-none rounded-none border-0 bg-transparent px-2 py-2 text-sm outline-none"
+              placeholder="add a task"
               value={text}
               rows={2}
               onChange={(e) => setText(e.target.value)}
@@ -57,7 +87,7 @@ export function QuickAdd() {
             />
             <button
               type="button"
-              className="poco-press mt-1 rounded-[var(--radius-sm)] bg-[var(--accent)] p-2 text-[var(--text-inverse)]"
+              className="poco-press mt-0.5 rounded-none bg-[var(--accent)] p-2 text-[var(--text-inverse)]"
               aria-label="Add task"
               onClick={submit}
             >
@@ -65,7 +95,7 @@ export function QuickAdd() {
             </button>
             <button
               type="button"
-              className="poco-press mt-1 p-2 text-[var(--text-tertiary)]"
+              className="poco-press mt-0.5 p-2 text-[var(--text-tertiary)]"
               aria-label="Close"
               onClick={() => {
                 setOpen(false)
@@ -76,12 +106,13 @@ export function QuickAdd() {
             </button>
           </div>
           {parsed.chips.length > 0 ? (
-            <div className="mt-2 flex flex-wrap gap-2">
+            <div className="mt-2 flex flex-wrap gap-1.5">
               {parsed.chips.map((c, i) => (
                 <span
                   key={`${c.label}-${i}`}
-                  className="rounded-full border border-[var(--border-default)] bg-[var(--bg-subtle)] px-3 py-1 text-xs font-semibold text-[var(--text-primary)]"
+                  className={`flex items-center gap-1 rounded-none border px-2 py-1 text-xs font-semibold ${chipStyles(c.kind)}`}
                 >
+                  <Icon name={chipIcon(c.kind)} size={14} className="shrink-0 opacity-90" />
                   {c.label}
                 </span>
               ))}

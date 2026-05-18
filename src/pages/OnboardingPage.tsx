@@ -49,7 +49,7 @@ export function OnboardingPage() {
           {Array.from({ length: 6 }).map((_, i) => (
             <span
               key={i}
-              className={`h-1.5 w-1.5 rounded-full ${
+              className={`h-1.5 w-1.5 rounded-none ${
                 i === step ? 'bg-[var(--accent)]' : 'bg-[var(--border-default)]'
               }`}
             />
