@@ -4,6 +4,9 @@ const ROW_DEFAULT = 28
 const VISIBLE_DEFAULT = 84
 const ROW_COMPACT = 24
 const VISIBLE_COMPACT = 72
+/** Detail sheet: larger type, compact wheel window */
+const ROW_PROMINENT = 32
+const VISIBLE_PROMINENT = 76
 
 type PocoScrollPickerProps<T extends string | number> = {
   value: T
@@ -12,6 +15,8 @@ type PocoScrollPickerProps<T extends string | number> = {
   format?: (v: T) => string
   /** Tighter wheel for side-by-side layouts */
   compact?: boolean
+  /** Larger label + compact wheel (e.g. task due pickers) */
+  prominent?: boolean
 }
 
 export function PocoScrollPicker<T extends string | number>({
@@ -20,9 +25,10 @@ export function PocoScrollPicker<T extends string | number>({
   onChange,
   format = (v) => String(v),
   compact = false,
+  prominent = false,
 }: PocoScrollPickerProps<T>) {
-  const row = compact ? ROW_COMPACT : ROW_DEFAULT
-  const visibleH = compact ? VISIBLE_COMPACT : VISIBLE_DEFAULT
+  const row = prominent ? ROW_PROMINENT : compact ? ROW_COMPACT : ROW_DEFAULT
+  const visibleH = prominent ? VISIBLE_PROMINENT : compact ? VISIBLE_COMPACT : VISIBLE_DEFAULT
   const pad = (visibleH - row) / 2
   const uid = useId()
   const ref = useRef<HTMLDivElement>(null)
@@ -78,8 +84,12 @@ export function PocoScrollPicker<T extends string | number>({
             <button
               key={`${uid}-${i}`}
               type="button"
-              className={`flex w-full items-center justify-center font-medium ${
-                compact ? 'h-[24px] text-xs' : 'h-[28px] text-sm'
+              className={`flex w-full items-center justify-center font-semibold ${
+                prominent
+                  ? 'text-base leading-none'
+                  : compact
+                    ? 'text-xs font-medium'
+                    : 'text-sm font-medium'
               } ${selected ? 'text-[var(--text-primary)]' : 'text-[var(--text-tertiary)]'}`}
               style={{ height: row }}
               onClick={() => {
@@ -94,21 +104,18 @@ export function PocoScrollPicker<T extends string | number>({
         <div style={{ height: pad }} aria-hidden />
       </div>
       <div
-        className={`pointer-events-none absolute left-0 right-0 top-1/2 z-[1] -translate-y-1/2 border-y border-[var(--border-subtle)] bg-[var(--bg-elevated)]/55 ${
-          compact ? 'h-[24px]' : 'h-[28px]'
-        }`}
+        className="pointer-events-none absolute left-0 right-0 top-1/2 z-[1] -translate-y-1/2 border-y border-[var(--border-subtle)] bg-[var(--bg-elevated)]/55"
+        style={{ height: row }}
         aria-hidden
       />
       <div
-        className={`pointer-events-none absolute inset-x-0 top-0 z-[2] bg-gradient-to-b from-[var(--bg-elevated)] via-[var(--bg-elevated)]/85 to-transparent ${
-          compact ? 'h-[22px]' : 'h-[26px]'
-        }`}
+        className="pointer-events-none absolute inset-x-0 top-0 z-[2] bg-gradient-to-b from-[var(--bg-elevated)] via-[var(--bg-elevated)]/85 to-transparent"
+        style={{ height: Math.max(12, pad - 4) }}
         aria-hidden
       />
       <div
-        className={`pointer-events-none absolute inset-x-0 bottom-0 z-[2] bg-gradient-to-t from-[var(--bg-elevated)] via-[var(--bg-elevated)]/85 to-transparent ${
-          compact ? 'h-[22px]' : 'h-[26px]'
-        }`}
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] bg-gradient-to-t from-[var(--bg-elevated)] via-[var(--bg-elevated)]/85 to-transparent"
+        style={{ height: Math.max(12, pad - 4) }}
         aria-hidden
       />
     </div>
