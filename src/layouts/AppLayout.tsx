@@ -1,9 +1,12 @@
 import type { ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Icon } from '../components/ui/Icon'
+import { useLongPress } from '../hooks/useLongPress'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useTimerStore } from '../stores/timerStore'
+import { pocoDevLab } from '../utils/pocoDevLab'
+import { triggerHaptic } from '../utils/haptics'
 
 function navClass(active: boolean) {
   const base =
@@ -34,9 +37,19 @@ function DesktopSidebarItem({
 
 export function AppLayout() {
   const location = useLocation()
+  const navigate = useNavigate()
   const profileName = useSettingsStore((s) => s.settings.profileName)
   const timerRunning = useTimerStore((s) => s.isRunning)
   const hideNav = location.pathname === '/focus' && timerRunning
+
+  const settingsTabLongPress = useLongPress(
+    () => {
+      pocoDevLab.unlock()
+      triggerHaptic([22, 40, 22])
+      if (location.pathname !== '/settings') navigate('/settings')
+    },
+    { ms: 900, slopPx: 20 },
+  )
 
   const initial = profileName.trim().charAt(0).toUpperCase() || ''
 
@@ -118,6 +131,12 @@ export function AppLayout() {
                       isActive ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]'
                     }`
                   }
+                  onPointerDown={settingsTabLongPress.onPointerDown}
+                  onPointerMove={settingsTabLongPress.onPointerMove}
+                  onPointerUp={settingsTabLongPress.onPointerUp}
+                  onPointerCancel={settingsTabLongPress.onPointerCancel}
+                  onClick={settingsTabLongPress.onClick}
+                  onContextMenu={settingsTabLongPress.onContextMenu}
                 >
                   <span className="flex h-5 w-5 items-center justify-center">
                     <Icon name="settings" size={20} />

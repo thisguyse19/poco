@@ -4,12 +4,15 @@ export type PocoDevLabState = {
   unlocked: boolean
   showTaskIds: boolean
   stressSeedActive: boolean
+  /** Longest Prism pulse streak (full rounds cleared). */
+  prismBestStreak: number
 }
 
 const defaultState: PocoDevLabState = {
   unlocked: false,
   showTaskIds: false,
   stressSeedActive: false,
+  prismBestStreak: 0,
 }
 
 function read(): PocoDevLabState {
@@ -21,6 +24,7 @@ function read(): PocoDevLabState {
       unlocked: Boolean(o.unlocked),
       showTaskIds: Boolean(o.showTaskIds),
       stressSeedActive: Boolean(o.stressSeedActive),
+      prismBestStreak: typeof o.prismBestStreak === 'number' && Number.isFinite(o.prismBestStreak) ? Math.max(0, Math.floor(o.prismBestStreak)) : 0,
     }
   } catch {
     return { ...defaultState }
@@ -35,6 +39,10 @@ function write(next: PocoDevLabState) {
 export const pocoDevLab = {
   get(): PocoDevLabState {
     return read()
+  },
+  /** Same as set({ unlocked: true }) — used by Settings title taps and long-press unlocks. */
+  unlock() {
+    write({ ...read(), unlocked: true })
   },
   set(patch: Partial<PocoDevLabState>) {
     write({ ...read(), ...patch })

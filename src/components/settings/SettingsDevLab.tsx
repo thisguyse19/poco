@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { Icon } from '../ui/Icon'
 import { PocoMessageDialog } from '../ui/PocoMessageDialog'
+import { PrismPulseGame } from './PrismPulseGame'
 import { pocoDevLab } from '../../utils/pocoDevLab'
 import { storage } from '../../services/storage'
 import { useTaskStore } from '../../stores/taskStore'
@@ -108,8 +109,13 @@ export function SettingsDevLab() {
         <h3 className="font-serif text-lg text-[var(--accent)]">Developer lab</h3>
       </div>
       <p className="text-xs text-[var(--text-secondary)]">
-        Hidden panel for curious builders. Nothing here leaves your device. Konami works only while this panel is visible.
+        Hidden panel for curious builders. Nothing here leaves your device. Unlock: tap the word <strong className="text-[var(--text-primary)]">Settings</strong> seven
+        times (within four seconds between taps), <strong className="text-[var(--text-primary)]">hold the subtitle</strong> on this page for about a second, or{' '}
+        <strong className="text-[var(--text-primary)]">hold the bottom Settings tab</strong> on phones for about a second. Konami (↑↑↓↓←→←→BA) works only while this
+        panel is visible.
       </p>
+
+      <PrismPulseGame />
 
       <div className="rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-xs text-[var(--text-secondary)]">
         <span className="font-semibold text-[var(--text-primary)]">Storage footprint (approx):</span> {bytes.toLocaleString()} characters across{' '}

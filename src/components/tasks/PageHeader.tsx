@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useLongPress } from '../../hooks/useLongPress'
 
 type PageHeaderProps = {
   title: string
@@ -9,6 +10,8 @@ type PageHeaderProps = {
   className?: string
   /** e.g. dev unlock tap sequence on Settings */
   onTitleClick?: () => void
+  /** Hold subtitle (~0.85s) — mobile-friendly dev lab unlock on Settings */
+  onSubtitleLongPress?: () => void
 }
 
 export function PageHeader({
@@ -18,7 +21,15 @@ export function PageHeader({
   searchClearance = false,
   className = '',
   onTitleClick,
+  onSubtitleLongPress,
 }: PageHeaderProps) {
+  const subtitleLongPress = useLongPress(
+    () => {
+      onSubtitleLongPress?.()
+    },
+    { ms: 850, slopPx: 14, disabled: !onSubtitleLongPress },
+  )
+
   const endPad = searchClearance ? 'pr-14 md:pr-16' : 'pr-4 md:pr-6'
   return (
     <header
@@ -31,7 +42,14 @@ export function PageHeader({
         >
           {title}
         </h1>
-        {subtitle ? <p className="mt-1 text-sm text-[var(--text-secondary)]">{subtitle}</p> : null}
+        {subtitle ? (
+          <p
+            className={`mt-1 text-sm text-[var(--text-secondary)] ${onSubtitleLongPress ? 'touch-manipulation select-none' : ''}`}
+            {...(onSubtitleLongPress ? subtitleLongPress : {})}
+          >
+            {subtitle}
+          </p>
+        ) : null}
       </div>
       {rightSlot ? <div className="shrink-0">{rightSlot}</div> : null}
     </header>
