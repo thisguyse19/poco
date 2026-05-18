@@ -9,16 +9,16 @@ import { useTimerStore } from '../../stores/timerStore'
 
 import { pocoDevLab } from '../../utils/pocoDevLab'
 
-const W_LATER = 100
-const W_TOM = 100
-const W_DEL = 82
+const W_LATER = 68
+const W_TOM = 68
+const W_DEL = 44
 const DIV = 2
-/** Total width of swipe tray (px) */
+/** Width when tray fully open at rest (px); delete column can grow while overshooting */
 const SWIPE_BASE = W_LATER + DIV + W_TOM + DIV + W_DEL
 
 function rubber(extra: number) {
   if (extra <= 0) return 0
-  return Math.min(52, extra * 0.48 + (extra * extra) / 200)
+  return Math.min(44, extra * 0.34 + (extra * extra) / 220)
 }
 
 function txClosed(delta: number) {
@@ -41,7 +41,7 @@ function txOpenDrag(delta: number) {
 }
 
 const toolBtn =
-  'poco-press flex h-9 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 border-0 bg-[var(--bg-subtle)] px-1 py-1 text-[var(--text-secondary)] transition-colors duration-200 [transition-timing-function:var(--ease-ios)] active:bg-[var(--accent-soft)] active:text-[var(--accent)]'
+  'poco-press flex h-8 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 border-0 bg-[var(--bg-subtle)] px-0.5 py-0.5 text-[var(--text-secondary)] transition-colors duration-200 [transition-timing-function:var(--ease-ios)] active:bg-[var(--accent-soft)] active:text-[var(--accent)] md:h-9 md:px-1 md:py-1'
 
 const priBg: Record<Priority, string> = {
   low: 'bg-[var(--priority-low)]',
@@ -109,8 +109,10 @@ export function TaskItem({
   const [flowPanel, setFlowPanel] = useState<Flow>(null)
   const [dragDelta, setDragDelta] = useState(0)
   const [dragOriginOpen, setDragOriginOpen] = useState(false)
+  const [gestureActive, setGestureActive] = useState(false)
   const startX = useRef(0)
   const dragDeltaRef = useRef(0)
+  const dragRafRef = useRef<number | null>(null)
   const maxOvershootRef = useRef(0)
   const suppressNextClick = useRef(false)
   const [justCompleted, setJustCompleted] = useState(false)
@@ -153,13 +155,24 @@ export function TaskItem({
     return rowSwipeOpen ? -SWIPE_BASE : 0
   })()
 
-  const deleteCharge = Math.min(1, Math.max(0, (-displayTranslate - SWIPE_BASE) / 40))
+  const deleteGrow = Math.max(0, -displayTranslate - SWIPE_BASE)
+  const trayWidth = SWIPE_BASE + deleteGrow
+  const deleteCharge = Math.min(1, Math.max(0, deleteGrow / 24))
+
+  const scheduleDragFrame = useCallback(() => {
+    if (dragRafRef.current != null) return
+    dragRafRef.current = requestAnimationFrame(() => {
+      dragRafRef.current = null
+      setDragDelta(dragDeltaRef.current)
+    })
+  }, [])
 
   const onTouchStart = (e: React.TouchEvent) => {
     if (task.completed) return
     suppressNextClick.current = false
     startX.current = e.touches[0].clientX
     setDragOriginOpen(rowSwipeOpen)
+    setGestureActive(true)
     setDragDelta(0)
     dragDeltaRef.current = 0
     maxOvershootRef.current = 0
@@ -169,7 +182,7 @@ export function TaskItem({
     if (task.completed) return
     const delta = e.touches[0].clientX - startX.current
     dragDeltaRef.current = delta
-    setDragDelta(delta)
+    scheduleDragFrame()
     if (Math.abs(delta) > 14) suppressNextClick.current = true
     const tx = dragOriginOpen ? txOpenDrag(delta) : txClosed(delta)
     maxOvershootRef.current = Math.max(maxOvershootRef.current, Math.max(0, -tx - SWIPE_BASE))
@@ -177,10 +190,16 @@ export function TaskItem({
 
   const onTouchEnd = () => {
     if (task.completed) return
+    if (dragRafRef.current != null) {
+      cancelAnimationFrame(dragRafRef.current)
+      dragRafRef.current = null
+    }
+    setDragDelta(dragDeltaRef.current)
     const d = dragDeltaRef.current
     const finalTx = dragOriginOpen ? txOpenDrag(d) : txClosed(d)
+    maxOvershootRef.current = Math.max(maxOvershootRef.current, Math.max(0, -finalTx - SWIPE_BASE))
 
-    if (maxOvershootRef.current > 22) {
+    if (maxOvershootRef.current > 14) {
       onRequestDelete(task.id)
       triggerHaptic([30, 40, 30])
       closeSwipe()
@@ -194,6 +213,7 @@ export function TaskItem({
     setDragDelta(0)
     dragDeltaRef.current = 0
     maxOvershootRef.current = 0
+    setGestureActive(false)
     window.setTimeout(() => {
       suppressNextClick.current = false
     }, 32)
@@ -202,20 +222,19 @@ export function TaskItem({
   return (
     <div
       data-task-swipe-row
-      className="group relative touch-pan-y overflow-hidden rounded-none border border-transparent transition-colors duration-200 [transition-timing-function:var(--ease-ios)] hover:border-[var(--border-subtle)] hover:bg-[var(--bg-subtle)] focus-within:border-[var(--border-default)] animate-fadeIn"
+      className="group relative touch-manipulation overflow-hidden rounded-none border border-transparent transition-colors duration-200 [transition-timing-function:var(--ease-ios)] hover:border-[var(--border-subtle)] hover:bg-[var(--bg-subtle)] focus-within:border-[var(--border-default)] animate-fadeIn"
     >
       {!task.completed ? (
         <div
           data-task-actions
           className="pointer-events-none absolute inset-y-0 right-0 z-0 flex border-l border-[var(--border-subtle)] bg-[var(--bg-subtle)]"
-          style={{ width: SWIPE_BASE }}
-          aria-hidden
+          style={{ width: trayWidth }}
         >
           <button
             type="button"
             tabIndex={-1}
             style={{ width: W_LATER }}
-            className="pointer-events-auto flex shrink-0 items-center justify-center bg-[var(--bg-subtle)] text-[11px] font-semibold text-[var(--text-secondary)]"
+            className="pointer-events-auto flex shrink-0 items-center justify-center bg-[var(--bg-subtle)] text-[10px] font-semibold leading-tight text-[var(--text-secondary)]"
             onClick={() => {
               rescheduleLaterToday(task.id)
               triggerHaptic(12)
@@ -229,7 +248,7 @@ export function TaskItem({
             type="button"
             tabIndex={-1}
             style={{ width: W_TOM }}
-            className="pointer-events-auto flex shrink-0 items-center justify-center bg-[var(--bg-subtle)] text-[11px] font-semibold text-[var(--text-secondary)]"
+            className="pointer-events-auto flex shrink-0 items-center justify-center bg-[var(--bg-subtle)] text-[10px] font-semibold leading-tight text-[var(--text-secondary)]"
             onClick={() => {
               rescheduleTomorrow(task.id)
               triggerHaptic(12)
@@ -239,28 +258,36 @@ export function TaskItem({
             Tomorrow
           </button>
           <div className="w-px shrink-0 bg-[var(--border-default)]" />
-          <div
-            style={{ width: W_DEL }}
-            className={`pointer-events-none flex shrink-0 flex-col items-center justify-center border-l border-transparent text-[10px] font-bold uppercase tracking-wide transition-colors duration-150 ${
-              deleteCharge > 0.55
-                ? 'bg-[var(--priority-high)]/25 text-[var(--priority-high)]'
-                : deleteCharge > 0.12
+          <button
+            type="button"
+            tabIndex={-1}
+            style={{ width: W_DEL + deleteGrow }}
+            className={`pointer-events-auto flex shrink-0 flex-col items-center justify-center border-l border-transparent text-[9px] font-bold uppercase tracking-wide transition-colors duration-150 ${
+              deleteCharge > 0.5
+                ? 'bg-[var(--priority-high)]/28 text-[var(--priority-high)]'
+                : deleteCharge > 0.1
                   ? 'bg-[var(--priority-high)]/12 text-[var(--text-secondary)]'
                   : 'text-[var(--text-tertiary)]'
             }`}
+            onClick={(e) => {
+              e.stopPropagation()
+              onRequestDelete(task.id)
+              closeSwipe()
+              triggerHaptic(12)
+            }}
           >
-            <Icon name="trash" size={14} className="mb-0.5 opacity-80" />
+            <Icon name="trash" size={12} className="mb-0.5 opacity-85" />
             Delete
-          </div>
+          </button>
         </div>
       ) : null}
 
       <div
         data-swipe-open={rowSwipeOpen || dragDelta !== 0 ? task.id : undefined}
-        className={`relative z-[1] bg-[var(--bg-elevated)] px-2 py-[var(--task-py)] transition-transform duration-200 [transition-timing-function:var(--ease-ios)] ${
-          task.completed ? 'opacity-60' : ''
-        } ${justCompleted ? 'animate-taskCompleteSoft' : ''}`}
-        style={{ transform: `translateX(${displayTranslate}px)` }}
+        className={`relative z-[1] bg-[var(--bg-elevated)] px-2 py-[var(--task-py)] will-change-transform [transition-timing-function:var(--ease-ios)] ${
+          gestureActive || dragDelta !== 0 ? '' : 'transition-transform duration-200'
+        } ${task.completed ? 'opacity-60' : ''} ${justCompleted ? 'animate-taskCompleteSoft' : ''}`}
+        style={{ transform: `translate3d(${displayTranslate}px,0,0)`, touchAction: 'pan-x pan-y' }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
@@ -405,7 +432,7 @@ export function TaskItem({
                 className={`${toolBtn} ${flowPanel === 'when' ? 'bg-[var(--accent-soft)] text-[var(--accent)]' : ''}`}
                 onClick={() => setFlowPanel((f) => (f === 'when' ? null : 'when'))}
               >
-                <Icon name="calendar" size={16} />
+                <Icon name="calendar" size={14} className="shrink-0" />
                 <span className="text-[10px] font-semibold leading-tight">When</span>
               </button>
               <button
@@ -413,7 +440,7 @@ export function TaskItem({
                 className={`${toolBtn} ${flowPanel === 'priority' ? 'bg-[var(--accent-soft)] text-[var(--accent)]' : ''}`}
                 onClick={() => setFlowPanel((f) => (f === 'priority' ? null : 'priority'))}
               >
-                <Icon name="flag" size={16} />
+                <Icon name="flag" size={14} className="shrink-0" />
                 <span className="text-[10px] font-semibold leading-tight">Priority</span>
               </button>
               <button
@@ -425,7 +452,7 @@ export function TaskItem({
                   triggerHaptic(10)
                 }}
               >
-                <Icon name="pin" size={16} />
+                <Icon name="pin" size={14} className="shrink-0" />
                 <span className="text-[10px] font-semibold leading-tight">Pin</span>
               </button>
               <button
@@ -436,19 +463,19 @@ export function TaskItem({
                   setEditMode(true)
                 }}
               >
-                <Icon name="edit" size={16} />
+                <Icon name="edit" size={14} className="shrink-0" />
                 <span className="text-[10px] font-semibold leading-tight">Rename</span>
               </button>
               <button type="button" className={toolBtn} onClick={() => onOpenDetail(task)}>
-                <Icon name="more-h" size={16} />
+                <Icon name="more-h" size={14} className="shrink-0" />
                 <span className="text-[10px] font-semibold leading-tight">Details</span>
               </button>
               <button
                 type="button"
-                className={`${toolBtn} text-[var(--priority-high)] active:bg-[var(--bg-subtle)]`}
+                className={`${toolBtn} hidden text-[var(--priority-high)] active:bg-[var(--bg-subtle)] md:flex`}
                 onClick={() => onRequestDelete(task.id)}
               >
-                <Icon name="trash" size={16} />
+                <Icon name="trash" size={16} className="shrink-0" />
                 <span className="text-[10px] font-semibold leading-tight">Delete</span>
               </button>
             </div>

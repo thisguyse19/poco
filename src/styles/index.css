@@ -416,3 +416,43 @@ input[type='number']::-webkit-outer-spin-button {
 [data-reduce-motion='true'] .poco-task-options-enter {
   animation: none !important;
 }
+
+/* Onboarding: lightweight motion demos */
+@keyframes poco-onboard-swipe {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  40% {
+    transform: translateX(-76px);
+  }
+  55% {
+    transform: translateX(-76px);
+  }
+}
+.poco-onboard-swipe-card {
+  animation: poco-onboard-swipe 3.1s ease-in-out infinite;
+}
+
+@keyframes poco-onboard-ring {
+  0% {
+    stroke-dashoffset: 88;
+    opacity: 0.85;
+  }
+  50% {
+    stroke-dashoffset: 22;
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 88;
+    opacity: 0.85;
+  }
+}
+.poco-onboard-ring-arc {
+  animation: poco-onboard-ring 2.8s ease-in-out infinite;
+}
+
+[data-reduce-motion='true'] .poco-onboard-swipe-card,
+[data-reduce-motion='true'] .poco-onboard-ring-arc {
+  animation: none !important;
+}
