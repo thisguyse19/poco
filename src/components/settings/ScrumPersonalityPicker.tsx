@@ -186,14 +186,14 @@ export function ScrumPersonalityPicker({
 
       <PocoMessageDialog
         open={boldR21Info}
-        title="Bold R21 unlocked"
-        message="Bold R21 is the late-night voice: slow-burn sensual, shamelessly flirty, and allergic to stiff corporate pillow talk. Stand-up and stand-down copy leans in close—adults only, still no creep behaviour. Flip back to regular Bold whenever the room gets too hot."
+        title="Bold R21 — locked"
+        message="Bold R21 is the no-chaperone voice: flirty-blunt, hungry verbs, says the quiet part loud. Stand-up and stand-down lines read like a late-night confession, not a quarterly report. 18+ wording in the app only—don’t be creepy to real humans. Switch back to plain Bold when you need to look innocent."
         onClose={() => setBoldR21Info(false)}
       />
       <PocoMessageDialog
         open={snarkyR21Info}
-        title="Snarky R21 unlocked"
-        message="Snarky R21 is your foul-mouthed coworker who skipped the professionalism workshop: blunt insults, crude jokes, zero HR varnish—nothing sexual, just aggressively honest. Great if you want copy that sounds like a hangover arguing with the backlog. Pick a softer tone before you screenshot anything."
+        title="Snarky R21 — mouth unlocked"
+        message="Snarky R21 is the coworker who never got the memo about “professional tone”: loud, crude, allergic to HR poetry—nothing sexual, just insults aimed at the plan, not people. Flip to something softer before you screenshot this for your boss."
         onClose={() => setSnarkyR21Info(false)}
       />
     </>
