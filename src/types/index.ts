@@ -70,7 +70,17 @@ export type LandingView = 'tasks' | 'focus'
 export type ScrumMasterGender = 'male' | 'female'
 
 /** Coaching tone for Scrum Master copy and nudges */
-export type ScrumMasterPersonality = 'warm' | 'coach' | 'minimal' | 'playful' | 'stern' | 'bold'
+export type ScrumMasterPersonality =
+  | 'warm'
+  | 'coach'
+  | 'minimal'
+  | 'playful'
+  | 'snarky'
+  | 'bold'
+  /** Unlocked secret mode — spicy adult voice, no corporate filter */
+  | 'boldR21'
+  /** Unlocked secret mode — sarcastic, profane, non-sexual */
+  | 'snarkyR21'
 
 export interface ScrumMasterSettings {
   enabled: boolean

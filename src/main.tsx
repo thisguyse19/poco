@@ -8,7 +8,3 @@ createRoot(document.getElementById('root')!).render(
     <App />
   </StrictMode>,
 )
-
-window.addEventListener('load', () => {
-  void navigator.serviceWorker.register('/poco/sw.js', { scope: '/poco/' }).catch(() => {})
-})

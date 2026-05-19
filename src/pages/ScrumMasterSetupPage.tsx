@@ -5,11 +5,8 @@ import type { ScrumMasterGender, ScrumMasterPersonality } from '../types'
 import { PocoHourCarousel } from '../components/ui/PocoHourCarousel'
 import { PocoMinuteCarousel } from '../components/ui/PocoMinuteCarousel'
 import { PocoScrollPicker } from '../components/ui/PocoScrollPicker'
-import {
-  normalizeTimeHHMM,
-  SCRUM_MASTER_PERSONALITIES,
-  scrumNamesForGender,
-} from '../utils/scrumMaster'
+import { normalizeTimeHHMM, scrumNamesForGender } from '../utils/scrumMaster'
+import { ScrumPersonalityPicker } from '../components/settings/ScrumPersonalityPicker'
 import { requestScrumNotificationPermission } from '../hooks/useScrumNotifications'
 import { notificationSettingsHint } from '../utils/notifyDelivery'
 
@@ -86,23 +83,7 @@ export function ScrumMasterSetupPage() {
 
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Personality</p>
-            <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {SCRUM_MASTER_PERSONALITIES.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => setPersonality(p.id)}
-                  className={`poco-press min-w-[9.5rem] shrink-0 rounded-[var(--radius-sm)] border px-3 py-3 text-left transition-colors ${
-                    personality === p.id
-                      ? 'border-[var(--accent)] bg-[var(--accent-soft)]'
-                      : 'border-[var(--border-subtle)] bg-[var(--bg-elevated)]'
-                  }`}
-                >
-                  <span className="block text-sm font-semibold text-[var(--text-primary)]">{p.title}</span>
-                  <span className="mt-1 block text-xs leading-snug text-[var(--text-secondary)]">{p.hint}</span>
-                </button>
-              ))}
-            </div>
+            <ScrumPersonalityPicker compact value={personality} onChange={setPersonality} />
           </div>
 
           <div className="grid grid-cols-2 gap-0 overflow-hidden rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)]">
