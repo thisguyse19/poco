@@ -15,7 +15,11 @@ export const SCRUM_MASTER_PERSONALITIES: {
   { id: 'minimal', title: 'Quiet', hint: 'Short lines, little flourish' },
   { id: 'playful', title: 'Playful', hint: 'Sparkly metaphors, cheeky asides, high fives' },
   { id: 'stern', title: 'Direct', hint: 'Crisp, no-nonsense prompts' },
-  { id: 'bold', title: 'Bold', hint: 'Confident edge and dry wit—still very work-appropriate' },
+  {
+    id: 'bold',
+    title: 'Bold',
+    hint: 'Flirty charm and smolder—PG-13 heat, still safe for the office',
+  },
 ]
 
 export const SCRUM_MALE_NAMES = [
@@ -186,7 +190,7 @@ function buildStandDownScheduleLine(dm: number, personality: ScrumMasterPersonal
         minimal: '',
         playful: ' One minute until the end-of-day boss battle (it is friendly, promise).',
         stern: ' Be ready.',
-        bold: ' Sixty seconds—get your receipts in order before reality checks your math.',
+        bold: ' Sixty seconds—smooth your collar and stack the facts so plan and reality can flirt without getting awkward.',
       })}`
     }
     if (m <= 5) {
@@ -196,7 +200,7 @@ function buildStandDownScheduleLine(dm: number, personality: ScrumMasterPersonal
         minimal: `${m} min to review.`,
         playful: ' Scoreboard time — chalk up the wins before the buzzer.',
         stern: '',
-        bold: ' Short runway—make sure shipped work can stand up to a polite interrogation.',
+        bold: ' Short runway—make sure what you shipped can hold eye contact when the lights go honest.',
       })}`
     }
     if (m <= 15) {
@@ -206,7 +210,7 @@ function buildStandDownScheduleLine(dm: number, personality: ScrumMasterPersonal
         minimal: '',
         playful: ' Sprint day finale — cue the highlight reel.',
         stern: ` ${m} minutes.`,
-        bold: ' Use the buffer—tomorrow-you will want receipts, not vibes.',
+        bold: ' Use the buffer—tomorrow-you remembers every sweet little promise you whispered to yourself.',
       })}`
     }
     if (m <= 29) {
@@ -216,7 +220,7 @@ function buildStandDownScheduleLine(dm: number, personality: ScrumMasterPersonal
         minimal: '',
         playful: ' Plot twist watch: what quietly shipped while nobody was looking?',
         stern: '',
-        bold: ' Plenty of runway—just do not confuse motion with evidence.',
+        bold: ' Plenty of runway—separate motion theatre from evidence you would happily show off.',
       })}`
     }
     return `${m} minutes until stand down — your daily sprint review.${pSuffix(personality, {
@@ -225,7 +229,7 @@ function buildStandDownScheduleLine(dm: number, personality: ScrumMasterPersonal
       minimal: `${m} min to stand down.`,
       playful: ' Grab confetti for the wins and a sticky note for the “whoops”.',
       stern: '',
-      bold: ' Early heads-up—build a clean narrative before the clock gets opinionated.',
+      bold: ' Early heads-up—craft a story tight enough to turn heads when the clock starts judging.',
     })}`
   }
   if (dm === 0) {
@@ -235,7 +239,7 @@ function buildStandDownScheduleLine(dm: number, personality: ScrumMasterPersonal
       minimal: ' Tap to start.',
       playful: ' Retro hat on — tap when ready.',
       stern: ' Tap to begin the review.',
-      bold: ' Tap in—let the numbers do the talking, politely but firmly.',
+      bold: ' Tap in—let the metrics murmur the truth you have been avoiding eye contact with.',
     })}`
   }
   const after = dm
@@ -246,7 +250,7 @@ function buildStandDownScheduleLine(dm: number, personality: ScrumMasterPersonal
       minimal: '',
       playful: ' Main character energy: celebrate the plot points you actually moved.',
       stern: '',
-      bold: ' Walk the board like you mean it—claims welcome, fiction discouraged.',
+      bold: ' Walk the board like you own the room—confidence is welcome, fiction gets left on read.',
     })}`
   }
   if (after <= 5) {
@@ -256,7 +260,7 @@ function buildStandDownScheduleLine(dm: number, personality: ScrumMasterPersonal
       minimal: '',
       playful: ' Tick boxes like you are popping bubble wrap.',
       stern: '',
-      bold: ' Still in the window—tighten the record while your memory is smug and accurate.',
+      bold: ' Still in the window—tighten the record while your memory is flush, smug, and dangerously accurate.',
     })}`
   }
   return `${after} minutes into stand down. Close the loop on today’s sprint slice.${pSuffix(personality, {
@@ -265,7 +269,7 @@ function buildStandDownScheduleLine(dm: number, personality: ScrumMasterPersonal
     minimal: '',
     playful: ' Bonus round: anything sparkly that was not on the morning list?',
     stern: '',
-    bold: ' Close the loop—half-done honesty ages badly by morning.',
+    bold: ' Close the loop—half-truths go stale faster than cheap cologne by morning.',
   })}`
 }
 
@@ -291,7 +295,7 @@ export function buildScrumBannerLine(
         minimal: '',
         playful: ' Deep breath — then we roll.',
         stern: ' Be on time.',
-        bold: ' Sixty seconds—decide what you are actually willing to own today.',
+        bold: ' Sixty seconds—pick what you are willing to wake up beside tomorrow morning.',
       })}`
     }
     if (m <= 5) {
@@ -301,7 +305,7 @@ export function buildScrumBannerLine(
         minimal: '',
         playful: ' Cue the tiny hype music in your head.',
         stern: '',
-        bold: ' Trim the fantasy backlog—keep what survives polite scrutiny.',
+        bold: ' Trim the fantasy—keep only what still looks good in harsh, flattering light.',
       })}`
     }
     if (m <= 15) {
@@ -311,7 +315,7 @@ export function buildScrumBannerLine(
         minimal: `${m} min to ${event}.`,
         playful: ' The day is warming up.',
         stern: `${m} minutes. Prepare.`,
-        bold: ` ${m} minutes—pick commitments you can defend in one calm sentence each.`,
+        bold: ` ${m} minutes—line up wins you would proudly introduce to someone intimidatingly competent.`,
       })}`
     }
     if (m <= 29) {
@@ -321,7 +325,7 @@ export function buildScrumBannerLine(
         minimal: '',
         playful: ' Coffee window closing soon.',
         stern: ` ${m} minutes out.`,
-        bold: ` ${m} minutes out—let ambition negotiate with capacity.`,
+        bold: ` ${m} minutes out—let ambition flirt with capacity until one of them blinks first.`,
       })}`
     }
     return `${m} minutes until your ${event}.${pSuffix(personality, {
@@ -330,7 +334,7 @@ export function buildScrumBannerLine(
       minimal: `${m} min to ${event}.`,
       playful: ' Still in the green room.',
       stern: ` ${Event} in ${m} minutes.`,
-      bold: ` ${Event} is on approach—reserve the mic for work that earns the spotlight.`,
+      bold: ` ${Event} is on approach—save the spotlight for work that can work the room.`,
     })}`
   }
 
@@ -341,7 +345,7 @@ export function buildScrumBannerLine(
       minimal: ' Tap to start.',
       playful: ' Tap — let us make today feel doable.',
       stern: ' Tap to begin now.',
-      bold: ' Tap in—commit loud enough that afternoon-you cannot squirm out.',
+      bold: ' Tap in—say out loud what you want today to remember about you tonight.',
     })}`
   }
 
@@ -353,7 +357,7 @@ export function buildScrumBannerLine(
       minimal: ' In progress.',
       playful: ' Momentum mode: on.',
       stern: ' Stay on task.',
-      bold: ' Hot take: clarity now saves awkward explanations later.',
+      bold: ' Momentum looks good on you—clarity now keeps tomorrow’s regret out of your inbox.',
     })}`
   }
   if (after <= 5) {
@@ -363,7 +367,7 @@ export function buildScrumBannerLine(
       minimal: '',
       playful: ' Shuffle the deck — keep only the hits.',
       stern: '',
-      bold: ' Still editable—swap bravado for specifics while it is cheap.',
+      bold: ' Still editable—swap swagger for specifics while the lighting is forgiving.',
     })}`
   }
   return `${after} minutes into your ${event}. Tap to open the flow.${pSuffix(personality, {
@@ -372,7 +376,7 @@ export function buildScrumBannerLine(
     minimal: '',
     playful: ' Mid-arc polish pass — tighten the story beats.',
     stern: ' Close the loop before the window ends.',
-    bold: ' Finish strong—vague commitments do not age into heroics.',
+    bold: ' Finish strong—vague commitments never get a second date with done.',
   })}`
 }
 
@@ -384,7 +388,7 @@ export function buildFarewellBannerLine(kind: 'farewellUp' | 'farewellDown', per
       minimal: 'Have a good day.',
       playful: 'You crushed the plot — I will host the silly little awards show at stand down.',
       stern: 'Execute. We reconcile at stand down.',
-      bold: 'Go ship something worth bragging about—then bring receipts to stand down.',
+      bold: 'Go ship something worth a slow smile—then slide those receipts across the table at stand down.',
     })
   }
   return pSuffix(personality, {
@@ -393,7 +397,7 @@ export function buildFarewellBannerLine(kind: 'farewellUp' | 'farewellDown', per
     minimal: 'See you tomorrow.',
     playful: 'Curtain call! Toss me the bloopers and the bloomin’ brilliant bits before you log off.',
     stern: 'Day closed. Be back on time tomorrow.',
-    bold: 'Power down clean—tomorrow respects a sharp reset, not a dramatic hangover.',
+    bold: 'Power down soft—tomorrow flirts harder when you leave tonight uncluttered and honest.',
   })
 }
 
@@ -405,7 +409,7 @@ export function scrumLiveSubtitle(personality: ScrumMasterPersonality, standUp: 
       minimal: 'Today’s commitments.',
       playful: 'Chuck commitments in like confetti — we will sweep the floor later.',
       stern: 'List what must ship today. Drop the rest.',
-      bold: 'Name what you will defend at stand down—optimism is cheap, commitments are not.',
+      bold: 'List what you will still respect at midnight—pretty intentions do not count.',
     })
   }
   return pSuffix(personality, {
@@ -414,7 +418,7 @@ export function scrumLiveSubtitle(personality: ScrumMasterPersonality, standUp: 
     minimal: 'Planned vs shipped today.',
     playful: 'Sticker-chart energy: check the real wins, laugh at the surprises, park the rest for tomorrow’s episode.',
     stern: 'Account for every commitment from stand up. Move unfinished work deliberately.',
-    bold: 'Reconcile like a pro: plan vs reality, no heroic adjectives unless earned.',
+    bold: 'Reconcile with charm: plan versus reality—save the dramatic adjectives for your group chat.',
   })
 }
 
@@ -435,7 +439,7 @@ export function scrumVoiceLeadIn(personality: ScrumMasterPersonality): string {
     minimal: '—',
     playful: 'chimes in…',
     stern: 'states…',
-    bold: 'leans in…',
+    bold: 'half-whispers…',
   })
 }
 
@@ -452,7 +456,7 @@ export function scrumSessionHeaderParts(
         minimal: ' live.',
         playful: ' is live — cue the drumroll for today’s hero arc.',
         stern: ' has started. Focus.',
-        bold: ' is live—make promises you can swagger through later.',
+        bold: ' is live—make promises you can still flirt with at stand down.',
       }),
     }
   }
@@ -464,7 +468,7 @@ export function scrumSessionHeaderParts(
       minimal: ' live.',
       playful: ' is on — roll credits on today’s sprint slice.',
       stern: ' has started. Account for the day.',
-      bold: ' is live—time for crisp facts, not confident folklore.',
+      bold: ' is live—straight story, sharp numbers—no rehearsing fairy tales in the mirror.',
     }),
   }
 }
@@ -476,7 +480,7 @@ export function scrumNotifyOptInCta(personality: ScrumMasterPersonality): string
     minimal: 'Enable notifications',
     playful: 'Ping me for the daily opening and closing credits',
     stern: 'Enable stand up and stand down notifications',
-    bold: 'Enable nudges for stand up and stand down—discipline loves a well-timed ping.',
+    bold: 'Turn on notifications—punctuality looks good on you, and I will notice every time.',
   })
 }
 
@@ -487,7 +491,7 @@ export function scrumQuickAddStandUpPlaceholder(personality: ScrumMasterPersonal
     minimal: 'Commitments…',
     playful: 'Drop the quests you are actually finishing today — no side-quest smuggling.',
     stern: 'List today’s must-ship commitments.',
-    bold: 'What actually ships today—not “aspires to,” not “might.”',
+    bold: 'What are you finishing today—and yes, I want the delicious specifics.',
   })
 }
 
@@ -498,7 +502,7 @@ export function scrumQuickAddStandDownPlaceholder(personality: ScrumMasterPerson
     minimal: 'Carry-over & extras…',
     playful: 'Spill the tea: carry-overs, bonus wins, sneaky little extras…',
     stern: 'Log carry-over and off-plan completions.',
-    bold: 'Carry-over, surprises, quiet wins—document what future-you cannot deny.',
+    bold: 'Carry-overs, sneaky wins, quiet flexes—spell it out so future-you cannot play coy.',
   })
 }
 
@@ -509,7 +513,7 @@ export function scrumEndStandUpLabel(personality: ScrumMasterPersonality): strin
     minimal: 'End',
     playful: 'Wrap the huddle',
     stern: 'End stand up',
-    bold: 'Close stand up',
+    bold: 'Call it: stand up done',
   })
 }
 
@@ -520,7 +524,7 @@ export function scrumEndStandDownLabel(personality: ScrumMasterPersonality): str
     minimal: 'End',
     playful: 'That’s a wrap on stand down',
     stern: 'End stand down',
-    bold: 'End stand down',
+    bold: 'Call it: stand down done',
   })
 }
 
@@ -531,7 +535,7 @@ export function scrumGatherIntoSectionTail(personality: ScrumMasterPersonality):
     minimal: 'Sectionize stand-up tasks',
     playful: 'Herd today’s stand-up goodies into their glitter corral',
     stern: 'Move stand-up tasks into the Scrum Master section',
-    bold: 'Corral stand-up work where it cannot quietly dodge accountability',
+    bold: 'Sweep stand-up tasks somewhere they cannot ghost you later.',
   })
 }
 
@@ -548,7 +552,7 @@ export function scrumTaskListCategorySubtitle(
       minimal: 'Review',
       playful: 'Scoreboard vs script · honest bloopers welcome',
       stern: 'Planned vs shipped',
-      bold: 'Plan vs reality—bring receipts, leave excuses off the record.',
+      bold: 'Plan vs reality—bring receipts, leave excuses at the door.',
     })
   }
   if (mode === 'standUp') {
@@ -558,7 +562,7 @@ export function scrumTaskListCategorySubtitle(
       minimal: 'Commitments',
       playful: 'Today’s “yes I’m doing this” pile',
       stern: 'Today’s commitments',
-      bold: 'Today’s commitments—written boldly, scoped honestly.',
+      bold: 'Today’s commitments—hot enough to commit to, honest enough to ship.',
     })
   }
   return n
@@ -576,7 +580,7 @@ export function scrumStandDownReviewHeading(personality: ScrumMasterPersonality,
       minimal: 'Review · today',
       playful: 'Today’s mini-retro',
       stern: 'Sprint review · today',
-      bold: 'Today’s review—short, sharp, and refreshingly blunt.',
+      bold: 'Today’s review—short, sharp, and dangerously honest.',
     })
   }
   return pSuffix(personality, {
@@ -585,7 +589,7 @@ export function scrumStandDownReviewHeading(personality: ScrumMasterPersonality,
     minimal: 'Plan vs done',
     playful: 'Script check: morning plan vs what actually filmed',
     stern: 'Planned work vs completions',
-    bold: 'Morning promises vs afternoon evidence—let them introduce themselves.',
+    bold: 'Morning promises, afternoon evidence—make the introductions uncomfortable in the best way.',
   })
 }
 
@@ -599,7 +603,7 @@ function extraDoneFragment(personality: ScrumMasterPersonality, n: number): stri
     minimal: ` +${n} off-plan.`,
     playful: ` Plus ${n} sneaky-little off-list ${taskU} already tickled “done” (plot twists, not cheating).`,
     stern: ` ${n} completions today were outside the stand-up plan.`,
-    bold: ` ${n} off-plan ${unit}—impressive hustle, just make sure the record reflects it.`,
+    bold: ` ${n} off-plan ${unit}—impressive hustle; make sure the paper trail looks as good as you do.`,
   })
 }
 
@@ -612,7 +616,7 @@ function extraDoneFragmentWithPlan(personality: ScrumMasterPersonality, n: numbe
     minimal: ` · +${n} off-plan`,
     playful: ` · +${n} bonus-scene ${taskU} not on the morning call sheet`,
     stern: ` · +${n} done today outside the stand-up plan`,
-    bold: ` · +${n} off-plan ${taskU}—credit where it is due, side-eye where it is not.`,
+    bold: ` · +${n} off-plan ${taskU}—tip your hat to the wins, side-eye the excuses.`,
   })
 }
 
@@ -624,7 +628,7 @@ export function scrumStandDownReviewBody(personality: ScrumMasterPersonality, pa
       minimal: 'Check off what shipped today.',
       playful: 'Honk the horn for anything you actually shipped today — even the bonus scenes that were not on this morning’s marquee.',
       stern: 'Record every completion from today, including off-plan work.',
-      bold: 'Log what really shipped—off-plan wins count, vague hand-waving does not.',
+      bold: 'Log what really shipped—bonus wins count, vague vibes do not get a plus-one.',
     })
     return base + extraDoneFragment(personality, params.extraOutsidePlan)
   }
@@ -649,8 +653,8 @@ export function scrumStandDownReviewBody(personality: ScrumMasterPersonality, pa
         : ` · all stand-up items closed out`,
     bold:
       plannedOpen > 0
-        ? ` · ${plannedOpen} still open—name the carry-over before optimism rewrites history`
-        : ` · plan cleared—enjoy the rare glow of closure`,
+        ? ` · ${plannedOpen} still open—name the carry-over before nostalgia rewrites the night`
+        : ` · plan cleared—rare, hot, and extremely your brand`,
   })
   return (
     pSuffix(personality, {
@@ -659,7 +663,7 @@ export function scrumStandDownReviewBody(personality: ScrumMasterPersonality, pa
       minimal: `${plannedDone}/${plannedTotal} done`,
       playful: `Morning bingo: ${plannedDone}/${plannedTotal} squares flipped`,
       stern: `Stand-up plan: ${plannedDone}/${plannedTotal} done`,
-      bold: `Morning contract: ${plannedDone}/${plannedTotal} delivered—no participation trophies`,
+      bold: `Stand-up score: ${plannedDone}/${plannedTotal}—no participation trophies, only the good kind of tension.`,
     }) +
     mid +
     extraDoneFragmentWithPlan(personality, extraOutsidePlan)
@@ -699,7 +703,7 @@ export function scrumNotifyPayload(
         minimal: W('{name} · Stand up', 'Ten minutes.'),
         playful: W('{name} · Stand up soon', 'Ten-minute trailer drop — stretch, hydrate, hype the day.'),
         stern: W('{name} · Stand up soon', 'Stand up in ten minutes. Be ready.'),
-        bold: W('{name} · Stand up soon', 'Ten minutes—decide what deserves the spotlight today.'),
+        bold: W('{name} · Stand up soon', 'Ten minutes—pick what deserves the spotlight and your best smolder.'),
       })
     case 'su-5':
       return line({
@@ -708,7 +712,7 @@ export function scrumNotifyPayload(
         minimal: W('{name} · Stand up', 'Five minutes.'),
         playful: W('{name} · Stand up', 'Five minutes until go-time — wiggle the jitters out.'),
         stern: W('{name} · Stand up', 'Five minutes to stand up.'),
-        bold: W('{name} · Stand up', 'Five minutes—cut the fantasy scope, keep the brave bits.'),
+        bold: W('{name} · Stand up', 'Five minutes—lose the fantasy wardrobe, keep what still fits reality.'),
       })
     case 'su-1':
       return line({
@@ -717,7 +721,7 @@ export function scrumNotifyPayload(
         minimal: W('{name} · Stand up', 'One minute.'),
         playful: W('{name} · Stand up', 'Sixty-second drumroll — mic check for your day.'),
         stern: W('{name} · Stand up', 'One minute. Open poco.'),
-        bold: W('{name} · Stand up', 'One minute—open poco like you mean business.'),
+        bold: W('{name} · Stand up', 'One minute—open poco like you are meeting someone worth impressing.'),
       })
     case 'su-0':
       return line({
@@ -726,7 +730,7 @@ export function scrumNotifyPayload(
         minimal: W('{name} · Stand up', 'Stand up now.'),
         playful: W('{name} · Stand up', 'And… scene! Stand up is open — jump in whenever you are ready.'),
         stern: W('{name} · Stand up', 'Stand up. Open poco now.'),
-        bold: W('{name} · Stand up', 'Stand up is open—bring commitments sharp enough to survive daylight.'),
+        bold: W('{name} · Stand up', 'Stand up is open—bring commitments sharp enough to flirt with daylight.'),
       })
     case 'sd-30':
       return line({
@@ -735,7 +739,7 @@ export function scrumNotifyPayload(
         minimal: W('{name} · Stand down', 'Stand down soon.'),
         playful: W('{name} · Stand down', 'Half-hour trailer for the finale — gather receipts for what shipped.'),
         stern: W('{name} · Stand down', 'Stand down soon. Prepare review.'),
-        bold: W('{name} · Stand down', 'Stand down incoming—separate signal from swagger while you still remember.'),
+        bold: W('{name} · Stand down', 'Stand down incoming—separate signal from swagger while you still look composed.'),
       })
     case 'sd-15':
       return line({
@@ -744,7 +748,7 @@ export function scrumNotifyPayload(
         minimal: W('{name} · Stand down', 'Fifteen minutes.'),
         playful: W('{name} · Stand down', 'Quarter-hour pep talk before the closing credits.'),
         stern: W('{name} · Stand down', 'Fifteen minutes to stand down.'),
-        bold: W('{name} · Stand down', 'Fifteen minutes—turn memory into evidence before it gets creative.'),
+        bold: W('{name} · Stand down', 'Fifteen minutes—turn memory into evidence before it starts telling little white lies.'),
       })
     case 'sd-5':
       return line({
@@ -753,7 +757,7 @@ export function scrumNotifyPayload(
         minimal: W('{name} · Stand down', 'Five minutes.'),
         playful: W('{name} · Stand down', 'Five minutes until the silly little awards show for your day.'),
         stern: W('{name} · Stand down', 'Five minutes to stand down.'),
-        bold: W('{name} · Stand down', 'Five minutes—make peace with the plan before the debrief does it for you.'),
+        bold: W('{name} · Stand down', 'Five minutes—make peace with the plan before the debrief steals your thunder.'),
       })
     case 'sd-1':
       return line({
@@ -762,7 +766,7 @@ export function scrumNotifyPayload(
         minimal: W('{name} · Stand down', 'One minute.'),
         playful: W('{name} · Stand down', 'Sixty seconds to cue the “what actually happened” montage.'),
         stern: W('{name} · Stand down', 'One minute. Open poco.'),
-        bold: W('{name} · Stand down', 'One minute—open poco and leave denial off the agenda.'),
+        bold: W('{name} · Stand down', 'One minute—open poco and drop the act; the numbers want honesty.'),
       })
     case 'sd-0':
       return line({
@@ -771,7 +775,7 @@ export function scrumNotifyPayload(
         minimal: W('{name} · Stand down', 'Stand down now.'),
         playful: W('{name} · Stand down', 'Roll credits on today — stand down is open for hot takes and honest ticks.'),
         stern: W('{name} · Stand down', 'Stand down. Review the day now.'),
-        bold: W('{name} · Stand down', 'Stand down—let the scoreboard be rude if it must, then move on clean.'),
+        bold: W('{name} · Stand down', 'Stand down—let the scoreboard flirt with the truth, then walk away clean.'),
       })
     case 'su-after1':
       return line({
@@ -780,7 +784,7 @@ export function scrumNotifyPayload(
         minimal: W('{name} · Stand up', 'Refine commitments.'),
         playful: W('{name} · Stand up', 'Still in the opening credits — tweak your quest log while it feels fun.'),
         stern: W('{name} · Stand up', 'Refine today’s commitments now.'),
-        bold: W('{name} · Stand up', 'Polish the list—confidence is great, specificity is what ships.'),
+        bold: W('{name} · Stand up', 'Polish the list—confidence is attractive, specificity is what gets you dinner.'),
       })
     case 'sd-after1':
       return line({
@@ -789,7 +793,7 @@ export function scrumNotifyPayload(
         minimal: W('{name} · Stand down', 'Log carry-over & extras.'),
         playful: W('{name} · Stand down', 'Tag the cliffhangers and the bonus wins you sneaked in today.'),
         stern: W('{name} · Stand down', 'Log carry-over and off-plan work from today.'),
-        bold: W('{name} · Stand down', 'Log carry-over and extras—future-you loves receipts, not riddles.'),
+        bold: W('{name} · Stand down', 'Log carry-over and extras—future-you loves a paper trail more than a mystery.'),
       })
   }
 }
