@@ -162,6 +162,7 @@ const DEFAULT_EXPORT_SETTINGS: Settings = {
   autoStartBreaks: false,
   autoStartNext: false,
   keepScreenAwake: false,
+  aheadShowCompleted: false,
   scrumMaster: {
     enabled: true,
     gender: 'female',

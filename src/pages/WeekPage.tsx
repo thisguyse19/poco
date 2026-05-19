@@ -364,13 +364,14 @@ export function WeekPage() {
   const deleteTask = useTaskStore((s) => s.deleteTask)
   const confirmDelete = useSettingsStore((s) => s.settings.confirmDelete)
   const smEnabled = useSettingsStore((s) => s.settings.scrumMaster.enabled)
+  const showCompleted = useSettingsStore((s) => s.settings.aheadShowCompleted)
+  const updateSettings = useSettingsStore((s) => s.updateSettings)
   const pointerFine = usePointerFine()
 
   const [pageIndex, setPageIndex] = useState(0)
   const pageIndexRef = useRef(pageIndex)
 
   const [clock, setClock] = useState(0)
-  const [showCompleted, setShowCompleted] = useState(false)
   const [detailTask, setDetailTask] = useState<Task | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [activeTask, setActiveTask] = useState<Task | null>(null)
@@ -649,7 +650,7 @@ export function WeekPage() {
           <h1 className="shrink-0 font-serif text-2xl text-[var(--text-primary)] md:text-3xl">Ahead</h1>
           {activeTask && zoneHighlight ? (
             <span
-              className="inline-flex max-w-[min(100%,11rem)] shrink-0 truncate rounded-full border border-green-700/35 bg-green-600/12 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-green-900 dark:border-green-400/40 dark:bg-green-400/12 dark:text-green-100 md:hidden"
+              className="inline-flex max-w-[min(100%,11rem)] shrink-0 truncate rounded-none border border-green-700/35 bg-green-600/12 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-green-900 dark:border-green-400/40 dark:bg-green-400/12 dark:text-green-100 md:hidden"
               role="status"
               title="Keep holding to flip pages"
             >
@@ -682,7 +683,7 @@ export function WeekPage() {
               type="checkbox"
               className="accent-[var(--accent)]"
               checked={showCompleted}
-              onChange={(e) => setShowCompleted(e.target.checked)}
+              onChange={(e) => updateSettings({ aheadShowCompleted: e.target.checked })}
             />
             Show completed
           </label>
