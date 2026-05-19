@@ -8,8 +8,11 @@ import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { PocoBottomSheet } from '../ui/PocoBottomSheet'
 import { Icon } from '../ui/Icon'
 
-const WEEKS = 13
+const WEEKS = 10
 const ROWS = 7
+/** Row 0 = Monday … row 6 = Sunday (matches grid iteration). */
+const WEEKDAY_INITIALS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'] as const
+const WEEKDAY_TITLES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const
 
 function mondayOfWeek(d: Date): Date {
   const x = new Date(d)
@@ -190,35 +193,50 @@ export function FocusLogSection({ focusActive }: { focusActive: boolean }) {
 
             <div className="md:flex md:items-start md:gap-8">
               <div className="min-w-0 flex-1">
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Last 13 weeks (Mon–Sun)</p>
-                <div className="overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
-                  <div className="flex gap-1 md:gap-0.5">
-                    {Array.from({ length: WEEKS }, (_, col) => (
-                      <div key={col} className="flex flex-col gap-1 md:gap-0.5">
-                        {Array.from({ length: ROWS }, (_, row) => {
-                          const cell = cells[col * ROWS + row]
-                          if (!cell) return null
-                          const lvl = cell.future ? 0 : levelFor(cell.min, maxMin)
-                          const cls = LEVEL_CLASS[cell.future ? 0 : lvl]
-                          const isToday = cell.date === todayStr
-                          return (
-                            <button
-                              key={cell.date}
-                              type="button"
-                              disabled={cell.future}
-                              title={`${cell.date}${cell.min ? ` · ${cell.min} min` : ''}`}
-                              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[3px] p-0 md:h-2.5 md:w-2.5 ${cls} ${
-                                cell.future ? 'cursor-default opacity-25' : 'poco-press cursor-pointer opacity-100'
-                              } ${isToday ? 'ring-1 ring-[var(--accent)] ring-offset-1 ring-offset-[var(--bg-base)]' : ''}`}
-                              onClick={() => {
-                                if (cell.future) return
-                                setSheetDay(cell.date)
-                              }}
-                            />
-                          )
-                        })}
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
+                  Last {WEEKS} weeks (Mon–Sun)
+                </p>
+                <div className="flex items-stretch gap-1 md:gap-0.5">
+                  <div className="flex shrink-0 flex-col gap-1 md:gap-0.5" aria-hidden>
+                    {WEEKDAY_INITIALS.map((letter, row) => (
+                      <div
+                        key={row}
+                        title={WEEKDAY_TITLES[row]}
+                        className="flex h-9 w-5 shrink-0 items-center justify-end pr-0.5 text-[10px] font-bold leading-none tracking-tight text-[var(--text-tertiary)] md:h-2.5 md:w-4 md:justify-center md:pr-0 md:text-[8px]"
+                      >
+                        {letter}
                       </div>
                     ))}
+                  </div>
+                  <div className="min-w-0 flex-1 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
+                    <div className="flex gap-1 md:gap-0.5">
+                      {Array.from({ length: WEEKS }, (_, col) => (
+                        <div key={col} className="flex flex-col gap-1 md:gap-0.5">
+                          {Array.from({ length: ROWS }, (_, row) => {
+                            const cell = cells[col * ROWS + row]
+                            if (!cell) return null
+                            const lvl = cell.future ? 0 : levelFor(cell.min, maxMin)
+                            const cls = LEVEL_CLASS[cell.future ? 0 : lvl]
+                            const isToday = cell.date === todayStr
+                            return (
+                              <button
+                                key={cell.date}
+                                type="button"
+                                disabled={cell.future}
+                                title={`${WEEKDAY_TITLES[row]} ${cell.date}${cell.min ? ` · ${cell.min} min` : ''}`}
+                                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[3px] p-0 md:h-2.5 md:w-2.5 ${cls} ${
+                                  cell.future ? 'cursor-default opacity-25' : 'poco-press cursor-pointer opacity-100'
+                                } ${isToday ? 'ring-1 ring-[var(--accent)] ring-offset-1 ring-offset-[var(--bg-base)]' : ''}`}
+                                onClick={() => {
+                                  if (cell.future) return
+                                  setSheetDay(cell.date)
+                                }}
+                              />
+                            )
+                          })}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
                 <p className="mt-2 text-[11px] leading-snug text-[var(--text-tertiary)] md:max-w-md">
