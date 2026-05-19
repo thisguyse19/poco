@@ -6,7 +6,11 @@ import { PocoMessageDialog } from '../ui/PocoMessageDialog'
 import { PrismPulseGame } from './PrismPulseGame'
 import { pocoDevLab } from '../../utils/pocoDevLab'
 import { deliverLocalNotification, isPwaDisplay, notificationSettingsHint } from '../../utils/notifyDelivery'
-import { activateWaitingServiceWorkerAndReload, ensurePocoServiceWorker, probeServiceWorkerUpdate } from '../../utils/pwaUpdate'
+import {
+  activateWaitingServiceWorkerAndReload,
+  ensurePocoServiceWorkerWithOutcome,
+  probeServiceWorkerUpdate,
+} from '../../utils/pwaUpdate'
 import { clearStandSessions, setStandDownLive, setStandUpLive } from '../../utils/scrumSession'
 import { storage } from '../../services/storage'
 import { useTaskStore } from '../../stores/taskStore'
@@ -123,11 +127,12 @@ export function SettingsDevLab() {
   }
 
   const checkPwaUpdate = async () => {
-    const reg = await ensurePocoServiceWorker()
-    if (!reg) {
-      setMsg('Service worker registration is not available in this environment.')
+    const outcome = await ensurePocoServiceWorkerWithOutcome()
+    if (!outcome.ok) {
+      setMsg(outcome.message)
       return
     }
+    const reg = outcome.registration
     const has = await probeServiceWorkerUpdate(reg)
     if (has) {
       window.dispatchEvent(new CustomEvent('poco-pwa-update-pending'))
@@ -138,8 +143,13 @@ export function SettingsDevLab() {
   }
 
   const reloadIfSwWaiting = () => {
-    void ensurePocoServiceWorker().then((reg) => {
-      if (reg?.waiting) activateWaitingServiceWorkerAndReload(reg)
+    void ensurePocoServiceWorkerWithOutcome().then((outcome) => {
+      if (!outcome.ok) {
+        setMsg(outcome.message)
+        return
+      }
+      const reg = outcome.registration
+      if (reg.waiting) activateWaitingServiceWorkerAndReload(reg)
       else setMsg('No waiting worker. Deploy a new build (or bump public/poco/sw.js), then “Check for app update”.')
     })
   }
