@@ -3,6 +3,7 @@ import { Icon } from '../ui/Icon'
 import { parseQuickAdd, type NlpPreviewChip } from '../../utils/nlp'
 import { formatNlpDateChipDisplay } from '../../utils/formatNlpChip'
 import { useTaskStore } from '../../stores/taskStore'
+import { useOobeTourStore } from '../../stores/oobeTourStore'
 import { triggerHaptic } from '../../utils/haptics'
 import { pocoDevLab } from '../../utils/pocoDevLab'
 
@@ -93,6 +94,7 @@ export function QuickAdd({
       scheduledFor: p.scheduledFor ?? 'today',
       priority: p.priority ?? 'medium',
     })
+    useOobeTourStore.getState().reportTry('quickadd_submitted')
     triggerHaptic(10)
     setText('')
     // Keep quick-add open so iOS can chain adds without re-tapping the field.

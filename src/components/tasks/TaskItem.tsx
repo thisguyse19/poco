@@ -5,6 +5,7 @@ import { formatTaskDueDisplay } from '../../utils/formatTaskDue'
 import { triggerHaptic } from '../../utils/haptics'
 import { Icon } from '../ui/Icon'
 import { useTaskStore } from '../../stores/taskStore'
+import { useOobeTourStore } from '../../stores/oobeTourStore'
 import { useTimerStore } from '../../stores/timerStore'
 
 import { pocoDevLab } from '../../utils/pocoDevLab'
@@ -318,6 +319,7 @@ export function TaskItem({
             className="pointer-events-auto flex shrink-0 items-center justify-center bg-[var(--bg-subtle)] text-[10px] font-semibold leading-tight text-[var(--text-secondary)]"
             onClick={() => {
               rescheduleLaterToday(task.id)
+              useOobeTourStore.getState().reportTry('swipe_reschedule')
               triggerHaptic(12)
               closeSwipe()
             }}
@@ -332,6 +334,7 @@ export function TaskItem({
             className="pointer-events-auto flex shrink-0 items-center justify-center bg-[var(--bg-subtle)] text-[10px] font-semibold leading-tight text-[var(--text-secondary)]"
             onClick={() => {
               rescheduleTomorrow(task.id)
+              useOobeTourStore.getState().reportTry('swipe_reschedule')
               triggerHaptic(12)
               closeSwipe()
             }}

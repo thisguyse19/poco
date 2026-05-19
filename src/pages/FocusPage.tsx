@@ -7,6 +7,7 @@ import { Icon } from '../components/ui/Icon'
 import { useTimer } from '../hooks/useTimer'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useTaskStore } from '../stores/taskStore'
+import { useOobeTourStore } from '../stores/oobeTourStore'
 import { ambientController } from '../utils/ambient'
 
 const FOCUS_HINTS = [
@@ -151,6 +152,7 @@ export function FocusPage() {
                   className="poco-press rounded-[var(--radius-sm)] border border-[var(--border-subtle)] px-3 py-3 text-left text-sm font-medium"
                   onClick={() => {
                     setCurrentTask(t.id)
+                    useOobeTourStore.getState().reportTry('focus_pick')
                     setPickerOpen(false)
                   }}
                 >
