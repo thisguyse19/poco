@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
   DndContext,
   DragOverlay,
   PointerSensor,
-  TouchSensor,
   closestCenter,
   useSensor,
   useSensors,
@@ -37,7 +36,6 @@ const ZONE_NEXT_ID = 'poco-week-zone-next'
 
 const DRAG_HOLD_MS = 220
 const PAGE_FLIP_MS = 750
-const SWIPE_MIN_PX = 52
 
 function dayDroppableId(iso: string) {
   return `day:${iso}`
@@ -64,19 +62,14 @@ function PlannerTaskCard({
   scrumAccent,
   onOpenDetail,
   dragDisabled,
-  armingTaskId,
-  onArmStart,
-  onArmClear,
 }: {
   task: Task
   scrumAccent: boolean
   onOpenDetail: (t: Task) => void
   dragDisabled?: boolean
-  armingTaskId: string | null
-  onArmStart: (id: string) => void
-  onArmClear: () => void
 }) {
-  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const armTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [armed, setArmed] = useState(false)
   const touchDownAt = useRef(0)
   const lastTouchTap = useRef<{ t: number; id: string }>({ t: 0, id: '' })
 
@@ -86,15 +79,23 @@ function PlannerTaskCard({
   })
   const style = transform ? { transform: CSS.Translate.toString(transform) } : undefined
 
-  const armed = armingTaskId === task.id && !isDragging
+  const borderEmphasis = (armed && !isDragging) || isDragging
 
-  const clearHold = useCallback(() => {
-    if (holdTimer.current != null) {
-      clearTimeout(holdTimer.current)
-      holdTimer.current = null
+  useEffect(
+    () => () => {
+      if (armTimer.current != null) clearTimeout(armTimer.current)
+    },
+    [],
+  )
+
+  const clearArmTimer = useCallback(() => {
+    if (armTimer.current != null) {
+      clearTimeout(armTimer.current)
+      armTimer.current = null
     }
-    onArmClear()
-  }, [onArmClear])
+  }, [])
+
+  const borderEmphasis = armed || isDragging
 
   return (
     <div
@@ -102,26 +103,23 @@ function PlannerTaskCard({
       style={style}
       {...listeners}
       {...attributes}
-      className={`select-none rounded-none border bg-[var(--bg-elevated)] px-2.5 py-2.5 text-left touch-manipulation ${
-        scrumAccent ? 'border-l-[3px] border-l-[var(--accent)] border-y-[var(--border-subtle)] border-r-[var(--border-subtle)]' : 'border-[var(--border-subtle)]'
-      } ${isDragging ? 'z-10 opacity-70 ring-2 ring-[var(--accent)]' : ''} ${
-        armed ? 'border-[var(--accent)] ring-1 ring-[var(--accent)]/45' : ''
+      className={`relative touch-none select-none rounded-none bg-[var(--bg-elevated)] px-2.5 py-2.5 text-left touch-manipulation ${
+        borderEmphasis ? 'border-2 border-[var(--accent)]' : 'border border-[var(--border-subtle)]'
+      } ${scrumAccent ? 'poco-scrum-week-mark' : ''} ${isDragging ? 'z-10 opacity-70' : ''} ${
+        task.completed ? 'opacity-60' : ''
       } ${dragDisabled ? 'pointer-events-none opacity-50' : ''}`}
       onPointerDown={() => {
         if (dragDisabled) return
-        clearHold()
-        holdTimer.current = setTimeout(() => onArmStart(task.id), DRAG_HOLD_MS)
+        clearArmTimer()
+        armTimer.current = setTimeout(() => setArmed(true), DRAG_HOLD_MS)
       }}
       onPointerUp={() => {
-        if (holdTimer.current != null) {
-          clearTimeout(holdTimer.current)
-          holdTimer.current = null
-        }
-        if (!isDragging) onArmClear()
+        clearArmTimer()
+        if (!isDragging) setArmed(false)
       }}
-      onPointerCancel={clearHold}
-      onPointerLeave={(e) => {
-        if (e.buttons === 0) clearHold()
+      onPointerCancel={() => {
+        clearArmTimer()
+        setArmed(false)
       }}
       onDoubleClick={(e) => {
         e.stopPropagation()
@@ -189,8 +187,10 @@ function DayCell({
   return (
     <div
       ref={setNodeRef}
-      className={`flex min-h-0 min-w-0 flex-col overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-subtle)] p-2 ${
-        isToday ? 'ring-1 ring-[var(--accent)] ring-offset-1 ring-offset-[var(--bg-base)]' : ''
+      className={`flex min-h-0 min-w-0 flex-col overflow-hidden bg-[var(--bg-subtle)] p-2 ${
+        isToday
+          ? 'border-2 border-[var(--accent)]'
+          : 'border border-[var(--border-subtle)]'
       } ${past ? 'opacity-70' : ''} ${isOver && !past ? 'bg-[var(--accent-soft)]' : ''}`}
     >
       <div className="mb-2 shrink-0 border-b border-[var(--border-subtle)] pb-1.5">
@@ -269,7 +269,7 @@ function ArrowZone({
     <button
       ref={mergedRef}
       type="button"
-      className={`poco-press flex min-h-[2.75rem] w-full shrink-0 items-center justify-center gap-2 border-y border-[var(--border-subtle)] transition-colors duration-200 ${
+      className={`poco-press flex h-9 w-full shrink-0 items-center justify-center gap-1 border-y border-[var(--border-subtle)] py-1 transition-colors duration-200 ${
         highlight || isOver ? 'bg-[color-mix(in_srgb,var(--accent-soft)_75%,var(--bg-subtle))]' : 'bg-[var(--bg-subtle)]'
       }`}
       onClick={onTap}
@@ -277,7 +277,7 @@ function ArrowZone({
     >
       <Icon
         name="chevron-down"
-        size={22}
+        size={18}
         className={direction === 'up' ? 'rotate-180 text-[var(--text-secondary)]' : 'text-[var(--text-secondary)]'}
       />
     </button>
@@ -298,17 +298,23 @@ export function WeekPage() {
   const [detailTask, setDetailTask] = useState<Task | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [activeTask, setActiveTask] = useState<Task | null>(null)
-  const [armingTaskId, setArmingTaskId] = useState<string | null>(null)
   const [zoneHighlight, setZoneHighlight] = useState<'prev' | 'next' | null>(null)
   const [unschedFlash, setUnschedFlash] = useState(false)
   const [binFlash, setBinFlash] = useState(false)
 
   const zonePrevRef = useRef<HTMLButtonElement | null>(null)
   const zoneNextRef = useRef<HTMLButtonElement | null>(null)
-  const swipeRef = useRef<HTMLDivElement | null>(null)
-  const swipeStart = useRef<{ y: number; x: number } | null>(null)
   const flipTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const activeZoneRef = useRef<'prev' | 'next' | null>(null)
+  const prevPageRef = useRef(pageIndex)
+  const [pageAnim, setPageAnim] = useState<'next' | 'prev' | null>(null)
+
+  useLayoutEffect(() => {
+    const prev = prevPageRef.current
+    if (prev === pageIndex) return
+    setPageAnim(pageIndex > prev ? 'next' : 'prev')
+    prevPageRef.current = pageIndex
+  }, [pageIndex])
 
   useEffect(() => {
     const id = window.setInterval(() => setClock((c) => c + 1), 60_000)
@@ -360,10 +366,7 @@ export function WeekPage() {
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: { delay: DRAG_HOLD_MS, tolerance: 8 },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: { delay: DRAG_HOLD_MS, tolerance: 8 },
+      activationConstraint: { delay: DRAG_HOLD_MS, tolerance: 10 },
     }),
   )
 
@@ -423,7 +426,6 @@ export function WeekPage() {
 
   const onDragStart = useCallback(
     (e: DragStartEvent) => {
-      setArmingTaskId(null)
       setZoneHighlight(null)
       const id = String(e.active.id)
       const t = tasks.find((x) => x.id === id)
@@ -436,7 +438,6 @@ export function WeekPage() {
     (e: DragEndEvent) => {
       setActiveTask(null)
       setZoneHighlight(null)
-      setArmingTaskId(null)
       clearFlipTimer()
       const { active, over } = e
       if (!over) return
@@ -479,29 +480,6 @@ export function WeekPage() {
     [confirmDelete, deleteTask, tasks],
   )
 
-  const onSwipeTouchStart = useCallback((e: React.TouchEvent) => {
-    if (e.touches.length !== 1) return
-    swipeStart.current = { y: e.touches[0]!.clientY, x: e.touches[0]!.clientX }
-  }, [])
-
-  const onSwipeTouchEnd = useCallback((e: React.TouchEvent) => {
-    const start = swipeStart.current
-    swipeStart.current = null
-    if (!start || e.changedTouches.length !== 1) return
-    const y = e.changedTouches[0]!.clientY
-    const x = e.changedTouches[0]!.clientX
-    const dy = y - start.y
-    const dx = x - start.x
-    if (Math.abs(dy) < SWIPE_MIN_PX || Math.abs(dy) < Math.abs(dx) * 1.1) return
-    if (dy < 0) {
-      setPageIndex((p) => p + 1)
-      triggerHaptic(10)
-    } else if (pageIndex > 0) {
-      setPageIndex((p) => Math.max(0, p - 1))
-      triggerHaptic(10)
-    }
-  }, [pageIndex])
-
   const goToday = useCallback(() => {
     setPageIndex(0)
     triggerHaptic(8)
@@ -512,7 +490,10 @@ export function WeekPage() {
       <header className="shrink-0 border-b border-[var(--border-subtle)] px-4 pb-3 pt-[max(1rem,env(safe-area-inset-top,0px))] md:px-6">
         <h1 className="font-serif text-2xl text-[var(--text-primary)] md:text-3xl">Week</h1>
         <p className="mt-1 text-sm text-[var(--text-secondary)]">{rangeLabel}</p>
-        <p className="mt-0.5 text-[11px] text-[var(--text-tertiary)]">Hold a task to drag · double-tap to edit</p>
+        <p className="mt-0.5 text-[11px] text-[var(--text-tertiary)]">
+          Hold a task to drag · double-tap to edit
+          {smEnabled ? ' · coloured strip: Scrum Master task' : ''}
+        </p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <button
             type="button"
@@ -551,10 +532,12 @@ export function WeekPage() {
           ) : null}
 
           <div
-            ref={swipeRef}
-            className="flex min-h-0 flex-1 flex-col overflow-hidden"
-            onTouchStart={onSwipeTouchStart}
-            onTouchEnd={onSwipeTouchEnd}
+            className={`flex min-h-0 flex-1 flex-col overflow-hidden ${
+              pageAnim === 'next' ? 'poco-week-page-snap-next' : pageAnim === 'prev' ? 'poco-week-page-snap-prev' : ''
+            }`}
+            onAnimationEnd={(e) => {
+              if (e.target === e.currentTarget) setPageAnim(null)
+            }}
           >
             {pageIndex > 0 ? <UnscheduledBin flash={binFlash} /> : null}
 
@@ -566,9 +549,6 @@ export function WeekPage() {
                     task={t}
                     scrumAccent={scrumAccent(t)}
                     onOpenDetail={setDetailTask}
-                    armingTaskId={armingTaskId}
-                    onArmStart={setArmingTaskId}
-                    onArmClear={() => setArmingTaskId(null)}
                   />
                 ))}
               </UnscheduledBlock>
@@ -584,9 +564,6 @@ export function WeekPage() {
                       scrumAccent={scrumAccent(t)}
                       onOpenDetail={setDetailTask}
                       dragDisabled={iso < todayIso}
-                      armingTaskId={armingTaskId}
-                      onArmStart={setArmingTaskId}
-                      onArmClear={() => setArmingTaskId(null)}
                     />
                   ))}
                 </DayCell>
@@ -604,7 +581,11 @@ export function WeekPage() {
 
           <DragOverlay dropAnimation={null}>
             {activeTask ? (
-              <div className="max-w-[min(92vw,22rem)] rounded-none border border-[var(--border-default)] bg-[var(--bg-elevated)] px-3 py-2.5 shadow-lg">
+              <div
+                className={`max-w-[min(92vw,22rem)] rounded-none border-2 border-[var(--accent)] bg-[var(--bg-elevated)] px-3 py-2.5 shadow-lg ${
+                  activeTask.completed ? 'opacity-60' : ''
+                }`}
+              >
                 <p className="line-clamp-3 text-sm font-medium leading-snug text-[var(--text-primary)] [overflow-wrap:anywhere]">{activeTask.title}</p>
               </div>
             ) : null}
