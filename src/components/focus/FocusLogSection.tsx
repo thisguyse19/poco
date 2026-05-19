@@ -10,7 +10,7 @@ import { Icon } from '../ui/Icon'
 import { formatIsoAsUkLong } from '../../utils/dateTimeFormat'
 import { POCO_LOCALE } from '../../utils/pocoLocale'
 
-const WEEKS = 10
+const WEEKS = 8
 const ROWS = 7
 /** Row 0 = Monday … row 6 = Sunday (matches grid iteration). */
 const WEEKDAY_INITIALS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'] as const
