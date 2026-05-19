@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   DndContext,
   DragOverlay,
   PointerSensor,
-  closestCorners,
+  TouchSensor,
+  closestCenter,
   useSensor,
   useSensors,
   type DragEndEvent,
@@ -22,16 +23,21 @@ import { formatIsoWeekRangeUk, formatIsoWeekdayShortUk } from '../utils/dateTime
 import { formatTaskDueDisplay } from '../utils/formatTaskDue'
 import { triggerHaptic } from '../utils/haptics'
 import {
-  getWeekFirstDayFromLocale,
+  addCalendarDaysFromIso,
   sortWeekColumnTasks,
-  startOfWeekWall,
   taskWeekPlacement,
   tomorrowIsoFrom,
-  weekIsoListFromStart,
 } from '../utils/weekPlanner'
 import { SCRUM_MASTER_CATEGORY } from '../utils/scrumMaster'
 
 const UNSCHEDULED_DROPPABLE_ID = 'poco-week-unscheduled'
+const UNSCHEDULED_BIN_ID = 'poco-week-unscheduled-bin'
+const ZONE_PREV_ID = 'poco-week-zone-prev'
+const ZONE_NEXT_ID = 'poco-week-zone-next'
+
+const DRAG_HOLD_MS = 220
+const PAGE_FLIP_MS = 750
+const SWIPE_MIN_PX = 52
 
 function dayDroppableId(iso: string) {
   return `day:${iso}`
@@ -47,80 +53,124 @@ function priorityDot(p: Priority) {
   return <span className={`h-1.5 w-1.5 shrink-0 rounded-none ${priBg[p]}`} aria-hidden />
 }
 
-function PlannerTaskRow({
+function pointInRect(clientX: number, clientY: number, el: HTMLElement | null): boolean {
+  if (!el) return false
+  const r = el.getBoundingClientRect()
+  return clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom
+}
+
+function PlannerTaskCard({
   task,
-  scrumMark,
+  scrumAccent,
   onOpenDetail,
   dragDisabled,
+  armingTaskId,
+  onArmStart,
+  onArmClear,
 }: {
   task: Task
-  scrumMark: boolean
+  scrumAccent: boolean
   onOpenDetail: (t: Task) => void
   dragDisabled?: boolean
+  armingTaskId: string | null
+  onArmStart: (id: string) => void
+  onArmClear: () => void
 }) {
-  const toggleComplete = useTaskStore((s) => s.toggleComplete)
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const touchDownAt = useRef(0)
+  const lastTouchTap = useRef<{ t: number; id: string }>({ t: 0, id: '' })
+
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: task.id,
     disabled: dragDisabled,
   })
   const style = transform ? { transform: CSS.Translate.toString(transform) } : undefined
 
+  const armed = armingTaskId === task.id && !isDragging
+
+  const clearHold = useCallback(() => {
+    if (holdTimer.current != null) {
+      clearTimeout(holdTimer.current)
+      holdTimer.current = null
+    }
+    onArmClear()
+  }, [onArmClear])
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gap-1.5 rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-1.5 py-[var(--task-py)] ${
-        isDragging ? 'z-10 opacity-60 ring-1 ring-[var(--accent)]' : ''
-      }`}
+      {...listeners}
+      {...attributes}
+      className={`select-none rounded-none border bg-[var(--bg-elevated)] px-2.5 py-2.5 text-left touch-manipulation ${
+        scrumAccent ? 'border-l-[3px] border-l-[var(--accent)] border-y-[var(--border-subtle)] border-r-[var(--border-subtle)]' : 'border-[var(--border-subtle)]'
+      } ${isDragging ? 'z-10 opacity-70 ring-2 ring-[var(--accent)]' : ''} ${
+        armed ? 'border-[var(--accent)] ring-1 ring-[var(--accent)]/45' : ''
+      } ${dragDisabled ? 'pointer-events-none opacity-50' : ''}`}
+      onPointerDown={() => {
+        if (dragDisabled) return
+        clearHold()
+        holdTimer.current = setTimeout(() => onArmStart(task.id), DRAG_HOLD_MS)
+      }}
+      onPointerUp={() => {
+        if (holdTimer.current != null) {
+          clearTimeout(holdTimer.current)
+          holdTimer.current = null
+        }
+        if (!isDragging) onArmClear()
+      }}
+      onPointerCancel={clearHold}
+      onPointerLeave={(e) => {
+        if (e.buttons === 0) clearHold()
+      }}
+      onDoubleClick={(e) => {
+        e.stopPropagation()
+        if (!dragDisabled) onOpenDetail(task)
+      }}
+      onTouchStart={() => {
+        touchDownAt.current = Date.now()
+      }}
+      onTouchEnd={(e) => {
+        if (dragDisabled) return
+        const dur = Date.now() - touchDownAt.current
+        if (dur > 450) return
+        const now = Date.now()
+        const prev = lastTouchTap.current
+        if (prev.id === task.id && now - prev.t < 400) {
+          onOpenDetail(task)
+          lastTouchTap.current = { t: 0, id: '' }
+          e.preventDefault()
+        } else {
+          lastTouchTap.current = { t: now, id: task.id }
+        }
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onOpenDetail(task)
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label={`${task.title}. Double-tap to edit.`}
     >
-      <button
-        type="button"
-        className="poco-press flex h-7 w-6 shrink-0 touch-none items-center justify-center text-[var(--text-tertiary)]"
-        aria-label="Drag to reschedule"
-        {...listeners}
-        {...attributes}
-      >
-        <Icon name="more-h" size={14} />
-      </button>
-      <button
-        type="button"
-        className={`poco-press flex h-8 w-8 shrink-0 touch-manipulation items-center justify-center rounded-none ${
-          scrumMark ? 'poco-scrum-checkbox-border' : 'border border-[var(--border-default)] bg-[var(--bg-elevated)]'
-        }`}
-        aria-label={task.completed ? 'Mark incomplete' : 'Mark complete'}
-        onClick={(e) => {
-          e.stopPropagation()
-          toggleComplete(task.id)
-          triggerHaptic(8)
-        }}
-      >
-        {task.completed ? (
-          <span className="flex h-4 w-4 items-center justify-center bg-[var(--accent)] text-[var(--text-inverse)]">
-            <Icon name="check" size={10} />
-          </span>
-        ) : null}
-      </button>
-      <button
-        type="button"
-        className="min-w-0 flex-1 touch-manipulation py-0.5 text-left"
-        onClick={() => onOpenDetail(task)}
-      >
-        <div className="flex items-center gap-1.5">
-          {priorityDot(task.priority)}
-          <p className="truncate text-sm font-medium leading-snug text-[var(--text-primary)]">{task.title}</p>
+      <div className="flex items-start gap-2">
+        {priorityDot(task.priority)}
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium leading-snug text-[var(--text-primary)] [overflow-wrap:anywhere]">{task.title}</p>
+          {task.description ? (
+            <p className="mt-1 line-clamp-3 text-xs leading-snug text-[var(--text-secondary)] [overflow-wrap:anywhere]">{task.description}</p>
+          ) : null}
+          {formatTaskDueDisplay(task.dueDate, task.dueTime) ? (
+            <p className="mt-1 text-[10px] text-[var(--text-tertiary)]">{formatTaskDueDisplay(task.dueDate, task.dueTime)}</p>
+          ) : null}
         </div>
-        {task.description ? (
-          <p className="mt-0.5 line-clamp-2 text-xs leading-snug text-[var(--text-secondary)]">{task.description}</p>
-        ) : null}
-        {formatTaskDueDisplay(task.dueDate, task.dueTime) ? (
-          <p className="mt-0.5 text-[10px] text-[var(--text-tertiary)]">{formatTaskDueDisplay(task.dueDate, task.dueTime)}</p>
-        ) : null}
-      </button>
+      </div>
     </div>
   )
 }
 
-function PlannerColumn({
+function DayCell({
   iso,
   todayIso,
   children,
@@ -139,40 +189,98 @@ function PlannerColumn({
   return (
     <div
       ref={setNodeRef}
-      className={`flex w-[min(100%,11.5rem)] shrink-0 flex-col border border-[var(--border-subtle)] bg-[var(--bg-subtle)] p-1.5 md:w-44 ${
+      className={`flex min-h-0 min-w-0 flex-col overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-subtle)] p-2 ${
         isToday ? 'ring-1 ring-[var(--accent)] ring-offset-1 ring-offset-[var(--bg-base)]' : ''
       } ${past ? 'opacity-70' : ''} ${isOver && !past ? 'bg-[var(--accent-soft)]' : ''}`}
     >
-      <div className="mb-1.5 border-b border-[var(--border-subtle)] pb-1.5">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
-          {formatIsoWeekdayShortUk(iso)}
-        </p>
+      <div className="mb-2 shrink-0 border-b border-[var(--border-subtle)] pb-1.5">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">{formatIsoWeekdayShortUk(iso)}</p>
         {past ? <p className="text-[10px] text-[var(--text-tertiary)]">Past</p> : null}
       </div>
-      <div className="flex min-h-[4rem] flex-col gap-[var(--list-row-gap)]">{children}</div>
-      {!past ? (
-        <p className="mt-1.5 text-[10px] leading-snug text-[var(--text-tertiary)]">Drop tasks here</p>
-      ) : null}
+      <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto [-webkit-overflow-scrolling:touch]">{children}</div>
     </div>
   )
 }
 
-function UnscheduledColumn({ children }: { children: React.ReactNode }) {
+function UnscheduledBlock({ children, flash }: { children: React.ReactNode; flash?: boolean }) {
   const { setNodeRef, isOver } = useDroppable({ id: UNSCHEDULED_DROPPABLE_ID })
   return (
     <div
       ref={setNodeRef}
-      className={`flex w-[min(100%,11.5rem)] shrink-0 flex-col border border-dashed border-[var(--border-default)] bg-[var(--bg-base)] p-1.5 md:w-44 ${
-        isOver ? 'border-[var(--accent)] bg-[var(--accent-soft)]' : ''
+      className={`flex min-h-[7rem] shrink-0 flex-col overflow-hidden rounded-none border border-dashed p-2 transition-colors duration-200 ${
+        flash
+          ? 'border-[var(--accent)] bg-[var(--accent-soft)]'
+          : isOver
+            ? 'border-[var(--accent)] bg-[var(--accent-soft)]'
+            : 'border-[var(--border-default)] bg-[var(--bg-base)]'
       }`}
     >
-      <div className="mb-1.5 border-b border-[var(--border-subtle)] pb-1.5">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Unscheduled</p>
-        <p className="text-[10px] leading-snug text-[var(--text-tertiary)]">Inbox and Someday</p>
+      <div className="mb-1.5 shrink-0 border-b border-[var(--border-subtle)] pb-1.5">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Unscheduled</p>
+        <p className="text-[10px] leading-snug text-[var(--text-tertiary)]">Inbox and Someday · drop to clear date</p>
       </div>
-      <div className="flex min-h-[4rem] flex-col gap-[var(--list-row-gap)]">{children}</div>
-      <p className="mt-1.5 text-[10px] leading-snug text-[var(--text-tertiary)]">Drop to clear date</p>
+      <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto [-webkit-overflow-scrolling:touch]">{children}</div>
     </div>
+  )
+}
+
+function UnscheduledBin({ flash }: { flash: boolean }) {
+  const { setNodeRef, isOver } = useDroppable({ id: UNSCHEDULED_BIN_ID })
+  return (
+    <div
+      ref={setNodeRef}
+      className={`flex shrink-0 items-center justify-center gap-2 border border-dashed px-2 py-2.5 transition-colors duration-200 ${
+        flash
+          ? 'border-[var(--accent)] bg-[var(--accent-soft)]'
+          : isOver
+            ? 'border-[var(--accent)]/70 bg-[color-mix(in_srgb,var(--accent-soft)_60%,var(--bg-base))]'
+            : 'border-[var(--border-subtle)] bg-[var(--bg-subtle)]'
+      }`}
+    >
+      <Icon name="tasks" size={16} className="text-[var(--text-tertiary)]" />
+      <span className="text-center text-[11px] font-medium text-[var(--text-secondary)]">Drop here for Unscheduled</span>
+    </div>
+  )
+}
+
+function ArrowZone({
+  id,
+  direction,
+  highlight,
+  onTap,
+  zoneRef,
+}: {
+  id: string
+  direction: 'up' | 'down'
+  highlight: boolean
+  onTap: () => void
+  zoneRef: React.MutableRefObject<HTMLButtonElement | null>
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id })
+  const mergedRef = useCallback(
+    (node: HTMLButtonElement | null) => {
+      zoneRef.current = node
+      setNodeRef(node)
+    },
+    [setNodeRef, zoneRef],
+  )
+
+  return (
+    <button
+      ref={mergedRef}
+      type="button"
+      className={`poco-press flex min-h-[2.75rem] w-full shrink-0 items-center justify-center gap-2 border-y border-[var(--border-subtle)] transition-colors duration-200 ${
+        highlight || isOver ? 'bg-[color-mix(in_srgb,var(--accent-soft)_75%,var(--bg-subtle))]' : 'bg-[var(--bg-subtle)]'
+      }`}
+      onClick={onTap}
+      aria-label={direction === 'up' ? 'Show previous four days' : 'Show next four days'}
+    >
+      <Icon
+        name="chevron-down"
+        size={22}
+        className={direction === 'up' ? 'rotate-180 text-[var(--text-secondary)]' : 'text-[var(--text-secondary)]'}
+      />
+    </button>
   )
 }
 
@@ -184,12 +292,23 @@ export function WeekPage() {
   const confirmDelete = useSettingsStore((s) => s.settings.confirmDelete)
   const smEnabled = useSettingsStore((s) => s.settings.scrumMaster.enabled)
 
-  const [weekOffset, setWeekOffset] = useState(0)
+  const [pageIndex, setPageIndex] = useState(0)
   const [clock, setClock] = useState(0)
   const [showCompleted, setShowCompleted] = useState(false)
   const [detailTask, setDetailTask] = useState<Task | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [activeTask, setActiveTask] = useState<Task | null>(null)
+  const [armingTaskId, setArmingTaskId] = useState<string | null>(null)
+  const [zoneHighlight, setZoneHighlight] = useState<'prev' | 'next' | null>(null)
+  const [unschedFlash, setUnschedFlash] = useState(false)
+  const [binFlash, setBinFlash] = useState(false)
+
+  const zonePrevRef = useRef<HTMLButtonElement | null>(null)
+  const zoneNextRef = useRef<HTMLButtonElement | null>(null)
+  const swipeRef = useRef<HTMLDivElement | null>(null)
+  const swipeStart = useRef<{ y: number; x: number } | null>(null)
+  const flipTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const activeZoneRef = useRef<'prev' | 'next' | null>(null)
 
   useEffect(() => {
     const id = window.setInterval(() => setClock((c) => c + 1), 60_000)
@@ -201,17 +320,13 @@ export function WeekPage() {
     return toLocalISODate()
   }, [clock])
 
-  const weekStart = useMemo(() => {
-    void clock
-    const fd = getWeekFirstDayFromLocale()
-    const base = startOfWeekWall(new Date(), fd)
-    base.setDate(base.getDate() + weekOffset * 7)
-    return base
-  }, [clock, weekOffset])
-
-  const weekIsos = useMemo(() => weekIsoListFromStart(weekStart), [weekStart])
-  const weekSet = useMemo(() => new Set(weekIsos), [weekIsos])
-  const rangeLabel = formatIsoWeekRangeUk(weekIsos[0]!, weekIsos[6]!)
+  const windowStartIso = useMemo(() => addCalendarDaysFromIso(todayIso, pageIndex * 4), [todayIso, pageIndex])
+  const fourIsos = useMemo(
+    () => [0, 1, 2, 3].map((i) => addCalendarDaysFromIso(windowStartIso, i)),
+    [windowStartIso],
+  )
+  const windowSet = useMemo(() => new Set(fourIsos), [fourIsos])
+  const rangeLabel = formatIsoWeekRangeUk(fourIsos[0]!, fourIsos[3]!)
 
   const ctx = useMemo(
     () => ({ todayIso, tomorrowIso: tomorrowIsoFrom(todayIso), showCompleted }),
@@ -220,7 +335,7 @@ export function WeekPage() {
 
   const { byDay, unscheduled } = useMemo(() => {
     const byDay = new Map<string, Task[]>()
-    for (const iso of weekIsos) byDay.set(iso, [])
+    for (const iso of fourIsos) byDay.set(iso, [])
     const uns: Task[] = []
 
     for (const t of tasks) {
@@ -230,28 +345,86 @@ export function WeekPage() {
         uns.push(t)
         continue
       }
-      if (weekSet.has(p.iso)) {
-        const arr = byDay.get(p.iso)!
-        arr.push(t)
+      if (windowSet.has(p.iso)) {
+        byDay.get(p.iso)!.push(t)
       } else {
         uns.push(t)
       }
     }
-    for (const iso of weekIsos) {
+    for (const iso of fourIsos) {
       byDay.set(iso, [...(byDay.get(iso) ?? [])].sort(sortWeekColumnTasks))
     }
     uns.sort(sortWeekColumnTasks)
     return { byDay, unscheduled: uns }
-  }, [tasks, ctx, weekIsos, weekSet])
+  }, [tasks, ctx, fourIsos, windowSet])
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: { distance: 10 },
+      activationConstraint: { delay: DRAG_HOLD_MS, tolerance: 8 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: DRAG_HOLD_MS, tolerance: 8 },
     }),
   )
 
+  const stopFlipInterval = useCallback(() => {
+    if (flipTimerRef.current != null) {
+      clearInterval(flipTimerRef.current)
+      flipTimerRef.current = null
+    }
+  }, [])
+
+  const clearFlipTimer = useCallback(() => {
+    stopFlipInterval()
+    activeZoneRef.current = null
+    setZoneHighlight(null)
+  }, [stopFlipInterval])
+
+  const startFlipIfNeeded = useCallback(
+    (clientX: number, clientY: number) => {
+      const inPrev = pageIndex > 0 && pointInRect(clientX, clientY, zonePrevRef.current)
+      const inNext = pointInRect(clientX, clientY, zoneNextRef.current)
+      const z: 'prev' | 'next' | null = inPrev ? 'prev' : inNext ? 'next' : null
+
+      if (z !== activeZoneRef.current) {
+        activeZoneRef.current = z
+        setZoneHighlight(z)
+        stopFlipInterval()
+        if (z) {
+          flipTimerRef.current = window.setInterval(() => {
+            setPageIndex((p) => (z === 'next' ? p + 1 : Math.max(0, p - 1)))
+          }, PAGE_FLIP_MS)
+        }
+      }
+    },
+    [pageIndex, stopFlipInterval],
+  )
+
+  useEffect(() => {
+    if (!activeTask) return
+    const onMove = (ev: PointerEvent) => {
+      startFlipIfNeeded(ev.clientX, ev.clientY)
+    }
+    const onUp = () => {
+      stopFlipInterval()
+      setZoneHighlight(null)
+      activeZoneRef.current = null
+    }
+    window.addEventListener('pointermove', onMove, { passive: true })
+    window.addEventListener('pointerup', onUp)
+    window.addEventListener('pointercancel', onUp)
+    return () => {
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
+      window.removeEventListener('pointercancel', onUp)
+      stopFlipInterval()
+    }
+  }, [activeTask, startFlipIfNeeded, stopFlipInterval])
+
   const onDragStart = useCallback(
     (e: DragStartEvent) => {
+      setArmingTaskId(null)
+      setZoneHighlight(null)
       const id = String(e.active.id)
       const t = tasks.find((x) => x.id === id)
       setActiveTask(t ?? null)
@@ -262,13 +435,25 @@ export function WeekPage() {
   const onDragEnd = useCallback(
     (e: DragEndEvent) => {
       setActiveTask(null)
+      setZoneHighlight(null)
+      setArmingTaskId(null)
+      clearFlipTimer()
       const { active, over } = e
       if (!over) return
       const taskId = String(active.id)
       const overId = String(over.id)
-      if (overId === UNSCHEDULED_DROPPABLE_ID) {
+      if (overId === UNSCHEDULED_DROPPABLE_ID || overId === UNSCHEDULED_BIN_ID) {
         clearWeekPlan(taskId)
+        if (overId === UNSCHEDULED_BIN_ID) setBinFlash(true)
+        else setUnschedFlash(true)
+        window.setTimeout(() => {
+          setBinFlash(false)
+          setUnschedFlash(false)
+        }, 420)
         triggerHaptic(12)
+        return
+      }
+      if (overId === ZONE_PREV_ID || overId === ZONE_NEXT_ID) {
         return
       }
       if (overId.startsWith('day:')) {
@@ -277,10 +462,10 @@ export function WeekPage() {
         triggerHaptic(12)
       }
     },
-    [clearWeekPlan, planTaskOnDate],
+    [clearFlipTimer, clearWeekPlan, planTaskOnDate],
   )
 
-  const scrumMark = useCallback(
+  const scrumAccent = useCallback(
     (t: Task) => Boolean(smEnabled && t.category === SCRUM_MASTER_CATEGORY),
     [smEnabled],
   )
@@ -294,32 +479,47 @@ export function WeekPage() {
     [confirmDelete, deleteTask, tasks],
   )
 
+  const onSwipeTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return
+    swipeStart.current = { y: e.touches[0]!.clientY, x: e.touches[0]!.clientX }
+  }, [])
+
+  const onSwipeTouchEnd = useCallback((e: React.TouchEvent) => {
+    const start = swipeStart.current
+    swipeStart.current = null
+    if (!start || e.changedTouches.length !== 1) return
+    const y = e.changedTouches[0]!.clientY
+    const x = e.changedTouches[0]!.clientX
+    const dy = y - start.y
+    const dx = x - start.x
+    if (Math.abs(dy) < SWIPE_MIN_PX || Math.abs(dy) < Math.abs(dx) * 1.1) return
+    if (dy < 0) {
+      setPageIndex((p) => p + 1)
+      triggerHaptic(10)
+    } else if (pageIndex > 0) {
+      setPageIndex((p) => Math.max(0, p - 1))
+      triggerHaptic(10)
+    }
+  }, [pageIndex])
+
+  const goToday = useCallback(() => {
+    setPageIndex(0)
+    triggerHaptic(8)
+  }, [])
+
   return (
     <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
       <header className="shrink-0 border-b border-[var(--border-subtle)] px-4 pb-3 pt-[max(1rem,env(safe-area-inset-top,0px))] md:px-6">
         <h1 className="font-serif text-2xl text-[var(--text-primary)] md:text-3xl">Week</h1>
         <p className="mt-1 text-sm text-[var(--text-secondary)]">{rangeLabel}</p>
+        <p className="mt-0.5 text-[11px] text-[var(--text-tertiary)]">Hold a task to drag · double-tap to edit</p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <button
             type="button"
-            className="poco-press rounded-none border border-[var(--border-default)] bg-[var(--bg-elevated)] px-2.5 py-1.5 text-xs font-semibold text-[var(--text-primary)]"
-            onClick={() => setWeekOffset((w) => w - 1)}
-          >
-            Previous week
-          </button>
-          <button
-            type="button"
-            className="poco-press rounded-none border border-[var(--border-default)] bg-[var(--bg-elevated)] px-2.5 py-1.5 text-xs font-semibold text-[var(--text-primary)]"
-            onClick={() => setWeekOffset((w) => w + 1)}
-          >
-            Next week
-          </button>
-          <button
-            type="button"
             className="poco-press rounded-none border border-[var(--border-default)] bg-[var(--bg-elevated)] px-2.5 py-1.5 text-xs font-semibold text-[var(--accent)]"
-            onClick={() => setWeekOffset(0)}
+            onClick={goToday}
           >
-            This week
+            Today
           </button>
           <label className="ml-auto flex cursor-pointer items-center gap-2 text-xs text-[var(--text-secondary)]">
             <input
@@ -333,42 +533,79 @@ export function WeekPage() {
         </div>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-auto px-4 pb-[calc(var(--poco-mobile-nav-height)+1rem)] pt-3 md:px-6 md:pb-6">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-[calc(var(--poco-mobile-nav-height)+1rem)] pt-2 md:px-6 md:pb-6">
         <DndContext
           sensors={sensors}
-          collisionDetection={closestCorners}
+          collisionDetection={closestCenter}
           onDragStart={onDragStart}
           onDragEnd={onDragEnd}
         >
-          <div className="flex min-w-min gap-2 pb-2">
-            <UnscheduledColumn>
-              {unscheduled.map((t) => (
-                <PlannerTaskRow
-                  key={t.id}
-                  task={t}
-                  scrumMark={scrumMark(t)}
-                  onOpenDetail={setDetailTask}
-                />
-              ))}
-            </UnscheduledColumn>
-            {weekIsos.map((iso) => (
-              <PlannerColumn key={iso} iso={iso} todayIso={todayIso}>
-                {(byDay.get(iso) ?? []).map((t) => (
-                  <PlannerTaskRow
+          {pageIndex > 0 ? (
+            <ArrowZone
+              id={ZONE_PREV_ID}
+              direction="up"
+              highlight={zoneHighlight === 'prev'}
+              onTap={() => setPageIndex((p) => Math.max(0, p - 1))}
+              zoneRef={zonePrevRef}
+            />
+          ) : null}
+
+          <div
+            ref={swipeRef}
+            className="flex min-h-0 flex-1 flex-col overflow-hidden"
+            onTouchStart={onSwipeTouchStart}
+            onTouchEnd={onSwipeTouchEnd}
+          >
+            {pageIndex > 0 ? <UnscheduledBin flash={binFlash} /> : null}
+
+            {pageIndex === 0 ? (
+              <UnscheduledBlock flash={unschedFlash}>
+                {unscheduled.map((t) => (
+                  <PlannerTaskCard
                     key={t.id}
                     task={t}
-                    scrumMark={scrumMark(t)}
+                    scrumAccent={scrumAccent(t)}
                     onOpenDetail={setDetailTask}
-                    dragDisabled={iso < todayIso}
+                    armingTaskId={armingTaskId}
+                    onArmStart={setArmingTaskId}
+                    onArmClear={() => setArmingTaskId(null)}
                   />
                 ))}
-              </PlannerColumn>
-            ))}
+              </UnscheduledBlock>
+            ) : null}
+
+            <div className="mt-2 grid min-h-0 flex-1 grid-cols-2 grid-rows-2 gap-2 overflow-hidden">
+              {fourIsos.map((iso) => (
+                <DayCell key={iso} iso={iso} todayIso={todayIso}>
+                  {(byDay.get(iso) ?? []).map((t) => (
+                    <PlannerTaskCard
+                      key={t.id}
+                      task={t}
+                      scrumAccent={scrumAccent(t)}
+                      onOpenDetail={setDetailTask}
+                      dragDisabled={iso < todayIso}
+                      armingTaskId={armingTaskId}
+                      onArmStart={setArmingTaskId}
+                      onArmClear={() => setArmingTaskId(null)}
+                    />
+                  ))}
+                </DayCell>
+              ))}
+            </div>
           </div>
+
+          <ArrowZone
+            id={ZONE_NEXT_ID}
+            direction="down"
+            highlight={zoneHighlight === 'next'}
+            onTap={() => setPageIndex((p) => p + 1)}
+            zoneRef={zoneNextRef}
+          />
+
           <DragOverlay dropAnimation={null}>
             {activeTask ? (
-              <div className="w-[min(100%,11.5rem)] rounded-none border border-[var(--border-default)] bg-[var(--bg-elevated)] px-2 py-2 shadow-md md:w-44">
-                <p className="truncate text-sm font-medium text-[var(--text-primary)]">{activeTask.title}</p>
+              <div className="max-w-[min(92vw,22rem)] rounded-none border border-[var(--border-default)] bg-[var(--bg-elevated)] px-3 py-2.5 shadow-lg">
+                <p className="line-clamp-3 text-sm font-medium leading-snug text-[var(--text-primary)] [overflow-wrap:anywhere]">{activeTask.title}</p>
               </div>
             ) : null}
           </DragOverlay>
