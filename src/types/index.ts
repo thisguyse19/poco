@@ -81,12 +81,20 @@ export interface ScrumMasterSettings {
   standUpTime: string
   standDownTime: string
   personality: ScrumMasterPersonality
+  /** Optional sprint label on Home (e.g. "Sprint 24") */
+  sprintTitle: string
+  /** One-line sprint goal for daily alignment */
+  sprintGoal: string
+  /** Sprint end date YYYY-MM-DD for countdown */
+  sprintEndDate: string | null
 }
 
 export interface Settings {
   onboardingComplete: boolean
   /** After main onboarding, one-time Scrum Master intro + optional setup has been finished or skipped */
   scrumMasterGateComplete: boolean
+  /** Increment to re-show the SM intro gate once for existing installs */
+  scrumMasterGatePromptVersion: number
   theme: ThemeName
   density: DensityName
   /** Root rem scale for body copy */

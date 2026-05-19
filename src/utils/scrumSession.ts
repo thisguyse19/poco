@@ -1,25 +1,25 @@
 import { toLocalISODate } from '../services/storage'
 
-type Session = {
+export type ScrumFarewellKind = 'standUp' | 'standDown'
+
+export type StandUpPlanSnapshot = {
+  date: string
+  taskIds: string[]
+}
+
+export type ScrumSessionState = {
   date: string
   standUpLive?: boolean
   standDownLive?: boolean
+  /** Shown after user ends stand up / stand down until `untilMs` */
+  farewell?: { kind: ScrumFarewellKind; untilMs: number }
+  /** Task ids captured when stand up ended — used for stand-down completion review */
+  standUpPlan?: StandUpPlanSnapshot
 }
 
 const KEY = 'poco:scrum-session'
 
-function read(): Session {
-  try {
-    const raw = localStorage.getItem(KEY)
-    if (!raw) return { date: toLocalISODate() }
-    const o = JSON.parse(raw) as Session
-    return { ...o, date: o.date ?? toLocalISODate() }
-  } catch {
-    return { date: toLocalISODate() }
-  }
-}
-
-function write(s: Session) {
+function write(s: ScrumSessionState) {
   localStorage.setItem(KEY, JSON.stringify(s))
 }
 
@@ -27,10 +27,29 @@ function today(): string {
   return toLocalISODate()
 }
 
-export function getScrumSession(): Session {
+function stripExpiredFarewell(s: ScrumSessionState): ScrumSessionState {
+  if (!s.farewell || s.farewell.untilMs > Date.now()) return s
+  const { farewell: _farewell, ...rest } = s
+  const next = rest as ScrumSessionState
+  write(next)
+  return next
+}
+
+function read(): ScrumSessionState {
+  try {
+    const raw = localStorage.getItem(KEY)
+    if (!raw) return { date: today() }
+    const o = JSON.parse(raw) as ScrumSessionState
+    return stripExpiredFarewell({ ...o, date: o.date ?? today() })
+  } catch {
+    return { date: today() }
+  }
+}
+
+export function getScrumSession(): ScrumSessionState {
   const s = read()
   if (s.date !== today()) {
-    const fresh: Session = { date: today() }
+    const fresh: ScrumSessionState = { date: today() }
     write(fresh)
     return fresh
   }
@@ -47,7 +66,36 @@ export function setStandDownLive(on: boolean) {
   write({ ...s, standDownLive: on, standUpLive: on ? false : s.standUpLive })
 }
 
+/** Clears live flags only (no farewell). */
 export function clearStandSessions() {
   const s = getScrumSession()
   write({ ...s, standUpLive: false, standDownLive: false })
+}
+
+/** End stand up: save today’s Scrum Master plan snapshot and show a one-minute farewell banner. */
+export function endStandUpSession(planTaskIds: string[]) {
+  const s = getScrumSession()
+  write({
+    ...s,
+    standUpLive: false,
+    standDownLive: false,
+    standUpPlan: { date: today(), taskIds: [...new Set(planTaskIds)] },
+    farewell: { kind: 'standUp', untilMs: Date.now() + 60_000 },
+  })
+}
+
+/** End stand down: show a one-minute farewell banner. */
+export function endStandDownSession() {
+  const s = getScrumSession()
+  write({
+    ...s,
+    standUpLive: false,
+    standDownLive: false,
+    farewell: { kind: 'standDown', untilMs: Date.now() + 60_000 },
+  })
+}
+
+export function getActiveFarewell(session: ScrumSessionState): { kind: ScrumFarewellKind; untilMs: number } | null {
+  if (!session.farewell || session.farewell.untilMs <= Date.now()) return null
+  return session.farewell
 }

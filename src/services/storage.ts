@@ -142,6 +142,7 @@ export const storage = {
 const DEFAULT_EXPORT_SETTINGS: Settings = {
   onboardingComplete: true,
   scrumMasterGateComplete: true,
+  scrumMasterGatePromptVersion: 3,
   theme: 'light',
   density: 'default',
   fontScale: 'md',
@@ -167,5 +168,8 @@ const DEFAULT_EXPORT_SETTINGS: Settings = {
     standUpTime: '09:00',
     standDownTime: '17:30',
     personality: 'warm',
+    sprintTitle: '',
+    sprintGoal: '',
+    sprintEndDate: null,
   },
 }

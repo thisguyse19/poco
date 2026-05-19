@@ -29,11 +29,22 @@ export const DEFAULT_SETTINGS: Settings = {
     standUpTime: '09:00',
     standDownTime: '17:30',
     personality: 'warm',
+    sprintTitle: '',
+    sprintGoal: '',
+    sprintEndDate: null,
   },
   scrumMasterGateComplete: true,
+  scrumMasterGatePromptVersion: 3,
 }
 
+export const SM_GATE_PROMPT_VERSION = 3
+
 const saved = storage.getSettings()
+const savedPromptVer =
+  typeof saved.scrumMasterGatePromptVersion === 'number' ? saved.scrumMasterGatePromptVersion : 1
+const migratedGateIncomplete =
+  savedPromptVer < SM_GATE_PROMPT_VERSION && Boolean(saved.onboardingComplete)
+
 const initial: Settings = {
   ...DEFAULT_SETTINGS,
   ...saved,
@@ -41,8 +52,18 @@ const initial: Settings = {
     ...DEFAULT_SETTINGS.scrumMaster,
     ...saved.scrumMaster,
     personality: saved.scrumMaster?.personality ?? DEFAULT_SETTINGS.scrumMaster.personality,
+    sprintTitle: saved.scrumMaster?.sprintTitle ?? DEFAULT_SETTINGS.scrumMaster.sprintTitle,
+    sprintGoal: saved.scrumMaster?.sprintGoal ?? DEFAULT_SETTINGS.scrumMaster.sprintGoal,
+    sprintEndDate: saved.scrumMaster?.sprintEndDate ?? DEFAULT_SETTINGS.scrumMaster.sprintEndDate,
   },
-  scrumMasterGateComplete: saved.scrumMasterGateComplete ?? DEFAULT_SETTINGS.scrumMasterGateComplete,
+  scrumMasterGateComplete: migratedGateIncomplete
+    ? false
+    : (saved.scrumMasterGateComplete ?? DEFAULT_SETTINGS.scrumMasterGateComplete),
+  scrumMasterGatePromptVersion: Math.max(SM_GATE_PROMPT_VERSION, savedPromptVer),
+}
+
+if (migratedGateIncomplete) {
+  storage.saveSettings(initial)
 }
 
 type SettingsState = {
@@ -79,6 +100,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       onboardingComplete: prev.onboardingComplete,
       profileName: prev.profileName,
       scrumMasterGateComplete: prev.scrumMasterGateComplete,
+      scrumMasterGatePromptVersion: prev.scrumMasterGatePromptVersion,
       scrumMaster: prev.scrumMaster,
     }
     set({ settings: next })

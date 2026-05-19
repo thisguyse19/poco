@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
-import { useSettingsStore } from '../stores/settingsStore'
+import { useSettingsStore, SM_GATE_PROMPT_VERSION } from '../stores/settingsStore'
 import type { DensityName, FontScaleName, ThemeName } from '../types'
 import { AppearanceControlGroup } from '../components/settings/AppearanceControlGroup'
 
@@ -23,7 +23,7 @@ export function OnboardingPage() {
   }, [theme, density, fontScale, updateSettings])
 
   const skipFromStart = () => {
-    updateSettings({ onboardingComplete: true, scrumMasterGateComplete: false })
+    updateSettings({ onboardingComplete: true, scrumMasterGateComplete: false, scrumMasterGatePromptVersion: SM_GATE_PROMPT_VERSION })
     navigate('/')
   }
 
@@ -32,6 +32,7 @@ export function OnboardingPage() {
     updateSettings({
       onboardingComplete: true,
       scrumMasterGateComplete: false,
+      scrumMasterGatePromptVersion: SM_GATE_PROMPT_VERSION,
       profileName: name,
       theme,
       density,

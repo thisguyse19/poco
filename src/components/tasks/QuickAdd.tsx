@@ -107,7 +107,11 @@ export function QuickAdd({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="poco-press flex h-[2.75rem] w-full items-center gap-2 rounded-none border border-dashed border-[var(--border-default)] bg-[var(--bg-elevated)] px-3 text-left text-sm text-[var(--text-secondary)] transition-opacity duration-300 [transition-timing-function:var(--ease-ios)]"
+          className={`poco-press flex h-[2.75rem] w-full items-center gap-2 rounded-none border border-dashed px-3 text-left text-sm text-[var(--text-secondary)] transition-opacity duration-300 [transition-timing-function:var(--ease-ios)] ${
+            scrumGlow
+              ? 'poco-scrum-glow-border border-transparent bg-[var(--bg-elevated)]'
+              : 'border-[var(--border-default)] bg-[var(--bg-elevated)]'
+          }`}
         >
           <Icon name="plus" size={18} />
           <span className="min-w-0 truncate">{ph}</span>

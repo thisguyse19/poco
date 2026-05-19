@@ -38,8 +38,8 @@ export function ScrumMasterEditModal({ open, onClose, value, onSave }: Props) {
   const names = useMemo(() => [...scrumNamesForGender(draft.gender)], [draft.gender])
 
   return (
-    <PocoAnimatedCenterModal open={open} onBackdropClick={onClose}>
-      <div className="mx-4 max-h-[min(88dvh,640px)] w-full max-w-md overflow-y-auto rounded-none border border-[var(--border-default)] bg-[var(--bg-elevated)] p-4 shadow-xl">
+    <PocoAnimatedCenterModal open={open} onBackdropClick={onClose} panelMaxWidthClass="max-w-md">
+      <div className="max-h-[min(88dvh,640px)] w-full overflow-y-auto rounded-none border border-[var(--border-default)] bg-[var(--bg-elevated)] p-4 shadow-xl">
         <h2 className="font-serif text-xl">Scrum Master</h2>
         <p className="mt-1 text-xs text-[var(--text-secondary)]">Daily stand-up and stand-down prompts stay local on this device.</p>
 
@@ -49,6 +49,32 @@ export function ScrumMasterEditModal({ open, onClose, value, onSave }: Props) {
             type="checkbox"
             checked={draft.enabled}
             onChange={(e) => setDraft((d) => ({ ...d, enabled: e.target.checked }))}
+          />
+        </label>
+
+        <p className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Sprint (optional)</p>
+        <p className="mb-2 text-[11px] text-[var(--text-tertiary)]">
+          Tie daily stand-up and stand-down to a time-boxed sprint on the home screen.
+        </p>
+        <input
+          className="poco-input mb-2 w-full rounded-none border border-[var(--border-subtle)] bg-[var(--bg-base)] px-3 py-2 text-sm"
+          placeholder="Sprint name (e.g. Sprint 12)"
+          value={draft.sprintTitle}
+          onChange={(e) => setDraft((d) => ({ ...d, sprintTitle: e.target.value }))}
+        />
+        <input
+          className="poco-input mb-2 w-full rounded-none border border-[var(--border-subtle)] bg-[var(--bg-base)] px-3 py-2 text-sm"
+          placeholder="Sprint goal — one line the team aligns on"
+          value={draft.sprintGoal}
+          onChange={(e) => setDraft((d) => ({ ...d, sprintGoal: e.target.value }))}
+        />
+        <label className="flex flex-col gap-1 text-xs font-semibold text-[var(--text-tertiary)]">
+          Sprint end date
+          <input
+            type="date"
+            className="poco-input rounded-none border border-[var(--border-subtle)] bg-[var(--bg-base)] px-3 py-2 text-sm font-normal text-[var(--text-primary)]"
+            value={draft.sprintEndDate ?? ''}
+            onChange={(e) => setDraft((d) => ({ ...d, sprintEndDate: e.target.value ? e.target.value : null }))}
           />
         </label>
 
