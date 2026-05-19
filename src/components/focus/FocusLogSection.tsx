@@ -4,6 +4,7 @@ import { storage, toLocalISODate } from '../../services/storage'
 import { useTaskStore } from '../../stores/taskStore'
 import { useTimerStore } from '../../stores/timerStore'
 import { useSettingsStore } from '../../stores/settingsStore'
+import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { PocoBottomSheet } from '../ui/PocoBottomSheet'
 import { Icon } from '../ui/Icon'
 
@@ -43,9 +44,65 @@ function levelFor(min: number, max: number): number {
   return Math.min(4, Math.max(1, Math.ceil(t * 4)))
 }
 
+function FocusDayDetail({
+  sheetDay,
+  dayTotal,
+  daySessions,
+  taskTitle,
+  onClose,
+  layout,
+}: {
+  sheetDay: string
+  dayTotal: number
+  daySessions: FocusSession[]
+  taskTitle: (id: string | null) => string
+  onClose: () => void
+  layout: 'sheet' | 'aside'
+}) {
+  const scrollWrap =
+    layout === 'sheet'
+      ? 'max-h-[min(70dvh,520px)] overflow-y-auto p-4 pb-[calc(var(--poco-mobile-nav-height)+0.75rem)]'
+      : 'max-h-[min(80vh,580px)] min-h-[12rem] flex-1 overflow-y-auto rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-subtle)] p-4 shadow-sm'
+
+  return (
+    <div className={scrollWrap}>
+      <div className="mb-3 flex items-start justify-between gap-2">
+        <div>
+          <p className="font-serif text-lg text-[var(--text-primary)]">{sheetDay}</p>
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">
+            <strong className="text-[var(--text-primary)]">{dayTotal}</strong> min across{' '}
+            <strong className="text-[var(--text-primary)]">{daySessions.length}</strong> sessions
+          </p>
+        </div>
+        <button type="button" className="poco-press p-2 text-[var(--text-tertiary)]" aria-label="Close" onClick={onClose}>
+          <Icon name="x" size={20} />
+        </button>
+      </div>
+      {daySessions.length === 0 ? (
+        <p className="text-sm text-[var(--text-tertiary)]">No completed focus sessions logged for this day.</p>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {daySessions.map((s) => (
+            <li
+              key={s.id}
+              className="rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-left"
+            >
+              <p className="text-sm font-medium text-[var(--text-primary)]">{taskTitle(s.taskId)}</p>
+              <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
+                {s.plannedMinutes} min · {new Date(s.startedAt).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
 export function FocusLogSection({ focusActive }: { focusActive: boolean }) {
   const [logOpen, setLogOpen] = useState(true)
   const [sheetDay, setSheetDay] = useState<string | null>(null)
+  const isMdUp = useMediaQuery('(min-width: 768px)')
   const sessionsCompleted = useTimerStore((s) => s.sessionsCompleted)
   const tasks = useTaskStore((s) => s.tasks)
   const focusMin = useSettingsStore((s) => s.settings.focusDurationMinutes)
@@ -131,78 +188,73 @@ export function FocusLogSection({ focusActive }: { focusActive: boolean }) {
             </p>
             <p className="text-xs text-[var(--text-tertiary)]">Current focus block length: {focusMin} min.</p>
 
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Last 13 weeks (Mon–Sun)</p>
-              <div className="overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
-                <div className="flex gap-0.5">
-                  {Array.from({ length: WEEKS }, (_, col) => (
-                    <div key={col} className="flex flex-col gap-0.5">
-                      {Array.from({ length: ROWS }, (_, row) => {
-                        const cell = cells[col * ROWS + row]
-                        if (!cell) return null
-                        const lvl = cell.future ? 0 : levelFor(cell.min, maxMin)
-                        const cls = LEVEL_CLASS[cell.future ? 0 : lvl]
-                        const isToday = cell.date === todayStr
-                        return (
-                          <button
-                            key={cell.date}
-                            type="button"
-                            disabled={cell.future}
-                            title={`${cell.date}${cell.min ? ` · ${cell.min} min` : ''}`}
-                            className={`h-2.5 w-2.5 shrink-0 rounded-[2px] p-0 ${cls} ${
-                              cell.future ? 'cursor-default opacity-25' : 'poco-press cursor-pointer opacity-100'
-                            } ${isToday ? 'ring-1 ring-[var(--accent)] ring-offset-1 ring-offset-[var(--bg-base)]' : ''}`}
-                            onClick={() => {
-                              if (cell.future) return
-                              setSheetDay(cell.date)
-                            }}
-                          />
-                        )
-                      })}
-                    </div>
-                  ))}
+            <div className="md:flex md:items-start md:gap-8">
+              <div className="min-w-0 flex-1">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Last 13 weeks (Mon–Sun)</p>
+                <div className="overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
+                  <div className="flex gap-1 md:gap-0.5">
+                    {Array.from({ length: WEEKS }, (_, col) => (
+                      <div key={col} className="flex flex-col gap-1 md:gap-0.5">
+                        {Array.from({ length: ROWS }, (_, row) => {
+                          const cell = cells[col * ROWS + row]
+                          if (!cell) return null
+                          const lvl = cell.future ? 0 : levelFor(cell.min, maxMin)
+                          const cls = LEVEL_CLASS[cell.future ? 0 : lvl]
+                          const isToday = cell.date === todayStr
+                          return (
+                            <button
+                              key={cell.date}
+                              type="button"
+                              disabled={cell.future}
+                              title={`${cell.date}${cell.min ? ` · ${cell.min} min` : ''}`}
+                              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[3px] p-0 md:h-2.5 md:w-2.5 ${cls} ${
+                                cell.future ? 'cursor-default opacity-25' : 'poco-press cursor-pointer opacity-100'
+                              } ${isToday ? 'ring-1 ring-[var(--accent)] ring-offset-1 ring-offset-[var(--bg-base)]' : ''}`}
+                              onClick={() => {
+                                if (cell.future) return
+                                setSheetDay(cell.date)
+                              }}
+                            />
+                          )
+                        })}
+                      </div>
+                    ))}
+                  </div>
                 </div>
+                <p className="mt-2 text-[11px] leading-snug text-[var(--text-tertiary)] md:max-w-md">
+                  Darker tiles = more completed focus minutes that day. Tap a tile for the session list
+                  {isMdUp ? ' (shown beside the grid on desktop).' : '.'}
+                </p>
               </div>
-              <p className="mt-2 text-[11px] leading-snug text-[var(--text-tertiary)]">
-                Darker tiles = more completed focus minutes that day. Tap a tile for the session list.
-              </p>
+
+              {sheetDay && isMdUp ? (
+                <aside className="mt-6 w-full shrink-0 md:mt-0 md:w-[min(100%,320px)] md:max-w-sm md:pt-5">
+                  <FocusDayDetail
+                    sheetDay={sheetDay}
+                    dayTotal={dayTotal}
+                    daySessions={daySessions}
+                    taskTitle={taskTitle}
+                    onClose={() => setSheetDay(null)}
+                    layout="aside"
+                  />
+                </aside>
+              ) : null}
             </div>
           </div>
         ) : null}
       </div>
 
-      <PocoBottomSheet open={Boolean(sheetDay)} onBackdropClick={() => setSheetDay(null)}>
-        <div className="max-h-[min(70dvh,520px)] overflow-y-auto p-4 pb-[calc(var(--poco-mobile-nav-height)+0.75rem)]">
-          <div className="mb-3 flex items-start justify-between gap-2">
-            <div>
-              <p className="font-serif text-lg text-[var(--text-primary)]">{sheetDay}</p>
-              <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                <strong className="text-[var(--text-primary)]">{dayTotal}</strong> min across{' '}
-                <strong className="text-[var(--text-primary)]">{daySessions.length}</strong> sessions
-              </p>
-            </div>
-            <button type="button" className="poco-press p-2 text-[var(--text-tertiary)]" aria-label="Close" onClick={() => setSheetDay(null)}>
-              <Icon name="x" size={20} />
-            </button>
-          </div>
-          {daySessions.length === 0 ? (
-            <p className="text-sm text-[var(--text-tertiary)]">No completed focus sessions logged for this day.</p>
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {daySessions.map((s) => (
-                <li
-                  key={s.id}
-                  className="rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-left"
-                >
-                  <p className="text-sm font-medium text-[var(--text-primary)]">{taskTitle(s.taskId)}</p>
-                  <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
-                    {s.plannedMinutes} min · {new Date(s.startedAt).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+      <PocoBottomSheet open={Boolean(sheetDay) && !isMdUp} onBackdropClick={() => setSheetDay(null)}>
+        {sheetDay ? (
+          <FocusDayDetail
+            sheetDay={sheetDay}
+            dayTotal={dayTotal}
+            daySessions={daySessions}
+            taskTitle={taskTitle}
+            onClose={() => setSheetDay(null)}
+            layout="sheet"
+          />
+        ) : null}
       </PocoBottomSheet>
     </>
   )

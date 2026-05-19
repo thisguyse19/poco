@@ -103,7 +103,13 @@ export function FocusPage() {
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch]">
-        <div className="mx-auto flex w-full max-w-lg flex-col items-stretch px-4 pb-[calc(var(--poco-mobile-nav-height)+1rem)] pt-3">
+        <div
+          className={`mx-auto flex w-full flex-col px-4 pb-[calc(var(--poco-mobile-nav-height)+1rem)] pt-3 ${
+            isRunning && mode === 'focus'
+              ? 'max-w-lg items-stretch md:max-w-4xl md:items-center md:px-8'
+              : 'max-w-lg items-stretch'
+          }`}
+        >
           <TimerControls
             topSlot={pickControl}
             mode={mode}
@@ -113,6 +119,7 @@ export function FocusPage() {
             sessionsCompleted={sessionsCompleted}
             focusSessionsInCycle={focusSessionsInCycle}
             compact={compactTimer}
+            phaseExpansive={isRunning && mode === 'focus'}
             onToggle={() => {
               if (isRunning) pause()
               else start()
