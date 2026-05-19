@@ -3,12 +3,14 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
-  closestCenter,
+  pointerWithin,
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragOverEvent,
   type DragStartEvent,
 } from '@dnd-kit/core'
+import { snapCenterToCursor } from '@dnd-kit/modifiers'
 import { useDraggable, useDroppable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import type { Priority, Task } from '../types'
@@ -29,6 +31,7 @@ import {
   tomorrowIsoFrom,
 } from '../utils/weekPlanner'
 import { SCRUM_MASTER_CATEGORY } from '../utils/scrumMaster'
+import { usePointerFine } from '../hooks/usePointerFine'
 
 const UNSCHEDULED_DROPPABLE_ID = 'poco-week-unscheduled'
 const UNSCHEDULED_BIN_ID = 'poco-week-unscheduled-bin'
@@ -63,11 +66,13 @@ function PlannerTaskCard({
   scrumAccent,
   onOpenDetail,
   dragDisabled,
+  pointerFine,
 }: {
   task: Task
   scrumAccent: boolean
   onOpenDetail: (t: Task) => void
   dragDisabled?: boolean
+  pointerFine: boolean
 }) {
   const armTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [armed, setArmed] = useState(false)
@@ -114,7 +119,7 @@ function PlannerTaskCard({
       style={style}
       {...restDraggableListeners}
       {...attributes}
-      className={`relative touch-none select-none rounded-none bg-[var(--bg-elevated)] px-2.5 py-2.5 text-left ${
+      className={`relative touch-none select-none rounded-none bg-[var(--bg-elevated)] px-2.5 py-2.5 text-left md:px-3 md:py-3 ${
         borderEmphasis ? 'border border-[var(--accent)]' : 'border border-[var(--border-subtle)]'
       } ${scrumAccent ? 'poco-scrum-week-mark' : ''} ${isDragging ? 'z-10 opacity-0' : ''} ${
         task.completed ? 'opacity-60' : ''
@@ -164,17 +169,23 @@ function PlannerTaskCard({
       }}
       role="button"
       tabIndex={0}
-      aria-label={`${task.title}. Double-tap to edit.`}
+      aria-label={
+        pointerFine ? `${task.title}. Double-click to edit.` : `${task.title}. Double-tap to edit.`
+      }
     >
       <div className="flex items-start gap-2">
         {priorityDot(task.priority)}
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium leading-snug text-[var(--text-primary)] [overflow-wrap:anywhere]">{task.title}</p>
+          <p className="text-sm font-medium leading-snug text-[var(--text-primary)] [overflow-wrap:anywhere] md:text-base">
+            {task.title}
+          </p>
           {task.description ? (
-            <p className="mt-1 line-clamp-3 text-xs leading-snug text-[var(--text-secondary)] [overflow-wrap:anywhere]">{task.description}</p>
+            <p className="mt-1 line-clamp-3 text-xs leading-snug text-[var(--text-secondary)] [overflow-wrap:anywhere] md:text-sm">
+              {task.description}
+            </p>
           ) : null}
           {formatTaskDueDisplay(task.dueDate, task.dueTime) ? (
-            <p className="mt-1 text-[10px] text-[var(--text-tertiary)]">{formatTaskDueDisplay(task.dueDate, task.dueTime)}</p>
+            <p className="mt-1 text-[10px] text-[var(--text-tertiary)] md:text-xs">{formatTaskDueDisplay(task.dueDate, task.dueTime)}</p>
           ) : null}
         </div>
       </div>
@@ -186,10 +197,12 @@ function DayCell({
   iso,
   todayIso,
   children,
+  peekDrop,
 }: {
   iso: string
   todayIso: string
   children: React.ReactNode
+  peekDrop?: boolean
 }) {
   const past = iso < todayIso
   const { setNodeRef, isOver } = useDroppable({
@@ -197,67 +210,82 @@ function DayCell({
     disabled: past,
   })
   const isToday = iso === todayIso
+  const dropGlow = !past && (isOver || peekDrop)
 
   return (
     <div
       ref={setNodeRef}
-      className={`flex min-h-0 min-w-0 flex-col overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-subtle)] p-2 ${
+      className={`flex min-h-0 min-w-0 flex-col overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-subtle)] p-2 md:p-3 ${
         past ? 'opacity-70' : ''
-      } ${isOver && !past ? 'bg-[var(--accent-soft)]' : ''}`}
+      } ${dropGlow ? 'bg-[color-mix(in_srgb,var(--accent-soft)_88%,var(--bg-subtle))] ring-2 ring-inset ring-[var(--accent)]/45' : ''}`}
     >
       <div className="mb-2 flex shrink-0 items-baseline justify-between gap-2 border-b border-[var(--border-subtle)] pb-1.5">
-        <p className="min-w-0 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
+        <p className="min-w-0 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)] md:text-xs">
           {formatIsoWeekdayShortUk(iso)}
         </p>
         {isToday ? (
-          <span className="shrink-0 rounded-none border border-[var(--accent)] bg-[var(--accent-soft)] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[var(--accent)]">
+          <span className="shrink-0 rounded-none border border-[var(--accent)] bg-[var(--accent-soft)] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[var(--accent)] md:px-2 md:py-0.5 md:text-[10px]">
             TODAY
           </span>
         ) : null}
-        {past ? <span className="shrink-0 text-[10px] text-[var(--text-tertiary)]">Past</span> : null}
+        {past ? (
+          <span className="shrink-0 text-[10px] text-[var(--text-tertiary)] md:text-xs">Past</span>
+        ) : null}
       </div>
-      <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto [-webkit-overflow-scrolling:touch]">{children}</div>
+      <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto [-webkit-overflow-scrolling:touch] md:gap-2">{children}</div>
     </div>
   )
 }
 
-function UnscheduledBlock({ children, flash }: { children: React.ReactNode; flash?: boolean }) {
+function UnscheduledBlock({
+  children,
+  flash,
+  peekDrop,
+}: {
+  children: React.ReactNode
+  flash?: boolean
+  peekDrop?: boolean
+}) {
   const { setNodeRef, isOver } = useDroppable({ id: UNSCHEDULED_DROPPABLE_ID })
+  const dropGlow = flash || isOver || peekDrop
   return (
     <div
       ref={setNodeRef}
-      className={`flex min-h-0 min-w-0 flex-col overflow-hidden bg-[var(--bg-subtle)] p-2 ${
+      className={`flex min-h-0 min-w-0 flex-col overflow-hidden bg-[var(--bg-subtle)] p-2 md:p-3 ${
         flash
           ? 'border border-[var(--accent)] bg-[var(--accent-soft)]'
-          : isOver
-            ? 'border border-[var(--accent)] bg-[var(--accent-soft)]'
+          : dropGlow
+            ? 'border border-[var(--accent)] bg-[color-mix(in_srgb,var(--accent-soft)_82%,var(--bg-base))] ring-2 ring-inset ring-[var(--accent)]/40'
             : 'border border-dashed border-[var(--border-default)] bg-[var(--bg-base)]'
       }`}
     >
       <div className="mb-1.5 shrink-0 border-b border-[var(--border-subtle)] pb-1.5">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Unscheduled</p>
-        <p className="text-[10px] leading-snug text-[var(--text-tertiary)]">Inbox and Someday · drop to clear date</p>
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)] md:text-xs">Unscheduled</p>
+        <p className="text-[10px] leading-snug text-[var(--text-tertiary)] md:text-[11px]">Inbox and Someday · drop to clear date</p>
       </div>
-      <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto [-webkit-overflow-scrolling:touch]">{children}</div>
+      <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto [-webkit-overflow-scrolling:touch] md:gap-2">{children}</div>
     </div>
   )
 }
 
-function UnscheduledBin({ flash }: { flash: boolean }) {
+function UnscheduledBin({ flash, peekDrop }: { flash: boolean; peekDrop?: boolean }) {
   const { setNodeRef, isOver } = useDroppable({ id: UNSCHEDULED_BIN_ID })
+  const dropGlow = flash || isOver || peekDrop
   return (
     <div
       ref={setNodeRef}
-      className={`flex shrink-0 items-center justify-center gap-2 border border-dashed px-2 py-2.5 transition-colors duration-200 ${
+      className={`flex min-h-[2.75rem] shrink-0 items-center justify-center gap-2 border border-dashed px-2 py-2.5 transition-colors duration-200 md:min-h-[3.5rem] md:px-4 md:py-4 ${
         flash
           ? 'border-[var(--accent)] bg-[var(--accent-soft)]'
-          : isOver
-            ? 'border-[var(--accent)]/70 bg-[color-mix(in_srgb,var(--accent-soft)_60%,var(--bg-base))]'
+          : dropGlow
+            ? 'border-[var(--accent)]/80 bg-[color-mix(in_srgb,var(--accent-soft)_70%,var(--bg-base))] ring-2 ring-inset ring-[var(--accent)]/35'
             : 'border-[var(--border-subtle)] bg-[var(--bg-subtle)]'
       }`}
     >
-      <Icon name="tasks" size={16} className="text-[var(--text-tertiary)]" />
-      <span className="text-center text-[11px] font-medium text-[var(--text-secondary)]">Drop here for Unscheduled</span>
+      <Icon name="tasks" size={20} className="text-[var(--text-tertiary)]" />
+      <span className="text-center text-[11px] font-medium text-[var(--text-secondary)] md:text-sm md:font-semibold">
+        Drop here for Unscheduled
+      </span>
     </div>
   )
 }
@@ -292,7 +320,7 @@ function ArrowZone({
     <button
       ref={mergedRef}
       type="button"
-      className={`poco-press relative flex h-7 w-full shrink-0 items-center justify-center overflow-hidden border-b border-[var(--border-subtle)] transition-colors duration-200 ${
+      className={`poco-press relative flex h-7 w-full shrink-0 items-center justify-center overflow-hidden border-b border-[var(--border-subtle)] transition-colors duration-200 md:h-12 ${
         highlight || isOver ? 'bg-[color-mix(in_srgb,var(--accent-soft)_75%,var(--bg-subtle))]' : 'bg-[var(--bg-base)]'
       }`}
       onClick={onTap}
@@ -305,7 +333,7 @@ function ArrowZone({
       />
       <Icon
         name="chevron-down"
-        size={14}
+        size={20}
         className={`relative z-[1] text-[var(--text-secondary)] ${direction === 'up' ? 'rotate-180' : ''}`}
       />
     </button>
@@ -319,6 +347,7 @@ export function WeekPage() {
   const deleteTask = useTaskStore((s) => s.deleteTask)
   const confirmDelete = useSettingsStore((s) => s.settings.confirmDelete)
   const smEnabled = useSettingsStore((s) => s.settings.scrumMaster.enabled)
+  const pointerFine = usePointerFine()
 
   const [pageIndex, setPageIndex] = useState(0)
   const pageIndexRef = useRef(pageIndex)
@@ -332,6 +361,7 @@ export function WeekPage() {
   const [flipProgress, setFlipProgress] = useState(0)
   const [unschedFlash, setUnschedFlash] = useState(false)
   const [binFlash, setBinFlash] = useState(false)
+  const [dragOverId, setDragOverId] = useState<string | null>(null)
 
   const zonePrevRef = useRef<HTMLButtonElement | null>(null)
   const zoneNextRef = useRef<HTMLButtonElement | null>(null)
@@ -494,6 +524,7 @@ export function WeekPage() {
   const onDragStart = useCallback(
     (e: DragStartEvent) => {
       clearFlipTimer()
+      setDragOverId(null)
       const id = String(e.active.id)
       const t = tasks.find((x) => x.id === id)
       setActiveTask(t ?? null)
@@ -501,9 +532,45 @@ export function WeekPage() {
     [tasks, clearFlipTimer],
   )
 
+  const onDragOver = useCallback(
+    (e: DragOverEvent) => {
+      let id = e.over?.id != null ? String(e.over.id) : null
+      const activeId = String(e.active.id)
+      if (id === activeId) id = null
+      if (
+        id &&
+        id !== activeId &&
+        !id.startsWith('day:') &&
+        id !== UNSCHEDULED_DROPPABLE_ID &&
+        id !== UNSCHEDULED_BIN_ID &&
+        id !== ZONE_PREV_ID &&
+        id !== ZONE_NEXT_ID
+      ) {
+        const hoveredTask = tasks.find((x) => x.id === id)
+        if (hoveredTask) {
+          const p = taskWeekPlacement(hoveredTask, ctx)
+          if (!p) id = null
+          else if (p.kind === 'unscheduled') id = UNSCHEDULED_DROPPABLE_ID
+          else if (windowSet.has(p.iso)) id = dayDroppableId(p.iso)
+          else id = null
+        }
+      }
+      setDragOverId(id)
+    },
+    [tasks, ctx, windowSet],
+  )
+
+  const onDragCancel = useCallback(() => {
+    setActiveTask(null)
+    setDragOverId(null)
+    setZoneHighlight(null)
+    clearFlipTimer()
+  }, [clearFlipTimer])
+
   const onDragEnd = useCallback(
     (e: DragEndEvent) => {
       setActiveTask(null)
+      setDragOverId(null)
       setZoneHighlight(null)
       clearFlipTimer()
       const { active, over } = e
@@ -554,26 +621,35 @@ export function WeekPage() {
     triggerHaptic(8)
   }, [])
 
+  const aheadDragHint = pointerFine
+    ? 'Click and hold a task to drag · double-click to edit'
+    : 'Hold a task to drag · double-tap to edit'
+
   return (
     <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
       <header className="shrink-0 border-b border-[var(--border-subtle)] px-4 pb-3 pt-[max(1rem,env(safe-area-inset-top,0px))] md:px-6">
-        <h1 className="font-serif text-2xl text-[var(--text-primary)] md:text-3xl">Week</h1>
-        <p className="mt-1 text-sm text-[var(--text-secondary)]">{rangeLabel}</p>
-        <p className="mt-0.5 text-[11px] text-[var(--text-tertiary)]">
-          Hold a task to drag · double-tap to edit
-          {smEnabled ? ' · coloured strip: Scrum Master task' : ''}
-        </p>
+        <h1 className="font-serif text-2xl text-[var(--text-primary)] md:text-3xl">Ahead</h1>
+        <p className="mt-1 text-sm text-[var(--text-secondary)] md:text-base">{rangeLabel}</p>
+        <p className="mt-0.5 text-[11px] text-[var(--text-tertiary)] md:text-xs">{aheadDragHint}</p>
+        {activeTask && zoneHighlight ? (
+          <p
+            className="mt-2 hidden rounded-none border border-[var(--accent)]/35 bg-[var(--accent-soft)] px-2.5 py-1.5 text-center text-sm font-semibold text-[var(--accent)] md:block"
+            role="status"
+          >
+            Keep holding to flip pages
+          </p>
+        ) : null}
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {pageIndex > 0 ? (
             <button
               type="button"
-              className="poco-press rounded-none border border-[var(--border-default)] bg-[var(--bg-elevated)] px-2.5 py-1.5 text-xs font-semibold text-[var(--accent)]"
+              className="poco-press rounded-none border border-[var(--border-default)] bg-[var(--bg-elevated)] px-2.5 py-1.5 text-xs font-semibold text-[var(--accent)] md:px-3 md:py-2 md:text-sm"
               onClick={goToday}
             >
               Today
             </button>
           ) : null}
-          <label className="ml-auto flex cursor-pointer items-center gap-2 text-xs text-[var(--text-secondary)]">
+          <label className="ml-auto flex cursor-pointer items-center gap-2 text-xs text-[var(--text-secondary)] md:text-sm">
             <input
               type="checkbox"
               className="accent-[var(--accent)]"
@@ -587,12 +663,15 @@ export function WeekPage() {
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-[calc(var(--poco-mobile-nav-height)+1rem)] pt-2 md:px-6 md:pb-6">
         {activeTask && zoneHighlight ? (
-          <p className="mb-1 text-center text-[11px] font-medium text-[var(--accent)]">Keep holding to flip pages</p>
+          <p className="mb-1 text-center text-[11px] font-medium text-[var(--accent)] md:hidden">Keep holding to flip pages</p>
         ) : null}
         <DndContext
           sensors={sensors}
-          collisionDetection={closestCenter}
+          collisionDetection={pointerWithin}
+          modifiers={[snapCenterToCursor]}
           onDragStart={onDragStart}
+          onDragOver={onDragOver}
+          onDragCancel={onDragCancel}
           onDragEnd={onDragEnd}
         >
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -607,7 +686,9 @@ export function WeekPage() {
               />
             ) : null}
 
-            {pageIndex > 0 ? <UnscheduledBin flash={binFlash} /> : null}
+            {pageIndex > 0 ? (
+              <UnscheduledBin flash={binFlash} peekDrop={dragOverId === UNSCHEDULED_BIN_ID} />
+            ) : null}
 
             <div
               data-oobe="week"
@@ -620,18 +701,28 @@ export function WeekPage() {
             >
               {weekSlots.map((slot) =>
                 slot.kind === 'unscheduled' ? (
-                  <UnscheduledBlock key="unscheduled" flash={unschedFlash}>
+                  <UnscheduledBlock
+                    key="unscheduled"
+                    flash={unschedFlash}
+                    peekDrop={dragOverId === UNSCHEDULED_DROPPABLE_ID}
+                  >
                     {unscheduled.map((t) => (
                       <PlannerTaskCard
                         key={t.id}
                         task={t}
                         scrumAccent={scrumAccent(t)}
                         onOpenDetail={setDetailTask}
+                        pointerFine={pointerFine}
                       />
                     ))}
                   </UnscheduledBlock>
                 ) : (
-                  <DayCell key={slot.iso} iso={slot.iso} todayIso={todayIso}>
+                  <DayCell
+                    key={slot.iso}
+                    iso={slot.iso}
+                    todayIso={todayIso}
+                    peekDrop={dragOverId === dayDroppableId(slot.iso)}
+                  >
                     {(byDay.get(slot.iso) ?? []).map((t) => (
                       <PlannerTaskCard
                         key={t.id}
@@ -639,6 +730,7 @@ export function WeekPage() {
                         scrumAccent={scrumAccent(t)}
                         onOpenDetail={setDetailTask}
                         dragDisabled={slot.iso < todayIso}
+                        pointerFine={pointerFine}
                       />
                     ))}
                   </DayCell>
@@ -659,11 +751,13 @@ export function WeekPage() {
           <DragOverlay dropAnimation={null}>
             {activeTask ? (
               <div
-                className={`max-w-[min(92vw,22rem)] rounded-none border border-[var(--accent)] bg-[var(--bg-elevated)] px-3 py-2.5 shadow-lg ${
+                className={`max-w-[min(92vw,22rem)] rounded-none border border-[var(--accent)] bg-[var(--bg-elevated)] px-3 py-2.5 shadow-lg md:max-w-[min(40vw,28rem)] md:px-4 md:py-3 ${
                   activeTask.completed ? 'opacity-60' : ''
                 }`}
               >
-                <p className="line-clamp-3 text-sm font-medium leading-snug text-[var(--text-primary)] [overflow-wrap:anywhere]">{activeTask.title}</p>
+                <p className="line-clamp-3 text-sm font-medium leading-snug text-[var(--text-primary)] [overflow-wrap:anywhere] md:text-base">
+                  {activeTask.title}
+                </p>
               </div>
             ) : null}
           </DragOverlay>

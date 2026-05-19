@@ -31,7 +31,8 @@ export function AppRoutes() {
       <Route path="/scrum-master-setup" element={<ScrumMasterSetupPage />} />
       <Route element={<AppLayout />}>
         <Route index element={<HomePage />} />
-        <Route path="week" element={<WeekPage />} />
+        <Route path="ahead" element={<WeekPage />} />
+        <Route path="week" element={<Navigate to="/ahead" replace />} />
         <Route path="focus" element={<FocusPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />

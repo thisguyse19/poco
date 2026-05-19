@@ -38,10 +38,10 @@ export const OOBE_TOUR_STEPS: OobeTourStepDef[] = [
     tryThis: 'swipe_reschedule',
   },
   {
-    path: '/week',
+    path: '/ahead',
     anchor: 'week',
-    title: 'Week planner — your turn',
-    body: 'Hold a task until it lifts, then drop it on a day or on Unscheduled. The tour advances after your first successful drop.',
+    title: 'Ahead — your turn',
+    body: 'Hold (or click and hold) a task until it lifts, then drop it on a day or on Unscheduled. The tour advances after your first successful drop.',
     tryThis: 'week_drag',
   },
   {
