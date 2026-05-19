@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { HomeSearchControl } from '../components/tasks/HomeSearchControl'
 import { QuickAdd } from '../components/tasks/QuickAdd'
 import { TaskList, type TaskListScrum } from '../components/tasks/TaskList'
@@ -10,10 +10,12 @@ import {
   getScrumBanner,
   isStandDownCollectionWindow,
   isStandUpCollectionWindow,
+  scrumLiveSubtitle,
   SCRUM_MASTER_CATEGORY,
 } from '../utils/scrumMaster'
 import { effectiveScrumFlatToday, writeScrumFlatPreference } from '../utils/scrumFlatStorage'
 import { clearStandSessions, getScrumSession, setStandDownLive, setStandUpLive } from '../utils/scrumSession'
+import { useScrumNotifications } from '../hooks/useScrumNotifications'
 
 function shouldShowReview(hour: number, dismissed: string | null, thresholdHour: number): boolean {
   if (hour < thresholdHour) return false
@@ -32,8 +34,13 @@ export function HomePage() {
   const [clock, setClock] = useState(0)
   const [sessTick, setSessTick] = useState(0)
   const [taskListKey, setTaskListKey] = useState(0)
+  const [smSessionEnter, setSmSessionEnter] = useState(false)
+  const prevLive = useRef(false)
 
   const sm = settings.scrumMaster
+  const gateComplete = settings.scrumMasterGateComplete
+
+  useScrumNotifications(sm, gateComplete)
 
   useEffect(() => {
     const id = window.setInterval(() => {
@@ -67,14 +74,37 @@ export function HomePage() {
   const standUpLive = Boolean(session.standUpLive)
   const standDownLive = Boolean(session.standDownLive)
 
+  useEffect(() => {
+    const live = standUpLive || standDownLive
+    if (live && !prevLive.current) {
+      setSmSessionEnter(true)
+      const t = window.setTimeout(() => setSmSessionEnter(false), 520)
+      prevLive.current = true
+      return () => window.clearTimeout(t)
+    }
+    if (!live) prevLive.current = false
+  }, [standUpLive, standDownLive])
+
   const showReview = useMemo(
     () => shouldShowReview(new Date().getHours(), settings.reviewDismissedAt, settings.endOfDayReviewHour),
     [settings.reviewDismissedAt, settings.endOfDayReviewHour],
   )
 
   const greeting = useMemo(() => {
-    if (standUpLive) return 'Stand up has started.'
-    if (standDownLive) return 'Stand down has started.'
+    if (standUpLive) {
+      return (
+        <>
+          <span className="poco-scrum-title-glow">Stand up</span> has started.
+        </>
+      )
+    }
+    if (standDownLive) {
+      return (
+        <>
+          <span className="poco-scrum-title-glow">Stand down</span> has started.
+        </>
+      )
+    }
     const h = new Date().getHours()
     const seg = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'
     const n = settings.profileName?.trim()
@@ -82,8 +112,8 @@ export function HomePage() {
   }, [settings.profileName, standUpLive, standDownLive])
 
   const subtitle = useMemo(() => {
-    if (standUpLive) return 'What will you be completing today?'
-    if (standDownLive) return 'What did you finish today — and what carries to tomorrow?'
+    if (standUpLive) return scrumLiveSubtitle(sm.personality, true)
+    if (standDownLive) return scrumLiveSubtitle(sm.personality, false)
     const line = new Intl.DateTimeFormat(undefined, {
       weekday: 'long',
       month: 'long',
@@ -92,7 +122,7 @@ export function HomePage() {
     }).format(new Date())
     const n = tasks.filter((t) => !t.completed && t.scheduledFor === 'today').length
     return `${line} · ${n} ${n === 1 ? 'task' : 'tasks'} today`
-  }, [tasks, standUpLive, standDownLive])
+  }, [tasks, standUpLive, standDownLive, sm.personality])
 
   const headerDimmed = searchOpen || searchQuery.trim().length > 0
 
@@ -139,6 +169,7 @@ export function HomePage() {
     ? {
         enabled: true,
         masterName: sm.name,
+        personality: sm.personality,
         banner,
         onBannerTap: () => {
           if (!banner.visible) return
@@ -162,7 +193,9 @@ export function HomePage() {
     : null
 
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col overflow-x-hidden">
+    <div
+      className={`relative flex min-h-0 flex-1 flex-col overflow-x-hidden ${smSessionEnter ? 'poco-sm-session-enter' : ''}`}
+    >
       <header className="relative flex min-h-[var(--poco-page-header-min)] shrink-0 flex-col border-b border-[var(--border-subtle)] px-4 pb-4 pt-[max(1rem,env(safe-area-inset-top,0px))] md:px-6">
         <div
           className={`min-w-0 transition-opacity duration-[400ms] [transition-timing-function:var(--ease-ios)] ${

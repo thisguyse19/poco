@@ -10,6 +10,7 @@ import { TaskDetailSheet } from './TaskDetailSheet'
 import { ScrumMasterBanner } from '../scrum/ScrumMasterBanner'
 import type { ScrumBannerView } from '../../utils/scrumMaster'
 import { SCRUM_MASTER_CATEGORY } from '../../utils/scrumMaster'
+import type { ScrumMasterPersonality } from '../../types'
 
 function sectionTitle(text: string) {
   return (
@@ -42,6 +43,7 @@ function taskMatchesSearch(t: Task, q: string): boolean {
 export type TaskListScrum = {
   enabled: boolean
   masterName: string
+  personality: ScrumMasterPersonality
   banner: ScrumBannerView
   onBannerTap: () => void
   standUpCollection: boolean
@@ -170,8 +172,13 @@ export function TaskList({ searchQuery = '', scrum }: { searchQuery?: string; sc
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pb-[calc(var(--poco-mobile-nav-height)+1rem)] pt-2 md:px-6 md:pb-6">
-      {scrum?.enabled && scrum.banner.visible ? (
-        <ScrumMasterBanner name={scrum.masterName} banner={scrum.banner} onTapStart={scrum.onBannerTap} />
+      {scrum?.enabled ? (
+        <ScrumMasterBanner
+          name={scrum.masterName}
+          banner={scrum.banner}
+          personality={scrum.personality}
+          onTapStart={scrum.onBannerTap}
+        />
       ) : null}
 
       {inbox.length > 0 ? (
@@ -203,17 +210,12 @@ export function TaskList({ searchQuery = '', scrum }: { searchQuery?: string; sc
               {todayByCategory.map(({ cat, items }) => {
                 const expanded = map[cat] !== false
                 const isSm = cat === SCRUM_MASTER_CATEGORY && scrum?.enabled
-                const smCollectionGlow = Boolean(
-                  isSm && (scrum.standUpCollection || scrum.standDownCollection || scrum.standUpLive || scrum.standDownLive),
-                )
                 const { title, subtitle } = scrumCategoryTitle(cat, items.length)
-                return (
-                  <div key={cat}>
+                const inner = (
+                  <>
                     <button
                       type="button"
-                      className={`poco-press mb-1.5 flex w-full items-center gap-2.5 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-base)] px-2.5 py-1.5 text-left md:px-3 md:py-2 ${
-                        smCollectionGlow ? 'poco-scrum-glow-border' : isSm ? 'poco-scrum-row-pulse' : ''
-                      }`}
+                      className="poco-press mb-1.5 flex w-full items-center gap-2.5 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-base)] px-2.5 py-1.5 text-left md:px-3 md:py-2"
                       onClick={() => toggle(cat)}
                     >
                       <span
@@ -232,6 +234,11 @@ export function TaskList({ searchQuery = '', scrum }: { searchQuery?: string; sc
                         {items.map((t) => renderTask(t, false))}
                       </div>
                     ) : null}
+                  </>
+                )
+                return (
+                  <div key={cat} className={isSm ? 'poco-scrum-panel' : undefined}>
+                    {inner}
                   </div>
                 )
               })}

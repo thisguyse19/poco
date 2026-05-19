@@ -124,7 +124,9 @@ export function QuickAdd({
             </span>
             <textarea
               ref={inputRef}
-              className="poco-input max-h-[2.75rem] min-h-0 flex-1 resize-none rounded-none border-0 bg-transparent px-1 py-1 text-sm leading-snug outline-none"
+              className={`poco-input max-h-[2.75rem] min-h-0 flex-1 resize-none rounded-none border-0 bg-transparent px-1 py-1 text-sm leading-snug outline-none ${
+                scrumGlow ? 'poco-scrum-input-inner-glow' : ''
+              }`}
               placeholder={ph}
               value={text}
               rows={1}

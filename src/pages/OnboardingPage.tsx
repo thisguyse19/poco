@@ -1,14 +1,10 @@
 import { useNavigate } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import { useSettingsStore } from '../stores/settingsStore'
-import type { DensityName, FontScaleName, ScrumMasterGender, ThemeName } from '../types'
+import type { DensityName, FontScaleName, ThemeName } from '../types'
 import { AppearanceControlGroup } from '../components/settings/AppearanceControlGroup'
-import { PocoHourCarousel } from '../components/ui/PocoHourCarousel'
-import { PocoMinuteCarousel } from '../components/ui/PocoMinuteCarousel'
-import { PocoScrollPicker } from '../components/ui/PocoScrollPicker'
-import { normalizeTimeHHMM, scrumNamesForGender } from '../utils/scrumMaster'
 
-const STEP_COUNT = 5
+const STEP_COUNT = 4
 
 export function OnboardingPage() {
   const navigate = useNavigate()
@@ -20,51 +16,26 @@ export function OnboardingPage() {
   const [density, setDensity] = useState<DensityName>(base.density)
   const [fontScale, setFontScale] = useState<FontScaleName>(base.fontScale)
 
-  const [smGender, setSmGender] = useState<ScrumMasterGender>(base.scrumMaster.gender)
-  const [smName, setSmName] = useState(base.scrumMaster.name)
-  const [smUp, setSmUp] = useState(base.scrumMaster.standUpTime)
-  const [smDown, setSmDown] = useState(base.scrumMaster.standDownTime)
-
   const [profileName, setProfileName] = useState(base.profileName.trim() || '')
-
-  const names = useMemo(() => [...scrumNamesForGender(smGender)], [smGender])
-
-  const upHm = useMemo(() => {
-    const [h, m] = normalizeTimeHHMM(smUp).split(':').map(Number)
-    return { h, m }
-  }, [smUp])
-  const downHm = useMemo(() => {
-    const [h, m] = normalizeTimeHHMM(smDown).split(':').map(Number)
-    return { h, m }
-  }, [smDown])
 
   useEffect(() => {
     updateSettings({ theme, density, fontScale })
   }, [theme, density, fontScale, updateSettings])
 
   const skipFromStart = () => {
-    updateSettings({ onboardingComplete: true })
+    updateSettings({ onboardingComplete: true, scrumMasterGateComplete: false })
     navigate('/')
   }
 
   const finish = () => {
     const name = profileName.trim() || 'You'
-    const cur = useSettingsStore.getState().settings
-    const nm = [...scrumNamesForGender(smGender)]
     updateSettings({
       onboardingComplete: true,
+      scrumMasterGateComplete: false,
       profileName: name,
       theme,
       density,
       fontScale,
-      scrumMaster: {
-        ...cur.scrumMaster,
-        enabled: true,
-        gender: smGender,
-        name: nm.includes(smName) ? smName : nm[0],
-        standUpTime: normalizeTimeHHMM(smUp),
-        standDownTime: normalizeTimeHHMM(smDown),
-      },
     })
     navigate('/')
   }
@@ -85,7 +56,8 @@ export function OnboardingPage() {
           <div className="animate-fadeIn flex flex-1 flex-col gap-6">
             <h1 className="font-serif text-3xl">Welcome to poco</h1>
             <p className="text-[var(--text-secondary)]">
-              A quiet place for tasks and focus. We will show two tiny motion hints, tune how poco looks, and meet your Scrum Master.
+              A quiet place for tasks and focus. We will show two tiny motion hints, tune how poco looks, then add your
+              name. After that, you can choose whether to enable the Scrum Master in a quick follow-up.
             </p>
             <div className="mt-auto flex flex-col gap-3 sm:flex-row sm:justify-between">
               <button type="button" className="poco-press text-sm font-semibold text-[var(--text-secondary)]" onClick={skipFromStart}>
@@ -186,70 +158,6 @@ export function OnboardingPage() {
         )}
 
         {step === 3 && (
-          <div className="animate-fadeIn flex flex-1 flex-col gap-5">
-            <h2 className="font-serif text-2xl">Your Scrum Master</h2>
-            <p className="text-sm text-[var(--text-secondary)]">
-              A gentle voice for stand-up and stand-down. You can change this later under Settings → Features.
-            </p>
-            <div className="grid grid-cols-2 gap-0 overflow-hidden rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)]">
-              {(['female', 'male'] as ScrumMasterGender[]).map((g) => (
-                <button
-                  key={g}
-                  type="button"
-                  className={`poco-press flex h-11 min-h-[2.75rem] flex-1 items-center justify-center border-r border-[var(--border-subtle)] text-xs font-semibold capitalize last:border-r-0 ${
-                    smGender === g ? 'bg-[var(--accent-soft)] text-[var(--accent)]' : 'text-[var(--text-secondary)]'
-                  }`}
-                  onClick={() => {
-                    setSmGender(g)
-                    const opts = scrumNamesForGender(g)
-                    setSmName(opts.includes(smName) ? smName : opts[0])
-                  }}
-                >
-                  {g}
-                </button>
-              ))}
-            </div>
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Name</p>
-              <div className="rounded-none border border-[var(--border-subtle)] bg-[var(--bg-base)] px-2 py-1">
-                <PocoScrollPicker
-                  prominent
-                  value={names.includes(smName) ? smName : names[0]}
-                  options={names}
-                  onChange={(n) => setSmName(n)}
-                />
-              </div>
-            </div>
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Stand up</p>
-              <div className="flex min-h-[72px] justify-center gap-2 rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-2">
-                <PocoHourCarousel variant="toolbar" hour0to23={upHm.h} onChange={(h) => setSmUp(normalizeTimeHHMM(`${h}:${upHm.m}`))} />
-                <PocoMinuteCarousel variant="toolbar" minute0to55Step5={upHm.m} onChange={(m) => setSmUp(normalizeTimeHHMM(`${upHm.h}:${m}`))} />
-              </div>
-            </div>
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Stand down</p>
-              <div className="flex min-h-[72px] justify-center gap-2 rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-2">
-                <PocoHourCarousel variant="toolbar" hour0to23={downHm.h} onChange={(h) => setSmDown(normalizeTimeHHMM(`${h}:${downHm.m}`))} />
-                <PocoMinuteCarousel variant="toolbar" minute0to55Step5={downHm.m} onChange={(m) => setSmDown(normalizeTimeHHMM(`${downHm.h}:${m}`))} />
-              </div>
-            </div>
-            <div className="mt-auto flex justify-between gap-3">
-              <button type="button" className="poco-press text-sm font-semibold" onClick={() => setStep(2)}>
-                Back
-              </button>
-              <button
-                type="button"
-                className="poco-press rounded-[var(--radius-sm)] bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-[var(--text-inverse)]"
-                onClick={() => setStep(4)}
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        )}
-
-        {step === 4 && (
           <div className="animate-fadeIn flex flex-1 flex-col gap-6">
             <h2 className="font-serif text-2xl">Almost there</h2>
             <p className="text-sm text-[var(--text-secondary)]">How should we greet you on the home screen?</p>
@@ -260,7 +168,7 @@ export function OnboardingPage() {
               onChange={(e) => setProfileName(e.target.value)}
             />
             <div className="mt-auto flex justify-between gap-3">
-              <button type="button" className="poco-press text-sm font-semibold" onClick={() => setStep(3)}>
+              <button type="button" className="poco-press text-sm font-semibold" onClick={() => setStep(2)}>
                 Back
               </button>
               <button

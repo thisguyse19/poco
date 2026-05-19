@@ -9,6 +9,7 @@ import { AppearanceControlGroup } from '../components/settings/AppearanceControl
 import { ScrumMasterEditModal } from '../components/settings/ScrumMasterEditModal'
 import { useSettingsStore, DEFAULT_SETTINGS } from '../stores/settingsStore'
 import { storage } from '../services/storage'
+import { SCRUM_MASTER_PERSONALITIES } from '../utils/scrumMaster'
 import { pocoDevLab } from '../utils/pocoDevLab'
 import { triggerHaptic } from '../utils/haptics'
 
@@ -113,7 +114,7 @@ export function SettingsPage() {
               <p className="font-medium">Scrum Master</p>
               <p className="truncate text-xs text-[var(--text-tertiary)]">
                 {settings.scrumMaster.enabled
-                  ? `${settings.scrumMaster.name} · ${settings.scrumMaster.standUpTime} / ${settings.scrumMaster.standDownTime}`
+                  ? `${settings.scrumMaster.name} · ${SCRUM_MASTER_PERSONALITIES.find((p) => p.id === settings.scrumMaster.personality)?.title ?? 'Warm'} · ${settings.scrumMaster.standUpTime} / ${settings.scrumMaster.standDownTime}`
                   : 'Off'}
               </p>
             </div>
