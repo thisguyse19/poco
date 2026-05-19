@@ -457,7 +457,7 @@ input[type='number']::-webkit-outer-spin-button {
   animation: none !important;
 }
 
-/* Scrum Master: iridescent accent — visible day-round on panels & banner */
+/* Scrum Master: muted iridescent accent */
 @property --poco-scrum-a {
   syntax: '<angle>';
   inherits: false;
@@ -473,45 +473,45 @@ input[type='number']::-webkit-outer-spin-button {
   border: 1.5px solid transparent;
   background:
     linear-gradient(var(--bg-base), var(--bg-base)) padding-box,
-    conic-gradient(from var(--poco-scrum-a), #3d8bd4, #a855f7, #22c55e, #f59e0b, #3d8bd4) border-box;
+    conic-gradient(from var(--poco-scrum-a), #6b93b8, #8b7cb5, #6fa889, #b89a68, #6b93b8) border-box;
   animation: poco-scrum-spin 14s linear infinite;
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent),
-    0 0 32px color-mix(in srgb, #a855f7 32%, transparent),
-    0 0 48px color-mix(in srgb, #3d8bd4 18%, transparent);
+    0 0 0 1px color-mix(in srgb, var(--accent) 14%, transparent),
+    0 0 22px color-mix(in srgb, #8b7cb5 22%, transparent),
+    0 0 34px color-mix(in srgb, #6b93b8 14%, transparent);
 }
 [data-reduce-motion='true'] .poco-scrum-glow-border {
   animation: none;
   background:
     linear-gradient(var(--bg-base), var(--bg-base)) padding-box,
-    linear-gradient(135deg, #3d8bd4, #a855f7, #22c55e) border-box;
+    linear-gradient(135deg, #6b93b8, #8b7cb5, #6fa889) border-box;
 }
 .poco-scrum-banner {
   --poco-scrum-a: 0deg;
   border: 1.5px solid transparent;
   background:
     linear-gradient(var(--bg-base), var(--bg-base)) padding-box,
-    conic-gradient(from var(--poco-scrum-a), #3d8bd4, #a855f7, #22c55e, #f59e0b, #3d8bd4) border-box;
+    conic-gradient(from var(--poco-scrum-a), #6b93b8, #8b7cb5, #6fa889, #b89a68, #6b93b8) border-box;
   animation: poco-scrum-spin 16s linear infinite;
   box-shadow:
-    0 0 0 1px color-mix(in srgb, #a855f7 35%, transparent),
-    0 0 36px color-mix(in srgb, #a855f7 38%, transparent),
-    0 0 56px color-mix(in srgb, #3d8bd4 22%, transparent);
+    0 0 0 1px color-mix(in srgb, #8b7cb5 22%, transparent),
+    0 0 26px color-mix(in srgb, #8b7cb5 24%, transparent),
+    0 0 40px color-mix(in srgb, #6b93b8 14%, transparent);
 }
 [data-reduce-motion='true'] .poco-scrum-banner {
   animation: none;
-  border-color: color-mix(in srgb, var(--accent) 45%, var(--border-subtle));
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--border-subtle));
   background: var(--bg-base);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent);
 }
 .poco-scrum-text-gradient {
-  background: linear-gradient(120deg, #2563eb, #9333ea, #16a34a, #d97706);
+  background: linear-gradient(120deg, #4a6e9b, #6d5aa0, #4a8f6e, #9a7d4a);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 .poco-scrum-placeholder-glow textarea::placeholder {
-  background: linear-gradient(120deg, #2563eb, #9333ea, #16a34a);
+  background: linear-gradient(120deg, #4a6e9b, #6d5aa0, #4a8f6e);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -532,27 +532,27 @@ input[type='number']::-webkit-outer-spin-button {
   border: 1.5px solid transparent;
   background:
     linear-gradient(var(--bg-base), var(--bg-base)) padding-box,
-    conic-gradient(from var(--poco-scrum-a), #3d8bd4, #a855f7, #22c55e, #f59e0b, #3d8bd4) border-box;
+    conic-gradient(from var(--poco-scrum-a), #6b93b8, #8b7cb5, #6fa889, #b89a68, #6b93b8) border-box;
   animation: poco-scrum-spin 18s linear infinite;
   box-shadow:
-    0 0 40px color-mix(in srgb, #a855f7 28%, transparent),
-    inset 0 0 28px color-mix(in srgb, #3d8bd4 14%, transparent);
+    0 0 28px color-mix(in srgb, #8b7cb5 18%, transparent),
+    inset 0 0 22px color-mix(in srgb, #6b93b8 10%, transparent);
 }
 [data-reduce-motion='true'] .poco-scrum-panel {
   animation: none;
   background: var(--bg-base);
-  border-color: color-mix(in srgb, #a855f7 40%, var(--border-subtle));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, #a855f7 20%, transparent);
+  border-color: color-mix(in srgb, #8b7cb5 28%, var(--border-subtle));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #8b7cb5 14%, transparent);
 }
 
 .poco-scrum-title-glow {
-  background: linear-gradient(120deg, #2563eb, #9333ea, #16a34a, #d97706);
+  background: linear-gradient(120deg, #4a6e9b, #6d5aa0, #4a8f6e, #9a7d4a);
   background-size: 200% 200%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   animation: poco-scrum-text-shimmer 5s ease-in-out infinite;
-  text-shadow: 0 0 18px color-mix(in srgb, #a855f7 45%, transparent);
+  text-shadow: 0 0 14px color-mix(in srgb, #8b7cb5 28%, transparent);
 }
 @keyframes poco-scrum-text-shimmer {
   0%,
@@ -570,8 +570,8 @@ input[type='number']::-webkit-outer-spin-button {
 
 .poco-scrum-input-inner-glow {
   box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, #a855f7 35%, transparent),
-    inset 0 0 14px color-mix(in srgb, #3d8bd4 22%, transparent);
+    inset 0 0 0 1px color-mix(in srgb, #8b7cb5 24%, transparent),
+    inset 0 0 12px color-mix(in srgb, #6b93b8 14%, transparent);
   border-radius: 2px;
 }
 

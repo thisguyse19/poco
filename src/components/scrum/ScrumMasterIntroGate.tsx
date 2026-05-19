@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { useSettingsStore } from '../../stores/settingsStore'
+import { useSettingsStore, SM_GATE_PROMPT_VERSION } from '../../stores/settingsStore'
 import { requestScrumNotificationPermission } from '../../hooks/useScrumNotifications'
 import { PocoAnimatedCenterModal } from '../ui/PocoAnimatedCenterModal'
 
@@ -11,6 +11,7 @@ export function ScrumMasterIntroGate() {
   const onNotNow = () => {
     updateSettings({
       scrumMasterGateComplete: true,
+      scrumMasterGatePromptVersion: SM_GATE_PROMPT_VERSION,
       scrumMaster: { ...sm, enabled: false },
     })
   }
@@ -24,8 +25,8 @@ export function ScrumMasterIntroGate() {
   }
 
   return (
-    <PocoAnimatedCenterModal open onBackdropClick={() => {}}>
-      <div className="mx-4 max-h-[min(88dvh,560px)] w-full max-w-md overflow-y-auto rounded-none border border-[var(--border-default)] bg-[var(--bg-elevated)] p-5 shadow-xl">
+    <PocoAnimatedCenterModal open onBackdropClick={() => {}} panelMaxWidthClass="max-w-md">
+      <div className="max-h-[min(88dvh,560px)] w-full overflow-y-auto rounded-none border border-[var(--border-default)] bg-[var(--bg-elevated)] p-5 shadow-xl">
         <h2 className="font-serif text-2xl">Meet your Scrum Master</h2>
         <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">
           A local rhythm for stand up and stand down: gentle prompts, a dedicated space for daily commitments, and a calmer

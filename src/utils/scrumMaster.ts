@@ -74,19 +74,23 @@ export function nowMinutes(d = new Date()): number {
   return d.getHours() * 60 + d.getMinutes()
 }
 
-export type ScrumBannerKind = 'standUp' | 'standDown'
+export type ScrumBannerScheduleKind = 'standUp' | 'standDown'
 
 export type ScrumBannerView =
   | { visible: false }
   | {
       visible: true
-      kind: ScrumBannerKind
+      kind: ScrumBannerScheduleKind
       /**
        * Signed offset in whole minutes: `nowMinutes - eventMinutes`.
        * Negative = before the scheduled time, zero = this minute, positive = after.
        */
       deltaMinutes: number
     }
+  | { visible: true; kind: 'farewellUp' | 'farewellDown' }
+
+/** @deprecated use ScrumBannerScheduleKind */
+export type ScrumBannerKind = ScrumBannerScheduleKind
 
 /** Stand up: 5 min before through 10 min after. Stand down: 30 min before through 10 min after. */
 export function getScrumBanner(sm: ScrumMasterSettings, d = new Date()): ScrumBannerView {
@@ -107,7 +111,7 @@ export function getScrumBanner(sm: ScrumMasterSettings, d = new Date()): ScrumBa
   return { visible: false }
 }
 
-function bannerFor(kind: ScrumBannerKind, n: number, t: number): ScrumBannerView {
+function bannerFor(kind: ScrumBannerScheduleKind, n: number, t: number): ScrumBannerView {
   return { visible: true, kind, deltaMinutes: n - t }
 }
 
@@ -140,11 +144,102 @@ function pSuffix(p: ScrumMasterPersonality, lines: Record<ScrumMasterPersonality
   return lines[p] ?? ''
 }
 
-/** Banner body line: `deltaMinutes` is `now - event` in whole minutes. */
-export function buildScrumBannerLine(kind: ScrumBannerKind, deltaMinutes: number, personality: ScrumMasterPersonality): string {
-  const isUp = kind === 'standUp'
-  const event = isUp ? 'stand up' : 'stand down'
-  const Event = isUp ? 'Stand up' : 'Stand down'
+/** Stand-down: end-of-day review vs stand-up plan + extra completions (Agile). */
+function buildStandDownScheduleLine(dm: number, personality: ScrumMasterPersonality): string {
+  const tap = ' Tap here to open the review flow.'
+  if (dm < 0) {
+    const m = Math.abs(dm)
+    if (m === 1) {
+      return `Stand down starts in one minute — time to prep your “done vs planned” recap.${pSuffix(personality, {
+        warm: ' You have done more than you think.',
+        coach: ' Gather completions before the bell.',
+        minimal: '',
+        playful: ' Almost retro o’clock.',
+        stern: ' Be ready.',
+      })}`
+    }
+    if (m <= 5) {
+      return `${m} minutes until stand down.${tap}${pSuffix(personality, {
+        warm: ' We will look at what you committed at stand up.',
+        coach: ' Line up shipped work vs this morning’s plan.',
+        minimal: `${m} min to review.`,
+        playful: ' Scoreboard time.',
+        stern: '',
+      })}`
+    }
+    if (m <= 15) {
+      return `${m} minutes until stand down — end-of-day review.${pSuffix(personality, {
+        warm: ' Planned vs done, plus anything extra you finished.',
+        coach: ' Note scope that slipped so tomorrow is honest.',
+        minimal: '',
+        playful: ' Sprint day closing chapter.',
+        stern: ` ${m} minutes.`,
+      })}`
+    }
+    if (m <= 29) {
+      return `${m} minutes until stand down.${pSuffix(personality, {
+        warm: ' You will reconcile what you promised at stand up with what shipped.',
+        coach: ' Think shipped, carry-over, and surprises.',
+        minimal: '',
+        playful: '',
+        stern: '',
+      })}`
+    }
+    return `${m} minutes until stand down — your daily sprint review.${pSuffix(personality, {
+      warm: ' Plenty of time to mentally stack wins and misses.',
+      coach: ' Capture evidence of done work while memory is fresh.',
+      minimal: `${m} min to stand down.`,
+      playful: '',
+      stern: '',
+    })}`
+  }
+  if (dm === 0) {
+    return `Time for stand down — review what completed today against this morning’s plan.${pSuffix(personality, {
+      warm: ' Include bonus tasks you finished that were not on the original list.',
+      coach: ' Mark done, log carry-over, name one improvement for tomorrow’s sprint day.',
+      minimal: ' Tap to start.',
+      playful: ' Retro hat on — tap when ready.',
+      stern: ' Tap to begin the review.',
+    })}`
+  }
+  const after = dm
+  if (after === 1) {
+    return `Stand down is open — walk your board: planned commitments, then extras you shipped.${pSuffix(personality, {
+      warm: '',
+      coach: '',
+      minimal: '',
+      playful: '',
+      stern: '',
+    })}`
+  }
+  if (after <= 5) {
+    return `${after} minute${after === 1 ? '' : 's'} into stand down. Check off what landed today.${pSuffix(personality, {
+      warm: '',
+      coach: ' Compare to your stand-up snapshot.',
+      minimal: '',
+      playful: '',
+      stern: '',
+    })}`
+  }
+  return `${after} minutes into stand down. Close the loop on today’s sprint slice.${pSuffix(personality, {
+    warm: '',
+    coach: '',
+    minimal: '',
+    playful: '',
+    stern: '',
+  })}`
+}
+
+/** Banner body for scheduled stand up / stand down (not farewell). */
+export function buildScrumBannerLine(
+  kind: ScrumBannerScheduleKind,
+  deltaMinutes: number,
+  personality: ScrumMasterPersonality,
+): string {
+  if (kind === 'standDown') return buildStandDownScheduleLine(deltaMinutes, personality)
+
+  const event = 'stand up'
+  const Event = 'Stand up'
   const dm = deltaMinutes
 
   if (dm < 0) {
@@ -233,6 +328,25 @@ export function buildScrumBannerLine(kind: ScrumBannerKind, deltaMinutes: number
   })}`
 }
 
+export function buildFarewellBannerLine(kind: 'farewellUp' | 'farewellDown', personality: ScrumMasterPersonality): string {
+  if (kind === 'farewellUp') {
+    return pSuffix(personality, {
+      warm: 'Have a calm, productive day. I will meet you at stand down to review what shipped versus this morning’s plan.',
+      coach: 'Ship with intent — capture outcomes as you go so stand down is quick and honest.',
+      minimal: 'Have a good day.',
+      playful: 'You have got this sprint day — I will bring the retro energy later.',
+      stern: 'Execute. We reconcile at stand down.',
+    })
+  }
+  return pSuffix(personality, {
+    warm: 'Rest well — tomorrow is a fresh sprint day. I will see you at stand up.',
+    coach: 'Close the laptop with a clear picture of done vs carry-over. See you tomorrow.',
+    minimal: 'See you tomorrow.',
+    playful: 'That is a wrap on today’s episode — same time tomorrow?',
+    stern: 'Day closed. Be back on time tomorrow.',
+  })
+}
+
 export function scrumLiveSubtitle(personality: ScrumMasterPersonality, standUp: boolean): string {
   if (standUp) {
     return pSuffix(personality, {
@@ -244,10 +358,10 @@ export function scrumLiveSubtitle(personality: ScrumMasterPersonality, standUp: 
     })
   }
   return pSuffix(personality, {
-    warm: 'Celebrate small wins, then park what can wait.',
-    coach: 'Mark done, note carry-over, and leave one clear start for tomorrow.',
-    minimal: 'Wrap-up and carry-over.',
-    playful: 'Close the loops so your brain can clock out.',
-    stern: 'Account for what shipped. Move the rest deliberately.',
+    warm: 'Tick off what completed today against your stand-up plan — note extras you finished and what carries forward.',
+    coach: 'Sprint review: planned vs done, blockers, carry-over. Log it while it is fresh.',
+    minimal: 'Planned vs shipped today.',
+    playful: 'Retro mode: wins, surprises, and honest carry-overs.',
+    stern: 'Account for every commitment from stand up. Move unfinished work deliberately.',
   })
 }

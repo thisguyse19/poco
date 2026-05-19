@@ -15,10 +15,12 @@ export function PocoAnimatedCenterModal({
   open,
   onBackdropClick,
   children,
+  panelMaxWidthClass = 'max-w-sm',
 }: {
   open: boolean
   onBackdropClick?: () => void
   children: ReactNode
+  panelMaxWidthClass?: string
 }) {
   const reduceMotion = useReduceMotion()
   const [mounted, setMounted] = useState(open)
@@ -78,7 +80,7 @@ export function PocoAnimatedCenterModal({
       />
       <div
         ref={panelRef}
-        className={`relative z-[var(--poco-z-dialog-panel)] w-full max-w-sm ${show ? 'pointer-events-auto' : 'pointer-events-none'}`}
+        className={`relative z-[var(--poco-z-dialog-panel)] w-full ${panelMaxWidthClass} ${show ? 'pointer-events-auto' : 'pointer-events-none'}`}
         style={{
           opacity: show ? 1 : 0,
           transform: show ? 'translate3d(0, 0, 0) scale(1)' : 'translate3d(0, 14px, 0) scale(0.96)',

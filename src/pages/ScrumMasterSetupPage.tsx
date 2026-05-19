@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useSettingsStore } from '../stores/settingsStore'
+import { useSettingsStore, SM_GATE_PROMPT_VERSION } from '../stores/settingsStore'
 import type { ScrumMasterGender, ScrumMasterPersonality } from '../types'
 import { PocoHourCarousel } from '../components/ui/PocoHourCarousel'
 import { PocoMinuteCarousel } from '../components/ui/PocoMinuteCarousel'
@@ -22,6 +22,9 @@ export function ScrumMasterSetupPage() {
   const [smName, setSmName] = useState(cur.name)
   const [smUp, setSmUp] = useState(cur.standUpTime)
   const [smDown, setSmDown] = useState(cur.standDownTime)
+  const [sprintTitle, setSprintTitle] = useState(cur.sprintTitle ?? '')
+  const [sprintGoal, setSprintGoal] = useState(cur.sprintGoal ?? '')
+  const [sprintEndDate, setSprintEndDate] = useState(cur.sprintEndDate ?? '')
 
   const names = useMemo(() => [...scrumNamesForGender(smGender)], [smGender])
 
@@ -39,6 +42,7 @@ export function ScrumMasterSetupPage() {
     const merged = useSettingsStore.getState().settings.scrumMaster
     updateSettings({
       scrumMasterGateComplete: true,
+      scrumMasterGatePromptVersion: SM_GATE_PROMPT_VERSION,
       scrumMaster: {
         ...merged,
         enabled: true,
@@ -47,6 +51,9 @@ export function ScrumMasterSetupPage() {
         standUpTime: normalizeTimeHHMM(smUp),
         standDownTime: normalizeTimeHHMM(smDown),
         personality,
+        sprintTitle: sprintTitle.trim(),
+        sprintGoal: sprintGoal.trim(),
+        sprintEndDate: sprintEndDate.trim() ? sprintEndDate.trim() : null,
       },
     })
     navigate('/', { replace: true })
@@ -58,8 +65,34 @@ export function ScrumMasterSetupPage() {
         <div className="animate-fadeIn flex flex-1 flex-col gap-5">
           <h1 className="font-serif text-3xl">Scrum Master setup</h1>
           <p className="text-sm text-[var(--text-secondary)]">
-            Pick a tone, name, and daily times. You can refine everything later in Settings → Features.
+            Pick a tone, name, daily times, and an optional sprint box for the home screen. You can refine everything later
+            in Settings → Features.
           </p>
+
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Sprint (optional)</p>
+            <input
+              className="poco-input mb-2 w-full rounded-none border border-[var(--border-subtle)] bg-[var(--bg-base)] px-3 py-2 text-sm"
+              placeholder="Sprint name"
+              value={sprintTitle}
+              onChange={(e) => setSprintTitle(e.target.value)}
+            />
+            <input
+              className="poco-input mb-2 w-full rounded-none border border-[var(--border-subtle)] bg-[var(--bg-base)] px-3 py-2 text-sm"
+              placeholder="Sprint goal — one line"
+              value={sprintGoal}
+              onChange={(e) => setSprintGoal(e.target.value)}
+            />
+            <label className="flex flex-col gap-1 text-xs font-semibold text-[var(--text-tertiary)]">
+              Sprint end date
+              <input
+                type="date"
+                className="poco-input rounded-none border border-[var(--border-subtle)] bg-[var(--bg-base)] px-3 py-2 text-sm font-normal text-[var(--text-primary)]"
+                value={sprintEndDate}
+                onChange={(e) => setSprintEndDate(e.target.value)}
+              />
+            </label>
+          </div>
 
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Personality</p>

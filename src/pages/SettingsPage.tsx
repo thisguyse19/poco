@@ -12,6 +12,7 @@ import { storage } from '../services/storage'
 import { SCRUM_MASTER_PERSONALITIES } from '../utils/scrumMaster'
 import { pocoDevLab } from '../utils/pocoDevLab'
 import { triggerHaptic } from '../utils/haptics'
+import { requestScrumNotificationPermission } from '../hooks/useScrumNotifications'
 
 export function SettingsPage() {
   const { settings, updateSettings, resetSettings } = useSettingsStore()
@@ -120,6 +121,22 @@ export function SettingsPage() {
             </div>
             <button type="button" className="poco-press shrink-0 text-sm font-semibold text-[var(--accent)]" onClick={() => setScrumModalOpen(true)}>
               Edit
+            </button>
+          </div>
+          <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              className="poco-press rounded-none border border-[var(--border-subtle)] bg-[var(--bg-base)] px-3 py-3 text-left text-sm font-semibold text-[var(--text-primary)]"
+              onClick={() => void requestScrumNotificationPermission()}
+            >
+              Enable browser reminders for stand up &amp; stand down
+            </button>
+            <button
+              type="button"
+              className="poco-press rounded-none border border-[var(--border-subtle)] bg-[var(--bg-base)] px-3 py-3 text-left text-sm font-semibold text-[var(--text-primary)]"
+              onClick={() => updateSettings({ scrumMasterGateComplete: false })}
+            >
+              Show Scrum Master intro and setup again
             </button>
           </div>
         </section>
