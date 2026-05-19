@@ -10,7 +10,7 @@ import { storage } from '../../services/storage'
 import { useTaskStore } from '../../stores/taskStore'
 import { useTimerStore } from '../../stores/timerStore'
 import { useSettingsStore } from '../../stores/settingsStore'
-import { previewScrumNotification } from '../../hooks/useScrumNotifications'
+import { scrumNotifyPayload } from '../../utils/scrumMaster'
 
 const KONAMI = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'] as const
 
@@ -171,13 +171,22 @@ export function SettingsDevLab() {
           <button
             type="button"
             className="poco-press rounded-none border border-[var(--border-default)] px-3 py-2 text-xs font-semibold"
-            onClick={() => {
+            onClick={async () => {
               if (typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
                 setMsg('Grant notification permission first (e.g. Test notification), then try again.')
                 return
               }
-              previewScrumNotification('su-0', sm.name, sm.personality)
-              setMsg('Fired a sample stand-up notification (same copy as the real reminder).')
+              const { title, body } = scrumNotifyPayload('su-0', sm.name, sm.personality)
+              const ok = await deliverLocalNotification(title, {
+                body,
+                tag: `poco-sm-dev-su-${Date.now()}`,
+                silent: false,
+              })
+              setMsg(
+                ok
+                  ? 'Fired a sample stand-up notification (same copy as the real reminder).'
+                  : 'Notification call failed—check Focus / Do Not Disturb, and that this install is allowed alerts in iOS Settings → Notifications → poco.',
+              )
             }}
           >
             Preview stand-up notify
@@ -185,13 +194,22 @@ export function SettingsDevLab() {
           <button
             type="button"
             className="poco-press rounded-none border border-[var(--border-default)] px-3 py-2 text-xs font-semibold"
-            onClick={() => {
+            onClick={async () => {
               if (typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
                 setMsg('Grant notification permission first (e.g. Test notification), then try again.')
                 return
               }
-              previewScrumNotification('sd-0', sm.name, sm.personality)
-              setMsg('Fired a sample stand-down notification.')
+              const { title, body } = scrumNotifyPayload('sd-0', sm.name, sm.personality)
+              const ok = await deliverLocalNotification(title, {
+                body,
+                tag: `poco-sm-dev-sd-${Date.now()}`,
+                silent: false,
+              })
+              setMsg(
+                ok
+                  ? 'Fired a sample stand-down notification.'
+                  : 'Notification call failed—check Focus / Do Not Disturb, and that this install is allowed alerts in iOS Settings → Notifications → poco.',
+              )
             }}
           >
             Preview stand-down notify

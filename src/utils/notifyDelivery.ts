@@ -20,6 +20,45 @@ export function notificationSettingsHint(): string {
   return 'Stand up and stand down use this browser’s notification permission while poco runs in a tab.'
 }
 
+function notificationIconUrl(): string | undefined {
+  if (typeof window === 'undefined') return undefined
+  return `${window.location.origin}/poco/icons/icon-192.png`
+}
+
+async function showViaServiceWorker(title: string, options: { body: string; tag: string; silent?: boolean }): Promise<boolean> {
+  if (!('serviceWorker' in navigator)) return false
+  const icon = notificationIconUrl()
+  const notifOpts: NotificationOptions = {
+    body: options.body,
+    tag: options.tag,
+    silent: options.silent ?? false,
+    ...(icon ? { icon, badge: icon } : {}),
+  }
+  try {
+    const reg = await navigator.serviceWorker.ready
+    await reg.showNotification(title, notifOpts)
+    return true
+  } catch {
+    /* continue */
+  }
+  try {
+    const reg = await navigator.serviceWorker.ready
+    const worker = reg.active ?? reg.waiting
+    if (!worker) return false
+    worker.postMessage({
+      type: 'poco-show-notification',
+      title,
+      body: options.body,
+      tag: options.tag,
+      silent: options.silent ?? false,
+      icon,
+    })
+    return true
+  } catch {
+    return false
+  }
+}
+
 /**
  * Shows a local notification. In a PWA we prefer the service worker path so the OS can treat alerts
  * like other installed apps; in a normal tab we use the window Notification constructor.
@@ -31,29 +70,26 @@ export async function deliverLocalNotification(
   if (typeof Notification === 'undefined') return false
   if (Notification.permission !== 'granted') return false
 
-  const pwa = isPwaDisplay()
-  if (pwa && 'serviceWorker' in navigator) {
-    try {
-      const reg = await navigator.serviceWorker.ready
-      await reg.showNotification(title, {
-        body: options.body,
-        tag: options.tag,
-        silent: options.silent ?? false,
-      })
-      return true
-    } catch {
-      /* fall through */
-    }
+  const icon = notificationIconUrl()
+  const notifOpts: NotificationOptions = {
+    body: options.body,
+    tag: options.tag,
+    silent: options.silent ?? false,
+    ...(icon ? { icon, badge: icon } : {}),
+  }
+
+  if (isPwaDisplay() && 'serviceWorker' in navigator) {
+    const ok = await showViaServiceWorker(title, options)
+    if (ok) return true
   }
 
   try {
-    new Notification(title, {
-      body: options.body,
-      tag: options.tag,
-      silent: options.silent ?? false,
-    })
+    new Notification(title, notifOpts)
     return true
   } catch {
+    if ('serviceWorker' in navigator) {
+      return showViaServiceWorker(title, options)
+    }
     return false
   }
 }
