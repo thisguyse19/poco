@@ -14,6 +14,7 @@ import { CSS } from '@dnd-kit/utilities'
 import type { Priority, Task } from '../types'
 import { toLocalISODate } from '../services/storage'
 import { useTaskStore } from '../stores/taskStore'
+import { useOobeTourStore } from '../stores/oobeTourStore'
 import { useSettingsStore } from '../stores/settingsStore'
 import { Icon } from '../components/ui/Icon'
 import { TaskDetailSheet } from '../components/tasks/TaskDetailSheet'
@@ -472,6 +473,7 @@ export function WeekPage() {
       const overId = String(over.id)
       if (overId === UNSCHEDULED_DROPPABLE_ID || overId === UNSCHEDULED_BIN_ID) {
         clearWeekPlan(taskId)
+        useOobeTourStore.getState().reportTry('week_drag')
         if (overId === UNSCHEDULED_BIN_ID) setBinFlash(true)
         else setUnschedFlash(true)
         window.setTimeout(() => {
@@ -487,6 +489,7 @@ export function WeekPage() {
       if (overId.startsWith('day:')) {
         const iso = overId.slice(4)
         planTaskOnDate(taskId, iso)
+        useOobeTourStore.getState().reportTry('week_drag')
         triggerHaptic(12)
       }
     },

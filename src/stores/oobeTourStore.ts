@@ -4,12 +4,16 @@ import { buildOobeDemoTasks } from '../utils/oobeDemoTasks'
 import { useTaskStore } from './taskStore'
 import { useSettingsStore } from './settingsStore'
 
+export type OobeTryKind = 'quickadd_submitted' | 'swipe_reschedule' | 'week_drag' | 'focus_pick'
+
 export type OobeTourStepDef = {
   path: string
   /** `data-oobe` value to scroll into view and outline; omit for none */
   anchor: string | null
   title: string
   body: string
+  /** When set, performing this action advances the tour (still use Next to skip). */
+  tryThis?: OobeTryKind
 }
 
 export const OOBE_TOUR_STEPS: OobeTourStepDef[] = [
@@ -17,31 +21,35 @@ export const OOBE_TOUR_STEPS: OobeTourStepDef[] = [
     path: '/',
     anchor: null,
     title: 'Welcome',
-    body: 'For the next minute you will see sample tasks. They are removed when you finish or skip the tour, and your real task list is restored.',
+    body: 'These are sample tasks—nothing you do here is permanent until the tour ends. Explore freely: the app stays fully usable. Tap Next when you are ready for your first hands-on step.',
   },
   {
     path: '/',
     anchor: 'quickadd',
-    title: 'Quick add',
-    body: 'Tap the dashed bar, type a task in everyday language (dates and categories work), then press Enter or the check mark.',
+    title: 'Quick add — your turn',
+    body: 'Use the dashed bar: type a short task (for example “Buy oat milk”) and press Enter or the check mark. The tour moves on automatically when a new task is added.',
+    tryThis: 'quickadd_submitted',
   },
   {
     path: '/',
     anchor: 'tasklist',
-    title: 'Swipe to rearrange',
-    body: 'Drag a row sideways to reveal Later, Tomorrow, and Delete. That is how you reshuffle work without opening a task.',
+    title: 'Swipe — your turn',
+    body: 'Swipe a demo row sideways (or use the Later / Tomorrow buttons that appear). Try it on any sample task—the tour advances when you reschedule one.',
+    tryThis: 'swipe_reschedule',
   },
   {
     path: '/week',
     anchor: 'week',
-    title: 'Week planner',
-    body: 'Hold a task briefly, then drag it onto a day (or Unscheduled) to set when you plan to do it.',
+    title: 'Week planner — your turn',
+    body: 'Hold a task until it lifts, then drop it on a day or on Unscheduled. The tour advances after your first successful drop.',
+    tryThis: 'week_drag',
   },
   {
     path: '/focus',
     anchor: 'focus',
-    title: 'Focus',
-    body: 'Link a task to the timer for a focused block. Start when you are ready for uninterrupted work.',
+    title: 'Focus — your turn',
+    body: 'Tap “Pick task”, choose any demo task, then close the sheet. The tour advances when a task is linked.',
+    tryThis: 'focus_pick',
   },
   {
     path: '/',
@@ -60,6 +68,8 @@ type OobeTourState = {
   nextStep: () => void
   skipTour: () => void
   finishTour: () => void
+  /** When the current step’s `tryThis` matches, advance automatically. */
+  reportTry: (kind: OobeTryKind) => void
 }
 
 export const useOobeTourStore = create<OobeTourState>((set, get) => ({
@@ -105,5 +115,13 @@ export const useOobeTourStore = create<OobeTourState>((set, get) => ({
       savedTasks: null,
       consumePendingOnFinish: false,
     })
+  },
+
+  reportTry(kind) {
+    const { active, stepIndex } = get()
+    if (!active) return
+    const step = OOBE_TOUR_STEPS[stepIndex]
+    if (!step?.tryThis || step.tryThis !== kind) return
+    get().nextStep()
   },
 }))
