@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import type { ScrumMasterPersonality, ScrumMasterSettings } from '../types'
+import type { ScrumMasterSettings } from '../types'
 import { toLocalISODate } from '../services/storage'
 import { getScrumSession } from '../utils/scrumSession'
 import { deliverLocalNotification } from '../utils/notifyDelivery'
@@ -62,7 +62,7 @@ export function useScrumNotifications(sm: ScrumMasterSettings) {
   useEffect(() => {
     if (!sm.enabled) return
     runScrumNotificationTick(sm)
-    const id = window.setInterval(() => runScrumNotificationTick(sm), 10_000)
+    const id = window.setInterval(() => runScrumNotificationTick(sm), 5_000)
     const onVis = () => {
       if (document.visibilityState === 'visible') runScrumNotificationTick(sm)
     }
@@ -74,21 +74,15 @@ export function useScrumNotifications(sm: ScrumMasterSettings) {
   }, [sm])
 }
 
-export function previewScrumNotification(
-  key: ScrumNotifyBodyKey,
-  name: string,
-  personality: ScrumMasterPersonality,
-) {
-  const { title, body } = scrumNotifyPayload(key, name, personality)
-  void deliverLocalNotification(title, { body, tag: `poco-sm-dev-${key}-${Date.now()}`, silent: false })
-}
-
 export async function requestScrumNotificationPermission(): Promise<boolean> {
   if (typeof Notification === 'undefined') return false
   if (Notification.permission === 'granted') return true
   if (Notification.permission === 'denied') return false
   try {
     const r = await Notification.requestPermission()
+    if (r === 'granted' && 'serviceWorker' in navigator) {
+      void navigator.serviceWorker.ready.then((reg) => reg.update()).catch(() => {})
+    }
     return r === 'granted'
   } catch {
     return false

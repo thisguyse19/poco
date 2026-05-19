@@ -10,5 +10,5 @@ createRoot(document.getElementById('root')!).render(
 )
 
 window.addEventListener('load', () => {
-  navigator.serviceWorker.register('/poco/sw.js').catch(() => {})
+  void navigator.serviceWorker.register('/poco/sw.js', { scope: '/poco/' }).catch(() => {})
 })

@@ -190,6 +190,8 @@ export function HomePage() {
 
   const headerDimmed = searchOpen || searchQuery.trim().length > 0
 
+  const standDownCompletedForDay = session.standDownCompletedDate === toLocalISODate()
+
   const planSnapshotIds = () =>
     tasks.filter((t) => t.scheduledFor === 'today' && t.category === SCRUM_MASTER_CATEGORY).map((t) => t.id)
 
@@ -197,39 +199,21 @@ export function HomePage() {
     categoryLock: string | null
     placeholderOverride?: string
     scrumGlow: boolean
-    showEndScrum: boolean
-    endScrumLabel: string
-    onEndScrum: () => void
   } = standUpLive
     ? {
         categoryLock: SCRUM_MASTER_CATEGORY,
         placeholderOverride: scrumQuickAddStandUpPlaceholder(sm.personality),
         scrumGlow: true,
-        showEndScrum: true,
-        endScrumLabel: scrumEndStandUpLabel(sm.personality),
-        onEndScrum: () => {
-          endStandUpSession(planSnapshotIds())
-          setSessTick((x) => x + 1)
-        },
       }
     : standDownLive
       ? {
           categoryLock: SCRUM_MASTER_CATEGORY,
           placeholderOverride: scrumQuickAddStandDownPlaceholder(sm.personality),
           scrumGlow: true,
-          showEndScrum: true,
-          endScrumLabel: scrumEndStandDownLabel(sm.personality),
-          onEndScrum: () => {
-            endStandDownSession()
-            setSessTick((x) => x + 1)
-          },
         }
       : {
           categoryLock: null,
           scrumGlow: false,
-          showEndScrum: false,
-          endScrumLabel: 'End',
-          onEndScrum: () => {},
         }
 
   const standUpPlan =
@@ -262,6 +246,21 @@ export function HomePage() {
         standUpLive,
         standDownLive,
         smRhythmActive,
+        standDownCompletedForDay,
+        endScrum:
+          standUpLive || standDownLive
+            ? {
+                label: standUpLive ? scrumEndStandUpLabel(sm.personality) : scrumEndStandDownLabel(sm.personality),
+                onClick: () => {
+                  if (standUpLive) {
+                    endStandUpSession(planSnapshotIds())
+                  } else {
+                    endStandDownSession()
+                  }
+                  setSessTick((x) => x + 1)
+                },
+              }
+            : null,
       }
     : null
 
@@ -305,9 +304,6 @@ export function HomePage() {
         categoryLock={scrumQuick.categoryLock}
         placeholderOverride={scrumQuick.placeholderOverride}
         scrumGlow={scrumQuick.scrumGlow}
-        showEndScrum={scrumQuick.showEndScrum}
-        endScrumLabel={scrumQuick.endScrumLabel}
-        onEndScrum={scrumQuick.onEndScrum}
       />
       <TaskList key={taskListKey} wallNowMs={wallMs} searchQuery={searchQuery} scrum={scrumList} />
       {showReview ? <ReviewModal /> : null}

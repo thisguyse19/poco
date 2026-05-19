@@ -44,9 +44,6 @@ type QuickAddProps = {
   placeholderOverride?: string
   /** Scrum stand-up / stand-down visual on the field */
   scrumGlow?: boolean
-  showEndScrum?: boolean
-  endScrumLabel?: string
-  onEndScrum?: () => void
 }
 
 function chipLabel(c: NlpPreviewChip, parsed: ReturnType<typeof parseQuickAdd>): string {
@@ -58,9 +55,6 @@ export function QuickAdd({
   categoryLock = null,
   placeholderOverride,
   scrumGlow = false,
-  showEndScrum = false,
-  endScrumLabel = 'End',
-  onEndScrum,
 }: QuickAddProps = {}) {
   const addTask = useTaskStore((s) => s.addTask)
   const [open, setOpen] = useState(false)
@@ -184,17 +178,6 @@ export function QuickAdd({
                   {chipLabel(c, parsed)}
                 </span>
               ))}
-            </div>
-          ) : null}
-          {showEndScrum && onEndScrum ? (
-            <div className="border-t border-[var(--border-subtle)] px-0 py-2">
-              <button
-                type="button"
-                className="poco-press w-full rounded-none border border-[var(--border-default)] bg-[var(--bg-subtle)] py-2 text-xs font-semibold text-[var(--text-primary)]"
-                onClick={onEndScrum}
-              >
-                {endScrumLabel}
-              </button>
             </div>
           ) : null}
         </div>

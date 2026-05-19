@@ -79,6 +79,10 @@ export type TaskListScrum = {
   standDownLive: boolean
   /** When true, show the dedicated “Name · Scrum Master” category; otherwise SM tasks merge into General with a ◆ marker. */
   smRhythmActive: boolean
+  /** After stand down is ended for today, completed SM tasks move to Done instead of lingering under Today. */
+  standDownCompletedForDay: boolean
+  /** Live stand up / stand down — end ritual control (shown under the SM banner). */
+  endScrum: { label: string; onClick: () => void } | null
 }
 
 export function TaskList({
@@ -145,6 +149,10 @@ export function TaskList({
     for (const t of tasks) {
       if (!taskMatchesSearch(t, searchQuery)) continue
       if (t.completed) {
+        if (scrum?.enabled && scrum.standDownCompletedForDay && t.scheduledFor === 'today' && t.category === SCRUM_MASTER_CATEGORY) {
+          completed.push(t)
+          continue
+        }
         if (t.scheduledFor === 'today' && isScrumMasterCompletedLingering(t, nowMs)) {
           today.push(t)
           continue
@@ -162,7 +170,7 @@ export function TaskList({
       else someday.push(t)
     }
     return { inbox, today, tomorrow, someday, completed }
-  }, [tasks, searchQuery, wallNowMs])
+  }, [tasks, searchQuery, wallNowMs, scrum])
 
   const todayByCategory = useMemo(() => {
     const nowMs = wallNowMs
@@ -284,6 +292,15 @@ export function TaskList({
           personality={scrum.personality}
           onTapStart={scrum.onBannerTap}
         />
+      ) : null}
+      {scrum?.enabled && scrum.endScrum ? (
+        <button
+          type="button"
+          className="poco-scrum-glow-border poco-press mb-3 w-full rounded-[var(--radius-sm)] bg-[var(--bg-base)] px-3 py-2.5 text-xs font-semibold text-[var(--text-primary)]"
+          onClick={scrum.endScrum.onClick}
+        >
+          {scrum.endScrum.label}
+        </button>
       ) : null}
 
       {inbox.length > 0 ? (
