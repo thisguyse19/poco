@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useShallow } from 'zustand/react/shallow'
 import { Icon } from '../ui/Icon'
 import { PocoMessageDialog } from '../ui/PocoMessageDialog'
@@ -8,6 +9,7 @@ import { deliverLocalNotification, isPwaDisplay, notificationSettingsHint } from
 import { clearStandSessions, setStandDownLive, setStandUpLive } from '../../utils/scrumSession'
 import { storage } from '../../services/storage'
 import { useTaskStore } from '../../stores/taskStore'
+import { useOobeTourStore } from '../../stores/oobeTourStore'
 import { useTimerStore } from '../../stores/timerStore'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { scrumNotifyPayload } from '../../utils/scrumMaster'
@@ -15,6 +17,7 @@ import { scrumNotifyPayload } from '../../utils/scrumMaster'
 const KONAMI = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'] as const
 
 export function SettingsDevLab() {
+  const navigate = useNavigate()
   const [state, setState] = useState(() => pocoDevLab.get())
   const [msg, setMsg] = useState<string | null>(null)
   const addTask = useTaskStore((s) => s.addTask)
@@ -103,6 +106,19 @@ export function SettingsDevLab() {
   const clearStress = () => {
     pocoDevLab.set({ stressSeedActive: false })
     setMsg('Stress-prefix mode off. Delete lab tasks manually if you like.')
+  }
+
+  const startOobeGuidedDemo = () => {
+    if (useOobeTourStore.getState().active) {
+      setMsg('The guided tour is already running. Finish or skip it first.')
+      return
+    }
+    const saved = structuredClone(useTaskStore.getState().tasks)
+    useOobeTourStore.getState().start(saved, false)
+    if (window.location.pathname !== '/') {
+      navigate('/')
+    }
+    setMsg('Guided tour started with sample tasks. When you finish or skip, your previous task list is restored.')
   }
 
   if (!state.unlocked) return null
@@ -227,6 +243,9 @@ export function SettingsDevLab() {
         </button>
         <button type="button" className="poco-press rounded-none border border-[var(--border-default)] px-3 py-2 text-xs font-semibold" onClick={clearStress}>
           Clear stress mode
+        </button>
+        <button type="button" className="poco-press rounded-none border border-[var(--border-default)] px-3 py-2 text-xs font-semibold" onClick={startOobeGuidedDemo}>
+          Start OOBE guided demo
         </button>
         <button
           type="button"

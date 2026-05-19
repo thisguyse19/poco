@@ -89,6 +89,8 @@ export interface ScrumMasterSettings {
 
 export interface Settings {
   onboardingComplete: boolean
+  /** When true, first app session after onboarding will start the guided demo tour (dummy tasks). Cleared when the tour finishes. */
+  oobeGuidedDemoPending: boolean
   /** After main onboarding, one-time Scrum Master intro + optional setup has been finished or skipped */
   scrumMasterGateComplete: boolean
   /** Increment to re-show the SM intro gate once for existing installs */

@@ -4,6 +4,7 @@ import { storage } from '../services/storage'
 
 export const DEFAULT_SETTINGS: Settings = {
   onboardingComplete: false,
+  oobeGuidedDemoPending: false,
   theme: 'light',
   density: 'default',
   fontScale: 'md',
@@ -94,6 +95,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     const next = {
       ...DEFAULT_SETTINGS,
       onboardingComplete: prev.onboardingComplete,
+      oobeGuidedDemoPending: prev.oobeGuidedDemoPending,
       profileName: prev.profileName,
       scrumMasterGateComplete: prev.scrumMasterGateComplete,
       scrumMasterGatePromptVersion: prev.scrumMasterGatePromptVersion,

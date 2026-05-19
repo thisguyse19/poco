@@ -72,18 +72,20 @@ export function FocusPage() {
   }, [settings.keepScreenAwake, isRunning, mode])
 
   const pickControl = (
-    <button
-      type="button"
-      onClick={() => setPickerOpen(true)}
-      className={`poco-press flex w-full min-h-10 items-center gap-2 rounded-[var(--radius-sm)] border px-3 py-2.5 text-left text-sm font-semibold ${
-        active
-          ? 'border-[var(--accent)]/70 bg-[var(--accent-soft)] text-[var(--accent)]'
-          : 'border-dashed border-[var(--border-default)] bg-[var(--bg-elevated)] text-[var(--text-secondary)]'
-      }`}
-    >
-      <Icon name="plus" size={18} className={`shrink-0 ${active ? 'opacity-80' : 'text-[var(--accent)]'}`} />
-      <span className="min-w-0 truncate">{active?.title ?? 'Pick task'}</span>
-    </button>
+    <div data-oobe="focus">
+      <button
+        type="button"
+        onClick={() => setPickerOpen(true)}
+        className={`poco-press flex w-full min-h-10 items-center gap-2 rounded-[var(--radius-sm)] border px-3 py-2.5 text-left text-sm font-semibold ${
+          active
+            ? 'border-[var(--accent)]/70 bg-[var(--accent-soft)] text-[var(--accent)]'
+            : 'border-dashed border-[var(--border-default)] bg-[var(--bg-elevated)] text-[var(--text-secondary)]'
+        }`}
+      >
+        <Icon name="plus" size={18} className={`shrink-0 ${active ? 'opacity-80' : 'text-[var(--accent)]'}`} />
+        <span className="min-w-0 truncate">{active?.title ?? 'Pick task'}</span>
+      </button>
+    </div>
   )
 
   return (

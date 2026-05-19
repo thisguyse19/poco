@@ -23,7 +23,12 @@ export function OnboardingPage() {
   }, [theme, density, fontScale, updateSettings])
 
   const skipFromStart = () => {
-    updateSettings({ onboardingComplete: true, scrumMasterGateComplete: false, scrumMasterGatePromptVersion: SM_GATE_PROMPT_VERSION })
+    updateSettings({
+      onboardingComplete: true,
+      oobeGuidedDemoPending: true,
+      scrumMasterGateComplete: false,
+      scrumMasterGatePromptVersion: SM_GATE_PROMPT_VERSION,
+    })
     navigate('/')
   }
 
@@ -31,6 +36,7 @@ export function OnboardingPage() {
     const name = profileName.trim() || 'You'
     updateSettings({
       onboardingComplete: true,
+      oobeGuidedDemoPending: true,
       scrumMasterGateComplete: false,
       scrumMasterGatePromptVersion: SM_GATE_PROMPT_VERSION,
       profileName: name,
