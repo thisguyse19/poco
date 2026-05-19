@@ -87,7 +87,7 @@ export function PrismPulseGame() {
         pocoDevLab.set({ prismBestStreak: Math.max(prevBest, cleared) })
         const next = [...sequence, Math.floor(Math.random() * PADS)]
         setSequence(next)
-        setStatus(`Round ${cleared} cleared — one more tone joins the chain.`)
+        setStatus(`Round ${cleared} cleared. One more tone joins the chain.`)
         void runShow(next)
       }
     },
@@ -105,7 +105,7 @@ export function PrismPulseGame() {
         </span>
       </div>
       <p className="mb-3 text-xs leading-relaxed text-[var(--text-secondary)]">
-        A quiet pattern memory game. Each time you finish, the chain grows by one tone. There is no time limit—only your recall.
+        A quiet pattern memory game. Each time you finish, the chain grows by one tone. There is no time limit, only your recall.
       </p>
 
       <div className="mb-3 grid grid-cols-2 gap-2">

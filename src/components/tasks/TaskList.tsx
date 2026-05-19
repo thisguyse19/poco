@@ -79,7 +79,7 @@ export type TaskListScrum = {
   standDownLive: boolean
   /** When true, show the dedicated “Name · Scrum Master” category; otherwise SM tasks merge into General with a ◆ marker. */
   smRhythmActive: boolean
-  /** Live stand up / stand down — end ritual control (shown under the SM banner). */
+  /** Live stand up / stand down: end ritual control (shown under the SM banner). */
   endScrum: { label: string; onClick: () => void } | null
 }
 

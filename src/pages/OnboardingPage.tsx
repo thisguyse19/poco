@@ -138,7 +138,7 @@ export function OnboardingPage() {
         {step === 2 && (
           <div className="animate-fadeIn flex flex-1 flex-col gap-6">
             <h2 className="font-serif text-2xl">Appearance</h2>
-            <p className="text-sm text-[var(--text-secondary)]">Same controls as Settings — changes apply as you tap.</p>
+            <p className="text-sm text-[var(--text-secondary)]">Same controls as Settings. Changes apply as you tap.</p>
             <AppearanceControlGroup
               theme={theme}
               density={density}
