@@ -65,7 +65,7 @@ export function ScrumMasterEditModal({ open, onClose, value, onSave }: Props) {
         />
         <input
           className="poco-input mb-2 w-full rounded-none border border-[var(--border-subtle)] bg-[var(--bg-base)] px-3 py-2 text-sm"
-          placeholder="Sprint goal — one line the team aligns on"
+          placeholder="Sprint goal: one line the team aligns on"
           value={draft.sprintGoal}
           onChange={(e) => setDraft((d) => ({ ...d, sprintGoal: e.target.value }))}
         />

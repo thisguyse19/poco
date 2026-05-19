@@ -56,7 +56,7 @@ export function ScrumMasterIntroGate() {
             className="poco-press py-2 text-sm font-semibold text-[var(--text-secondary)]"
             onClick={onNotNow}
           >
-            Not now — keep Scrum Master off
+            Not now, keep Scrum Master off
           </button>
         </div>
       </div>

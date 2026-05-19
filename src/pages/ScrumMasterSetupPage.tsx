@@ -75,7 +75,7 @@ export function ScrumMasterSetupPage() {
             />
             <input
               className="poco-input mb-2 w-full rounded-none border border-[var(--border-subtle)] bg-[var(--bg-base)] px-3 py-2 text-sm"
-              placeholder="Sprint goal — one line"
+              placeholder="Sprint goal: one line"
               value={sprintGoal}
               onChange={(e) => setSprintGoal(e.target.value)}
             />

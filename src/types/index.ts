@@ -77,9 +77,9 @@ export type ScrumMasterPersonality =
   | 'playful'
   | 'snarky'
   | 'bold'
-  /** Unlocked secret mode — spicy adult voice, no corporate filter */
+  /** Unlocked secret mode: spicy adult voice, no corporate filter */
   | 'boldR21'
-  /** Unlocked secret mode — sarcastic, profane, non-sexual */
+  /** Unlocked secret mode: sarcastic, profane, non-sexual */
   | 'snarkyR21'
 
 export interface ScrumMasterSettings {

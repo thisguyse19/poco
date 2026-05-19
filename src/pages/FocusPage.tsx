@@ -11,7 +11,7 @@ import { useOobeTourStore } from '../stores/oobeTourStore'
 import { ambientController } from '../utils/ambient'
 
 const FOCUS_HINTS = [
-  'Mute other apps before you start—depth beats context switching.',
+  'Mute other apps before you start. Depth beats context switching.',
   'Use breaks to stand and look away from the screen, not to scroll feeds.',
   'One finished block beats five half-started ones.',
   'Let the ring be a boundary: inside it, only this.',
