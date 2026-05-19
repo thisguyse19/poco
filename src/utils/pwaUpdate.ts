@@ -3,7 +3,8 @@ const BASE_PATH = import.meta.env.BASE_URL
 /** Same-origin URLs for the poco shell worker (avoids path-resolution quirks on mobile / hash routes). */
 function pocoServiceWorkerUrls(): { scopeUrl: string; scriptUrl: string } {
   const scopeUrl = new URL(BASE_PATH, window.location.origin).href
-  const scriptUrl = new URL('sw.js', scopeUrl).href
+  // Worker file lives at public/poco/sw.js → dist/poco/sw.js, i.e. {BASE}poco/sw.js (not {BASE}sw.js).
+  const scriptUrl = new URL('poco/sw.js', scopeUrl).href
   return { scopeUrl, scriptUrl }
 }
 
