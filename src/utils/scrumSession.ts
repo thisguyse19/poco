@@ -17,10 +17,13 @@ export type ScrumSessionState = {
   standUpPlan?: StandUpPlanSnapshot
 }
 
-const KEY = 'poco:scrum-session'
+export const SCRUM_SESSION_STORAGE_KEY = 'poco:scrum-session'
+
+const KEY = SCRUM_SESSION_STORAGE_KEY
 
 function write(s: ScrumSessionState) {
   localStorage.setItem(KEY, JSON.stringify(s))
+  window.dispatchEvent(new CustomEvent('poco-scrum-session-changed'))
 }
 
 function today(): string {

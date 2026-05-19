@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import type { ScrumMasterSettings } from '../types'
 import { toLocalISODate } from '../services/storage'
 import { getScrumSession } from '../utils/scrumSession'
+import { deliverLocalNotification } from '../utils/notifyDelivery'
 import { nowMinutes, scrumNotifyPayload, timeToMinutes, type ScrumNotifyBodyKey } from '../utils/scrumMaster'
 
 function canNotify(): boolean {
@@ -31,11 +32,7 @@ function runScrumNotificationTick(sm: ScrumMasterSettings) {
   const fire = (key: ScrumNotifyBodyKey) => {
     if (!markSent(day, key)) return
     const { title, body } = scrumNotifyPayload(key, sm.name, sm.personality)
-    try {
-      new Notification(title, { body, tag: `poco-sm-${key}`, silent: false })
-    } catch {
-      /* ignore */
-    }
+    void deliverLocalNotification(title, { body, tag: `poco-sm-${key}`, silent: false })
   }
 
   const du = n - tu

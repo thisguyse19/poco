@@ -26,6 +26,7 @@ import {
   endStandUpSession,
   getActiveFarewell,
   getScrumSession,
+  SCRUM_SESSION_STORAGE_KEY,
   setStandDownLive,
   setStandUpLive,
 } from '../utils/scrumSession'
@@ -55,6 +56,19 @@ export function HomePage() {
   const sm = settings.scrumMaster
 
   useScrumNotifications(sm)
+
+  useEffect(() => {
+    const bump = () => setSessTick((x) => x + 1)
+    window.addEventListener('poco-scrum-session-changed', bump)
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === SCRUM_SESSION_STORAGE_KEY) bump()
+    }
+    window.addEventListener('storage', onStorage)
+    return () => {
+      window.removeEventListener('poco-scrum-session-changed', bump)
+      window.removeEventListener('storage', onStorage)
+    }
+  }, [])
 
   useEffect(() => {
     const id = window.setInterval(() => {

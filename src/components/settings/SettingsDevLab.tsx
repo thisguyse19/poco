@@ -4,6 +4,8 @@ import { Icon } from '../ui/Icon'
 import { PocoMessageDialog } from '../ui/PocoMessageDialog'
 import { PrismPulseGame } from './PrismPulseGame'
 import { pocoDevLab } from '../../utils/pocoDevLab'
+import { deliverLocalNotification, isPwaDisplay, notificationSettingsHint } from '../../utils/notifyDelivery'
+import { clearStandSessions, setStandDownLive, setStandUpLive } from '../../utils/scrumSession'
 import { storage } from '../../services/storage'
 import { useTaskStore } from '../../stores/taskStore'
 import { useTimerStore } from '../../stores/timerStore'
@@ -127,6 +129,45 @@ export function SettingsDevLab() {
         {JSON.stringify(timerSnap, null, 1)}
       </div>
 
+      <div className="rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-xs text-[var(--text-secondary)]">
+        <div className="mb-2 font-sans font-semibold text-[var(--text-primary)]">Scrum Master (local session)</div>
+        <p className="mb-2 leading-snug">
+          Starts the live stand up or stand down state stored on this device. Open Home to see banners and the task flow.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="poco-press rounded-none border border-[var(--border-default)] px-3 py-2 text-xs font-semibold"
+            onClick={() => {
+              setStandUpLive(true)
+              setMsg('Stand up is now live. Open Home to continue.')
+            }}
+          >
+            Simulate stand up
+          </button>
+          <button
+            type="button"
+            className="poco-press rounded-none border border-[var(--border-default)] px-3 py-2 text-xs font-semibold"
+            onClick={() => {
+              setStandDownLive(true)
+              setMsg('Stand down is now live. Open Home to continue.')
+            }}
+          >
+            Simulate stand down
+          </button>
+          <button
+            type="button"
+            className="poco-press rounded-none border border-[var(--border-default)] px-3 py-2 text-xs font-semibold"
+            onClick={() => {
+              clearStandSessions()
+              setMsg('Cleared live stand up / stand down flags (farewell banner unchanged).')
+            }}
+          >
+            Clear live session
+          </button>
+        </div>
+      </div>
+
       <div className="flex flex-wrap gap-2">
         <button type="button" className="poco-press rounded-none border border-[var(--border-default)] px-3 py-2 text-xs font-semibold" onClick={copyDebug}>
           Copy debug snapshot
@@ -160,14 +201,17 @@ export function SettingsDevLab() {
               setMsg(`Notification permission was not granted (${perm}).`)
               return
             }
-            try {
-              new Notification('poco', {
-                body: 'Local notification test from Developer lab.',
-                tag: 'poco-dev-notification-test',
-              })
-              setMsg('A local notification was sent. If you do not see a banner, check system notification settings for this browser.')
-            } catch (e) {
-              setMsg(`Could not show notification: ${e instanceof Error ? e.message : String(e)}`)
+            const ok = await deliverLocalNotification('poco', {
+              body: 'Test notification from Developer lab.',
+              tag: 'poco-dev-notification-test',
+            })
+            if (ok) {
+              const via = isPwaDisplay() ? 'installed app (service worker when available)' : 'this browser tab'
+              setMsg(
+                `Sent a test notification via ${via}. ${notificationSettingsHint()} If nothing appears, check system notification settings for poco.`,
+              )
+            } else {
+              setMsg('Could not show a notification (permission or API).')
             }
           }}
         >
