@@ -190,8 +190,6 @@ export function HomePage() {
 
   const headerDimmed = searchOpen || searchQuery.trim().length > 0
 
-  const standDownCompletedForDay = session.standDownCompletedDate === toLocalISODate()
-
   const planSnapshotIds = () =>
     tasks.filter((t) => t.scheduledFor === 'today' && t.category === SCRUM_MASTER_CATEGORY).map((t) => t.id)
 
@@ -246,7 +244,6 @@ export function HomePage() {
         standUpLive,
         standDownLive,
         smRhythmActive,
-        standDownCompletedForDay,
         endScrum:
           standUpLive || standDownLive
             ? {

@@ -60,8 +60,9 @@ async function showViaServiceWorker(title: string, options: { body: string; tag:
 }
 
 /**
- * Shows a local notification. In a PWA we prefer the service worker path so the OS can treat alerts
- * like other installed apps; in a normal tab we use the window Notification constructor.
+ * Shows a local notification. Prefer the window `Notification` constructor first so alerts appear
+ * while the app is in the foreground (especially in installed PWAs, where SW-only delivery is easy
+ * to miss). Fall back to the service worker when the page cannot show a notification.
  */
 export async function deliverLocalNotification(
   title: string,
@@ -78,18 +79,15 @@ export async function deliverLocalNotification(
     ...(icon ? { icon, badge: icon } : {}),
   }
 
-  if (isPwaDisplay() && 'serviceWorker' in navigator) {
-    const ok = await showViaServiceWorker(title, options)
-    if (ok) return true
-  }
-
   try {
     new Notification(title, notifOpts)
     return true
   } catch {
-    if ('serviceWorker' in navigator) {
-      return showViaServiceWorker(title, options)
-    }
-    return false
+    /* e.g. insecure context or policy blocks page notifications */
   }
+
+  if ('serviceWorker' in navigator) {
+    return showViaServiceWorker(title, options)
+  }
+  return false
 }
