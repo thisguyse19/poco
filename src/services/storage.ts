@@ -170,6 +170,5 @@ const DEFAULT_EXPORT_SETTINGS: Settings = {
     personality: 'warm',
     sprintTitle: '',
     sprintGoal: '',
-    sprintEndDate: null,
   },
 }

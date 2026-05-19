@@ -85,8 +85,6 @@ export interface ScrumMasterSettings {
   sprintTitle: string
   /** One-line sprint goal for daily alignment */
   sprintGoal: string
-  /** Sprint end date YYYY-MM-DD for countdown */
-  sprintEndDate: string | null
 }
 
 export interface Settings {

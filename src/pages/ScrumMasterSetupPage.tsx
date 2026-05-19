@@ -24,7 +24,6 @@ export function ScrumMasterSetupPage() {
   const [smDown, setSmDown] = useState(cur.standDownTime)
   const [sprintTitle, setSprintTitle] = useState(cur.sprintTitle ?? '')
   const [sprintGoal, setSprintGoal] = useState(cur.sprintGoal ?? '')
-  const [sprintEndDate, setSprintEndDate] = useState(cur.sprintEndDate ?? '')
 
   const names = useMemo(() => [...scrumNamesForGender(smGender)], [smGender])
 
@@ -53,7 +52,6 @@ export function ScrumMasterSetupPage() {
         personality,
         sprintTitle: sprintTitle.trim(),
         sprintGoal: sprintGoal.trim(),
-        sprintEndDate: sprintEndDate.trim() ? sprintEndDate.trim() : null,
       },
     })
     navigate('/', { replace: true })
@@ -83,15 +81,6 @@ export function ScrumMasterSetupPage() {
               value={sprintGoal}
               onChange={(e) => setSprintGoal(e.target.value)}
             />
-            <label className="flex flex-col gap-1 text-xs font-semibold text-[var(--text-tertiary)]">
-              Sprint end date
-              <input
-                type="date"
-                className="poco-input rounded-none border border-[var(--border-subtle)] bg-[var(--bg-base)] px-3 py-2 text-sm font-normal text-[var(--text-primary)]"
-                value={sprintEndDate}
-                onChange={(e) => setSprintEndDate(e.target.value)}
-              />
-            </label>
           </div>
 
           <div>

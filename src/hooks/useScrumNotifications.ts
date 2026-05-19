@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import type { ScrumMasterSettings } from '../types'
 import { toLocalISODate } from '../services/storage'
 import { getScrumSession } from '../utils/scrumSession'
-import { nowMinutes, timeToMinutes } from '../utils/scrumMaster'
+import { nowMinutes, scrumNotifyPayload, timeToMinutes, type ScrumNotifyBodyKey } from '../utils/scrumMaster'
 
 function canNotify(): boolean {
   return typeof Notification !== 'undefined' && Notification.permission === 'granted'
@@ -28,8 +28,9 @@ function runScrumNotificationTick(sm: ScrumMasterSettings) {
   const td = timeToMinutes(sm.standDownTime)
   const sess = getScrumSession()
 
-  const fire = (key: string, title: string, body: string) => {
+  const fire = (key: ScrumNotifyBodyKey) => {
     if (!markSent(day, key)) return
+    const { title, body } = scrumNotifyPayload(key, sm.name, sm.personality)
     try {
       new Notification(title, { body, tag: `poco-sm-${key}`, silent: false })
     } catch {
@@ -41,22 +42,22 @@ function runScrumNotificationTick(sm: ScrumMasterSettings) {
   const dd = n - td
 
   if (!sess.standUpLive) {
-    if (inMinuteWindow(du, -10, 2, 1)) fire('su-10', `${sm.name} · Stand up soon`, 'Stand up is in about ten minutes.')
-    if (inMinuteWindow(du, -5, 2, 1)) fire('su-5', `${sm.name} · Stand up`, 'Five minutes until stand up.')
-    if (inMinuteWindow(du, -1, 1, 1)) fire('su-1', `${sm.name} · Stand up`, 'One minute until stand up.')
-    if (du >= 0 && du <= 4) fire('su-0', `${sm.name} · Stand up`, 'Time for stand up — open poco when you are ready.')
+    if (inMinuteWindow(du, -10, 2, 1)) fire('su-10')
+    if (inMinuteWindow(du, -5, 2, 1)) fire('su-5')
+    if (inMinuteWindow(du, -1, 1, 1)) fire('su-1')
+    if (du >= 0 && du <= 4) fire('su-0')
   }
 
   if (!sess.standDownLive) {
-    if (inMinuteWindow(dd, -30, 2, 2)) fire('sd-30', `${sm.name} · Stand down`, 'Stand down soon — start your end-of-day review.')
-    if (inMinuteWindow(dd, -15, 2, 2)) fire('sd-15', `${sm.name} · Stand down`, 'Fifteen minutes until stand down.')
-    if (inMinuteWindow(dd, -5, 2, 1)) fire('sd-5', `${sm.name} · Stand down`, 'Five minutes until stand down.')
-    if (inMinuteWindow(dd, -1, 1, 1)) fire('sd-1', `${sm.name} · Stand down`, 'One minute until stand down.')
-    if (dd >= 0 && dd <= 4) fire('sd-0', `${sm.name} · Stand down`, 'Time for stand down — review planned vs shipped today.')
+    if (inMinuteWindow(dd, -30, 2, 2)) fire('sd-30')
+    if (inMinuteWindow(dd, -15, 2, 2)) fire('sd-15')
+    if (inMinuteWindow(dd, -5, 2, 1)) fire('sd-5')
+    if (inMinuteWindow(dd, -1, 1, 1)) fire('sd-1')
+    if (dd >= 0 && dd <= 4) fire('sd-0')
   }
 
-  if (du >= 1 && du <= 6 && sess.standUpLive) fire('su-after1', `${sm.name} · Stand up`, 'Refine today’s commitments while context is fresh.')
-  if (dd >= 1 && dd <= 6 && sess.standDownLive) fire('sd-after1', `${sm.name} · Stand down`, 'Log carry-overs and extra completions from today.')
+  if (du >= 1 && du <= 6 && sess.standUpLive) fire('su-after1')
+  if (dd >= 1 && dd <= 6 && sess.standDownLive) fire('sd-after1')
 }
 
 /** Local reminders for stand up / stand down (deduped per calendar day). */
