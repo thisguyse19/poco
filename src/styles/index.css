@@ -79,6 +79,41 @@
   animation: none;
 }
 
+/* Scrum personality Bold / Snarky: hot press + R21 locked-in glow */
+.poco-personality-bold-hot-press:active {
+  box-shadow:
+    0 0 0 2px rgba(196, 30, 30, 0.65),
+    0 0 22px 8px rgba(196, 30, 30, 0.35);
+}
+.poco-personality-snarky-cool-press:active {
+  box-shadow:
+    0 0 0 2px rgba(37, 99, 235, 0.65),
+    0 0 22px 8px rgba(37, 99, 235, 0.35);
+}
+.poco-personality-bold-r21-active {
+  border-color: rgba(196, 30, 30, 0.55) !important;
+  background-color: color-mix(in srgb, rgba(196, 30, 30, 0.12) 100%, var(--bg-base)) !important;
+  box-shadow:
+    0 0 0 2px rgba(196, 30, 30, 0.75),
+    0 0 28px 8px rgba(196, 30, 30, 0.38);
+}
+.poco-personality-snarky-r21-active {
+  border-color: rgba(37, 99, 235, 0.55) !important;
+  background-color: color-mix(in srgb, rgba(37, 99, 235, 0.12) 100%, var(--bg-base)) !important;
+  box-shadow:
+    0 0 0 2px rgba(37, 99, 235, 0.75),
+    0 0 28px 8px rgba(37, 99, 235, 0.38);
+}
+
+[data-reduce-motion='true'] .poco-personality-bold-hot-press:active,
+[data-reduce-motion='true'] .poco-personality-snarky-cool-press:active {
+  box-shadow: none;
+}
+[data-reduce-motion='true'] .poco-personality-bold-r21-active,
+[data-reduce-motion='true'] .poco-personality-snarky-r21-active {
+  box-shadow: none;
+}
+
 [data-theme='dark'] {
   --bg-base: #1e1c1a;
   --bg-elevated: #252320;

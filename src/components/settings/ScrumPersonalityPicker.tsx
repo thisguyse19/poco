@@ -127,6 +127,16 @@ export function ScrumPersonalityPicker({
                 : { title: p.title, hint: p.hint }
 
           const glowClass = isBold && boldGlow ? 'poco-personality-bold-pulse' : isSnarky && snarkyGlow ? 'poco-personality-snarky-pulse' : ''
+          const r21Locked =
+            (isBold && value === 'boldR21') || (isSnarky && value === 'snarkyR21')
+            ? isBold
+              ? 'poco-personality-bold-r21-active'
+              : 'poco-personality-snarky-r21-active'
+            : ''
+          const pressGlow = isBold ? 'poco-personality-bold-hot-press' : isSnarky ? 'poco-personality-snarky-cool-press' : ''
+          const selectedLook =
+            r21Locked ||
+            (selected ? 'border-[var(--accent)] bg-[var(--accent-soft)]' : 'border-[var(--border-subtle)] bg-[var(--bg-base)]')
 
           return (
             <button
@@ -145,9 +155,7 @@ export function ScrumPersonalityPicker({
                 }
                 onChange(p.id)
               }}
-              className={`poco-press relative ${minW} shrink-0 rounded-none border ${pad} text-left transition-[box-shadow,background-color,border-color] duration-200 [transition-timing-function:var(--ease-ios)] ${
-                selected ? 'border-[var(--accent)] bg-[var(--accent-soft)]' : 'border-[var(--border-subtle)] bg-[var(--bg-base)]'
-              } ${compact ? 'rounded-[var(--radius-sm)]' : ''} ${glowClass}`}
+              className={`poco-press relative ${minW} shrink-0 rounded-none border ${pad} text-left transition-[box-shadow,background-color,border-color] duration-200 [transition-timing-function:var(--ease-ios)] ${selectedLook} ${compact ? 'rounded-[var(--radius-sm)]' : ''} ${glowClass} ${pressGlow}`}
             >
               <span className={`block font-semibold text-[var(--text-primary)] ${titleCls}`}>{meta.title}</span>
               <span className={`mt-0.5 block leading-snug text-[var(--text-secondary)] ${compact ? 'text-xs' : 'text-[10px]'}`}>{meta.hint}</span>
@@ -179,13 +187,13 @@ export function ScrumPersonalityPicker({
       <PocoMessageDialog
         open={boldR21Info}
         title="Bold R21 unlocked"
-        message="Bold R21 is an adults-only voice: spicy, blunt, and stripped of corporate polish. It is still meant to be fun, not cruel—consent and basic decency still matter. You can switch back to standard Bold or any other tone in this list whenever you want."
+        message="Bold R21 is the late-night voice: slow-burn sensual, shamelessly flirty, and allergic to stiff corporate pillow talk. Stand-up and stand-down copy leans in close—adults only, still no creep behaviour. Flip back to regular Bold whenever the room gets too hot."
         onClose={() => setBoldR21Info(false)}
       />
       <PocoMessageDialog
         open={snarkyR21Info}
         title="Snarky R21 unlocked"
-        message="Snarky R21 dials sarcasm way up and swears freely—rude, vulgar in a non-sexual way, and allergic to HR-safe platitudes. Great if you want your Scrum copy to sound like a tired engineer on their fourth coffee—not great if you need something safe for a work demo. Pick another tone anytime."
+        message="Snarky R21 is your foul-mouthed coworker who skipped the professionalism workshop: blunt insults, crude jokes, zero HR varnish—nothing sexual, just aggressively honest. Great if you want copy that sounds like a hangover arguing with the backlog. Pick a softer tone before you screenshot anything."
         onClose={() => setSnarkyR21Info(false)}
       />
     </>
