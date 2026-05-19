@@ -611,21 +611,21 @@ input[type='number']::-webkit-outer-spin-button {
 @keyframes poco-week-page-next {
   from {
     opacity: 0.55;
-    transform: translateX(16px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
-    transform: translateX(0);
+    transform: translateY(0);
   }
 }
 @keyframes poco-week-page-prev {
   from {
     opacity: 0.55;
-    transform: translateX(-16px);
+    transform: translateY(-12px);
   }
   to {
     opacity: 1;
-    transform: translateX(0);
+    transform: translateY(0);
   }
 }
 .poco-week-page-snap-next {
