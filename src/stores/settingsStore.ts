@@ -51,7 +51,11 @@ const initial: Settings = {
   scrumMaster: (() => {
     const merged = { ...DEFAULT_SETTINGS.scrumMaster, ...saved.scrumMaster } as Record<string, unknown>
     delete merged.sprintEndDate
-    return merged as unknown as ScrumMasterSettings
+    let sm = merged as unknown as ScrumMasterSettings
+    if ((sm.personality as string) === 'stern') {
+      sm = { ...sm, personality: 'snarky' }
+    }
+    return sm
   })(),
   scrumMasterGateComplete: migratedGateIncomplete
     ? false
@@ -60,6 +64,10 @@ const initial: Settings = {
 }
 
 if (migratedGateIncomplete) {
+  storage.saveSettings(initial)
+}
+
+if ((saved.scrumMaster as { personality?: string } | undefined)?.personality === 'stern') {
   storage.saveSettings(initial)
 }
 

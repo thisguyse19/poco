@@ -4,7 +4,8 @@ import { PocoAnimatedCenterModal } from '../ui/PocoAnimatedCenterModal'
 import { PocoHourCarousel } from '../ui/PocoHourCarousel'
 import { PocoMinuteCarousel } from '../ui/PocoMinuteCarousel'
 import { PocoScrollPicker } from '../ui/PocoScrollPicker'
-import { normalizeTimeHHMM, scrumNamesForGender, SCRUM_MASTER_PERSONALITIES } from '../../utils/scrumMaster'
+import { normalizeTimeHHMM, scrumNamesForGender } from '../../utils/scrumMaster'
+import { ScrumPersonalityPicker } from './ScrumPersonalityPicker'
 
 const triBase =
   'poco-press flex h-11 min-h-[2.75rem] flex-1 flex-row items-center justify-center gap-2 px-2 text-xs font-semibold capitalize transition-colors duration-200 [transition-timing-function:var(--ease-ios)]'
@@ -70,23 +71,7 @@ export function ScrumMasterEditModal({ open, onClose, value, onSave }: Props) {
         />
 
         <p className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Personality</p>
-        <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {SCRUM_MASTER_PERSONALITIES.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => setDraft((d) => ({ ...d, personality: p.id }))}
-              className={`poco-press min-w-[8.5rem] shrink-0 rounded-none border px-2.5 py-2 text-left ${
-                draft.personality === p.id
-                  ? 'border-[var(--accent)] bg-[var(--accent-soft)]'
-                  : 'border-[var(--border-subtle)] bg-[var(--bg-base)]'
-              }`}
-            >
-              <span className="block text-xs font-semibold text-[var(--text-primary)]">{p.title}</span>
-              <span className="mt-0.5 block text-[10px] leading-snug text-[var(--text-secondary)]">{p.hint}</span>
-            </button>
-          ))}
-        </div>
+        <ScrumPersonalityPicker value={draft.personality} onChange={(personality) => setDraft((d) => ({ ...d, personality }))} />
 
         <p className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Voice</p>
         <div className="grid grid-cols-2 gap-0 overflow-hidden rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)]">

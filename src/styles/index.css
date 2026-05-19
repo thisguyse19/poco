@@ -50,6 +50,35 @@
   transition: outline-color 0.2s var(--ease-ios);
 }
 
+@keyframes poco-personality-bold-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(196, 30, 30, 0.55);
+  }
+  100% {
+    box-shadow: 0 0 32px 12px rgba(196, 30, 30, 0);
+  }
+}
+.poco-personality-bold-pulse {
+  animation: poco-personality-bold-pulse 0.68s var(--ease-ios) both;
+}
+
+@keyframes poco-personality-snarky-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.55);
+  }
+  100% {
+    box-shadow: 0 0 32px 12px rgba(37, 99, 235, 0);
+  }
+}
+.poco-personality-snarky-pulse {
+  animation: poco-personality-snarky-pulse 0.68s var(--ease-ios) both;
+}
+
+[data-reduce-motion='true'] .poco-personality-bold-pulse,
+[data-reduce-motion='true'] .poco-personality-snarky-pulse {
+  animation: none;
+}
+
 [data-theme='dark'] {
   --bg-base: #1e1c1a;
   --bg-elevated: #252320;

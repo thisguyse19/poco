@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { HashRouter } from 'react-router-dom'
 import { AppRoutes } from './routes/AppRoutes'
+import { PwaUpdateToast } from './components/pwa/PwaUpdateToast'
 import { isPwaDisplay } from './utils/notifyDelivery'
 
 /** Installed PWA: block system context menu (long-press) at capture phase. */
@@ -19,6 +20,7 @@ function PwaContextMenuGuard() {
 export default function App() {
   return (
     <HashRouter>
+      <PwaUpdateToast />
       <PwaContextMenuGuard />
       <AppRoutes />
     </HashRouter>
