@@ -486,6 +486,23 @@ input[type='number']::-webkit-outer-spin-button {
     linear-gradient(var(--bg-base), var(--bg-base)) padding-box,
     linear-gradient(135deg, #6b93b8, #8b7cb5, #6fa889) border-box;
 }
+
+/* Scrum Master task rows: conic border on the complete control (replaces list-row SM icon). */
+.poco-scrum-checkbox-border {
+  --poco-scrum-a: 0deg;
+  border: 1.5px solid transparent;
+  background:
+    linear-gradient(var(--bg-elevated), var(--bg-elevated)) padding-box,
+    conic-gradient(from var(--poco-scrum-a), #6b93b8, #8b7cb5, #6fa889, #b89a68, #6b93b8) border-box;
+  animation: poco-scrum-spin 14s linear infinite;
+}
+[data-reduce-motion='true'] .poco-scrum-checkbox-border {
+  animation: none;
+  background:
+    linear-gradient(var(--bg-elevated), var(--bg-elevated)) padding-box,
+    linear-gradient(135deg, #6b93b8, #8b7cb5, #6fa889) border-box;
+}
+
 .poco-scrum-banner {
   --poco-scrum-a: 0deg;
   border: 1.5px solid transparent;

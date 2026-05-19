@@ -88,7 +88,7 @@ export function TaskItem({
   onRequestDelete: (id: string) => void
   swipeOpenId: string | null
   onSwipeOpenChange: (id: string | null) => void
-  /** Multicolour Scrum Master accent on the row */
+  /** Scrum Master tasks outside the SM column: SM-coloured border on the complete checkbox */
   scrumMark?: boolean
 }) {
   const navigate = useNavigate()
@@ -374,7 +374,11 @@ export function TaskItem({
         <div className="flex items-center gap-2">
           <button
             type="button"
-            className="poco-press flex h-8 w-8 shrink-0 items-center justify-center rounded-none border border-[var(--border-default)] bg-[var(--bg-elevated)]"
+            className={`poco-press flex h-8 w-8 shrink-0 items-center justify-center rounded-none ${
+              scrumMark
+                ? 'poco-scrum-checkbox-border'
+                : 'border border-[var(--border-default)] bg-[var(--bg-elevated)]'
+            }`}
             aria-label={task.completed ? 'Mark incomplete' : 'Mark complete'}
             onClick={(e) => {
               e.stopPropagation()
@@ -433,11 +437,6 @@ export function TaskItem({
             ) : (
               <div>
                 <div className="flex items-center gap-1.5">
-                  {scrumMark ? (
-                    <span className="shrink-0 leading-none" title="Scrum Master">
-                      <Icon name="scrum" size={13} className="shrink-0" />
-                    </span>
-                  ) : null}
                   {priorityDot(task.priority)}
                   <p className="text-sm font-medium leading-snug text-[var(--text-primary)]">
                     {task.title}
