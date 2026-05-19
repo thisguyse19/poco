@@ -607,6 +607,56 @@ input[type='number']::-webkit-outer-spin-button {
   animation: none;
 }
 
+/* Week planner: page change (arrow / Today / auto-flip while dragging) */
+@keyframes poco-week-page-next {
+  from {
+    opacity: 0.55;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes poco-week-page-prev {
+  from {
+    opacity: 0.55;
+    transform: translateX(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+.poco-week-page-snap-next {
+  animation: poco-week-page-next 280ms var(--ease-ios) both;
+}
+.poco-week-page-snap-prev {
+  animation: poco-week-page-prev 280ms var(--ease-ios) both;
+}
+[data-reduce-motion='true'] .poco-week-page-snap-next,
+[data-reduce-motion='true'] .poco-week-page-snap-prev {
+  animation: none;
+}
+
+/* Week planner: Scrum Master task — iridescent strip (same palette as SM chrome) */
+.poco-scrum-week-mark {
+  position: relative;
+}
+.poco-scrum-week-mark::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, #6b93b8, #8b7cb5, #6fa889, #b89a68);
+  pointer-events: none;
+}
+[data-reduce-motion='true'] .poco-scrum-week-mark::before {
+  background: linear-gradient(180deg, #6b93b8, #6fa889);
+}
+
 /* Installed PWA (esp. iOS): reduce long-press callouts, text selection, and tap highlight. */
 @media (display-mode: standalone), (display-mode: minimal-ui), (display-mode: fullscreen) {
   html {
