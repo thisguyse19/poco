@@ -119,7 +119,7 @@ function PlannerTaskCard({
       style={style}
       {...restDraggableListeners}
       {...attributes}
-      className={`relative touch-none select-none rounded-none bg-[var(--bg-elevated)] px-2.5 py-2.5 text-left md:px-3 md:py-3 ${
+      className={`relative touch-pan-y select-none rounded-none bg-[var(--bg-elevated)] px-2.5 py-2.5 text-left md:px-3 md:py-3 ${
         borderEmphasis ? 'border border-[var(--accent)]' : 'border border-[var(--border-subtle)]'
       } ${scrumAccent ? 'poco-scrum-week-mark' : ''} ${isDragging ? 'z-10 opacity-0' : ''} ${
         task.completed ? 'opacity-60' : ''
