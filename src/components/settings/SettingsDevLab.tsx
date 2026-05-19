@@ -150,7 +150,7 @@ export function SettingsDevLab() {
       }
       const reg = outcome.registration
       if (reg.waiting) activateWaitingServiceWorkerAndReload(reg)
-      else setMsg('No waiting worker. Deploy a new build (or bump public/poco/sw.js), then “Check for app update”.')
+      else setMsg('No waiting worker. Deploy a new build (or bump public/sw.js cache name), then “Check for app update”.')
     })
   }
 
