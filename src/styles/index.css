@@ -606,3 +606,24 @@ input[type='number']::-webkit-outer-spin-button {
 [data-reduce-motion='true'] .poco-sm-session-enter {
   animation: none;
 }
+
+/* Installed PWA (esp. iOS): reduce long-press callouts, text selection, and tap highlight. */
+@media (display-mode: standalone), (display-mode: minimal-ui), (display-mode: fullscreen) {
+  html {
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  input,
+  textarea,
+  select,
+  [contenteditable='true'] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+}

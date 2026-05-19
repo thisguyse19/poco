@@ -7,6 +7,8 @@ import { useSettingsStore } from '../../stores/settingsStore'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { PocoBottomSheet } from '../ui/PocoBottomSheet'
 import { Icon } from '../ui/Icon'
+import { formatIsoAsUkLong } from '../../utils/dateTimeFormat'
+import { POCO_LOCALE } from '../../utils/pocoLocale'
 
 const WEEKS = 10
 const ROWS = 7
@@ -71,7 +73,7 @@ function FocusDayDetail({
     <div className={scrollWrap}>
       <div className="mb-3 flex items-start justify-between gap-2">
         <div>
-          <p className="font-serif text-lg text-[var(--text-primary)]">{sheetDay}</p>
+          <p className="font-serif text-lg text-[var(--text-primary)]">{formatIsoAsUkLong(sheetDay)}</p>
           <p className="mt-1 text-sm text-[var(--text-secondary)]">
             <strong className="text-[var(--text-primary)]">{dayTotal}</strong> min across{' '}
             <strong className="text-[var(--text-primary)]">{daySessions.length}</strong> sessions
@@ -92,7 +94,8 @@ function FocusDayDetail({
             >
               <p className="text-sm font-medium text-[var(--text-primary)]">{taskTitle(s.taskId)}</p>
               <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
-                {s.plannedMinutes} min · {new Date(s.startedAt).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
+                {s.plannedMinutes} min ·{' '}
+                {new Date(s.startedAt).toLocaleTimeString(POCO_LOCALE, { hour: 'numeric', minute: '2-digit' })}
               </p>
             </li>
           ))}

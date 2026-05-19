@@ -178,7 +178,7 @@ export function HomePage() {
   const subtitle = useMemo(() => {
     if (standUpLive) return scrumLiveSubtitle(sm.personality, true)
     if (standDownLive) return scrumLiveSubtitle(sm.personality, false)
-    const line = new Intl.DateTimeFormat(undefined, {
+    const line = new Intl.DateTimeFormat('en-GB', {
       weekday: 'long',
       month: 'long',
       day: 'numeric',

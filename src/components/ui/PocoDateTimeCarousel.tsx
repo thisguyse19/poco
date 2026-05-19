@@ -1,4 +1,5 @@
 import { toLocalISODate } from '../../services/storage'
+import { POCO_LOCALE } from '../../utils/pocoLocale'
 import { PocoScrollPicker } from './PocoScrollPicker'
 
 function pad2(n: number) {
@@ -6,7 +7,7 @@ function pad2(n: number) {
 }
 
 function monthMmm(m: string) {
-  return new Date(2000, Number(m) - 1, 1).toLocaleDateString(undefined, { month: 'short' })
+  return new Date(2000, Number(m) - 1, 1).toLocaleDateString(POCO_LOCALE, { month: 'short' })
 }
 
 type DueChange = { dueDate: string | null; dueTime: string | null }
