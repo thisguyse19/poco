@@ -95,8 +95,6 @@ function PlannerTaskCard({
     }
   }, [])
 
-  const borderEmphasis = armed || isDragging
-
   return (
     <div
       ref={setNodeRef}
