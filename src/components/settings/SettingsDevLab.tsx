@@ -123,7 +123,8 @@ export function SettingsDevLab() {
       <PrismPulseGame />
 
       <div className="rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-xs text-[var(--text-secondary)]">
-        <span className="font-semibold text-[var(--text-primary)]">Storage footprint (approx):</span> {bytes.toLocaleString()} characters across{' '}
+        <span className="font-semibold text-[var(--text-primary)]">Storage footprint (approx):</span>{' '}
+        {bytes.toLocaleString('en-GB')} characters across{' '}
         {localStorage.length} keys.
       </div>
 

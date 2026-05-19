@@ -70,6 +70,7 @@ export function AppLayout() {
           </div>
           <nav className="flex flex-col gap-1">
             <DesktopSidebarItem to="/" end icon={<Icon name="tasks" size={18} />} label="Tasks" />
+            <DesktopSidebarItem to="/week" icon={<Icon name="calendar" size={18} />} label="Week" />
             <DesktopSidebarItem to="/focus" icon={<Icon name="focus" size={18} />} label="Focus" />
             <DesktopSidebarItem to="/settings" icon={<Icon name="settings" size={18} />} label="Settings" />
           </nav>
@@ -98,38 +99,51 @@ export function AppLayout() {
               }`}
               aria-hidden={hideNav}
             >
-              <div className="grid grid-cols-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]">
+              <div className="grid grid-cols-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]">
                 <NavLink
                   to="/"
                   end
                   className={({ isActive }) =>
-                    `poco-nav-tab flex min-h-[3.5rem] flex-col items-center justify-center gap-1 text-[11px] font-medium tracking-wide ${
+                    `poco-nav-tab flex min-h-[3.5rem] flex-col items-center justify-center gap-0.5 text-[10px] font-medium tracking-wide ${
                       isActive ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]'
                     }`
                   }
                 >
                   <span className="flex h-5 w-5 items-center justify-center">
-                    <Icon name="tasks" size={20} />
+                    <Icon name="tasks" size={18} />
                   </span>
                   Tasks
                 </NavLink>
                 <NavLink
-                  to="/focus"
+                  to="/week"
                   className={({ isActive }) =>
-                    `poco-nav-tab flex min-h-[3.5rem] flex-col items-center justify-center gap-1 text-[11px] font-medium tracking-wide ${
+                    `poco-nav-tab flex min-h-[3.5rem] flex-col items-center justify-center gap-0.5 text-[10px] font-medium tracking-wide ${
                       isActive ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]'
                     }`
                   }
                 >
                   <span className="flex h-5 w-5 items-center justify-center">
-                    <Icon name="focus" size={20} />
+                    <Icon name="calendar" size={18} />
+                  </span>
+                  Week
+                </NavLink>
+                <NavLink
+                  to="/focus"
+                  className={({ isActive }) =>
+                    `poco-nav-tab flex min-h-[3.5rem] flex-col items-center justify-center gap-0.5 text-[10px] font-medium tracking-wide ${
+                      isActive ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]'
+                    }`
+                  }
+                >
+                  <span className="flex h-5 w-5 items-center justify-center">
+                    <Icon name="focus" size={18} />
                   </span>
                   Focus
                 </NavLink>
                 <NavLink
                   to="/settings"
                   className={({ isActive }) =>
-                    `poco-nav-tab flex min-h-[3.5rem] flex-col items-center justify-center gap-1 text-[11px] font-medium tracking-wide ${
+                    `poco-nav-tab flex min-h-[3.5rem] flex-col items-center justify-center gap-0.5 text-[10px] font-medium tracking-wide ${
                       isActive ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]'
                     }`
                   }
@@ -141,7 +155,7 @@ export function AppLayout() {
                   onContextMenu={settingsTabLongPress.onContextMenu}
                 >
                   <span className="flex h-5 w-5 items-center justify-center">
-                    <Icon name="settings" size={20} />
+                    <Icon name="settings" size={18} />
                   </span>
                   Settings
                 </NavLink>

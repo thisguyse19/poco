@@ -5,6 +5,7 @@ import { useSettingsStore } from '../stores/settingsStore'
 import { useTimerStore } from '../stores/timerStore'
 import { AppLayout } from '../layouts/AppLayout'
 import { HomePage } from '../pages/HomePage'
+import { WeekPage } from '../pages/WeekPage'
 import { FocusPage } from '../pages/FocusPage'
 import { SettingsPage } from '../pages/SettingsPage'
 import { OnboardingPage } from '../pages/OnboardingPage'
@@ -30,6 +31,7 @@ export function AppRoutes() {
       <Route path="/scrum-master-setup" element={<ScrumMasterSetupPage />} />
       <Route element={<AppLayout />}>
         <Route index element={<HomePage />} />
+        <Route path="week" element={<WeekPage />} />
         <Route path="focus" element={<FocusPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />

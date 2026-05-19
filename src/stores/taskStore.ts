@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { v4 as uuidv4 } from 'uuid'
 import type { Priority, ScheduledFor, Task } from '../types'
 import { storage, toLocalISODate } from '../services/storage'
+import { patchTaskForPlanDate } from '../utils/weekPlanner'
 
 type TaskState = {
   tasks: Task[]
@@ -16,6 +17,10 @@ type TaskState = {
   toggleComplete: (id: string) => void
   rescheduleLaterToday: (id: string) => void
   rescheduleTomorrow: (id: string) => void
+  /** Week planner: assign task to a calendar day and align `scheduledFor` with Home buckets. */
+  planTaskOnDate: (id: string, targetIsoDate: string) => void
+  /** Week planner: remove calendar date; inbox stays inbox, otherwise Someday. */
+  clearWeekPlan: (id: string) => void
 }
 
 const nowIso = () => new Date().toISOString()
@@ -135,5 +140,18 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       scheduledFor: 'tomorrow',
       dueDate: `${y}-${m}-${day}`,
     })
+  },
+
+  planTaskOnDate(id, targetIsoDate) {
+    const today = toLocalISODate()
+    const patch = patchTaskForPlanDate(targetIsoDate, today)
+    get().updateTask(id, patch)
+  },
+
+  clearWeekPlan(id) {
+    const t = get().tasks.find((x) => x.id === id)
+    if (!t) return
+    const scheduledFor: ScheduledFor = t.scheduledFor === 'inbox' ? 'inbox' : 'someday'
+    get().updateTask(id, { dueDate: null, scheduledFor })
   },
 }))
