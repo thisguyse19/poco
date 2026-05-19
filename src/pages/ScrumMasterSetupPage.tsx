@@ -119,7 +119,7 @@ export function ScrumMasterSetupPage() {
 
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Stand up</p>
-            <div className="flex min-h-[72px] justify-center gap-2 rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-2">
+            <div className="flex min-h-[84px] justify-center gap-2 rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-2">
               <PocoHourCarousel variant="toolbar" hour0to23={upHm.h} onChange={(h) => setSmUp(normalizeTimeHHMM(`${h}:${upHm.m}`))} />
               <PocoMinuteCarousel variant="toolbar" minute0to55Step5={upHm.m} onChange={(m) => setSmUp(normalizeTimeHHMM(`${upHm.h}:${m}`))} />
             </div>
@@ -127,7 +127,7 @@ export function ScrumMasterSetupPage() {
 
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Stand down</p>
-            <div className="flex min-h-[72px] justify-center gap-2 rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-2">
+            <div className="flex min-h-[84px] justify-center gap-2 rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-2">
               <PocoHourCarousel variant="toolbar" hour0to23={downHm.h} onChange={(h) => setSmDown(normalizeTimeHHMM(`${h}:${downHm.m}`))} />
               <PocoMinuteCarousel variant="toolbar" minute0to55Step5={downHm.m} onChange={(m) => setSmDown(normalizeTimeHHMM(`${downHm.h}:${m}`))} />
             </div>

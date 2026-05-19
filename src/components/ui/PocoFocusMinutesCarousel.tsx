@@ -28,8 +28,8 @@ export function PocoFocusMinutesCarousel({
     />
   )
   if (variant === 'toolbar') {
-    // Match PocoScrollPicker compact viewport (72px); shorter parent clips the wheel.
-    return <div className="flex h-[72px] max-w-[6.5rem] min-w-[5rem] shrink-0 items-stretch justify-end">{picker}</div>
+    // Match PocoScrollPicker compact viewport (84px); shorter parent clips the wheel.
+    return <div className="flex h-[84px] max-w-[6.5rem] min-w-[5rem] shrink-0 items-stretch justify-end">{picker}</div>
   }
-  return <div className="flex h-[2.75rem] max-w-[7rem] items-stretch">{picker}</div>
+  return <div className="flex min-h-[5.25rem] max-w-[7rem] items-stretch">{picker}</div>
 }
