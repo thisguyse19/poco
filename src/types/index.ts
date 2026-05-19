@@ -127,6 +127,8 @@ export interface Settings {
   autoStartBreaks: boolean
   autoStartNext: boolean
   keepScreenAwake: boolean
+  /** Ahead (week planner): include completed tasks in columns when true */
+  aheadShowCompleted: boolean
   scrumMaster: ScrumMasterSettings
 }
 
