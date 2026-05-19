@@ -36,6 +36,8 @@ const ZONE_NEXT_ID = 'poco-week-zone-next'
 
 const DRAG_HOLD_MS = 220
 const PAGE_FLIP_MS = 750
+const FLIP_TICK_MS = 50
+const ZONE_HIT_PAD_PX = 14
 
 function dayDroppableId(iso: string) {
   return `day:${iso}`
@@ -51,10 +53,15 @@ function priorityDot(p: Priority) {
   return <span className={`h-1.5 w-1.5 shrink-0 rounded-none ${priBg[p]}`} aria-hidden />
 }
 
-function pointInRect(clientX: number, clientY: number, el: HTMLElement | null): boolean {
+function pointInRect(clientX: number, clientY: number, el: HTMLElement | null, pad = 0): boolean {
   if (!el) return false
   const r = el.getBoundingClientRect()
-  return clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom
+  return (
+    clientX >= r.left - pad &&
+    clientX <= r.right + pad &&
+    clientY >= r.top - pad &&
+    clientY <= r.bottom + pad
+  )
 }
 
 function PlannerTaskCard({
@@ -85,7 +92,7 @@ function PlannerTaskCard({
   } = listeners ?? {}
   const style = transform ? { transform: CSS.Translate.toString(transform) } : undefined
 
-  const borderEmphasis = (armed && !isDragging) || isDragging
+  const borderEmphasis = armed && !isDragging
 
   useEffect(
     () => () => {
@@ -93,6 +100,12 @@ function PlannerTaskCard({
     },
     [],
   )
+
+  useEffect(() => {
+    if (!isDragging) return
+    const id = window.requestAnimationFrame(() => setArmed(false))
+    return () => window.cancelAnimationFrame(id)
+  }, [isDragging])
 
   const clearArmTimer = useCallback(() => {
     if (armTimer.current != null) {
@@ -109,9 +122,9 @@ function PlannerTaskCard({
       {...attributes}
       className={`relative touch-none select-none rounded-none bg-[var(--bg-elevated)] px-2.5 py-2.5 text-left ${
         borderEmphasis ? 'border border-[var(--accent)]' : 'border border-[var(--border-subtle)]'
-      } ${scrumAccent ? 'poco-scrum-week-mark' : ''} ${isDragging ? 'z-10 opacity-70' : ''} ${
-        task.completed ? 'opacity-60' : ''
-      } ${dragDisabled ? 'pointer-events-none opacity-50' : ''}`}
+      } ${scrumAccent ? 'poco-scrum-week-mark' : ''} ${isDragging ? 'z-10 opacity-0' : task.completed ? 'opacity-60' : ''} ${
+        dragDisabled ? 'pointer-events-none opacity-50' : ''
+      }`}
       onPointerDown={(e) => {
         dndPointerDown?.(e)
         if (dragDisabled) return
@@ -121,12 +134,18 @@ function PlannerTaskCard({
       onPointerUp={(e) => {
         dndPointerUp?.(e)
         clearArmTimer()
-        if (!isDragging) setArmed(false)
+        setArmed(false)
       }}
       onPointerCancel={(e) => {
         dndPointerCancel?.(e)
         clearArmTimer()
         setArmed(false)
+      }}
+      onPointerLeave={() => {
+        if (!isDragging) {
+          clearArmTimer()
+          setArmed(false)
+        }
       }}
       onDoubleClick={(e) => {
         e.stopPropagation()
@@ -194,15 +213,18 @@ function DayCell({
   return (
     <div
       ref={setNodeRef}
-      className={`flex min-h-0 min-w-0 flex-col overflow-hidden bg-[var(--bg-subtle)] p-2 ${
-        isToday
-          ? 'border border-[var(--accent)]'
-          : 'border border-[var(--border-subtle)]'
-      } ${past ? 'opacity-70' : ''} ${isOver && !past ? 'bg-[var(--accent-soft)]' : ''}`}
+      className={`flex min-h-0 min-w-0 flex-col overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-subtle)] p-2 ${
+        past ? 'opacity-70' : ''
+      } ${isOver && !past ? 'bg-[var(--accent-soft)]' : ''}`}
     >
       <div className="mb-2 shrink-0 border-b border-[var(--border-subtle)] pb-1.5">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">{formatIsoWeekdayShortUk(iso)}</p>
-        {past ? <p className="text-[10px] text-[var(--text-tertiary)]">Past</p> : null}
+        <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">{formatIsoWeekdayShortUk(iso)}</p>
+          {isToday ? (
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--accent)]">TODAY</span>
+          ) : null}
+        </div>
+        {past ? <p className="mt-0.5 text-[10px] text-[var(--text-tertiary)]">Past</p> : null}
       </div>
       <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto [-webkit-overflow-scrolling:touch]">{children}</div>
     </div>
@@ -256,12 +278,14 @@ function ArrowZone({
   highlight,
   onTap,
   zoneRef,
+  holdProgress = 0,
 }: {
   id: string
   direction: 'up' | 'down'
   highlight: boolean
   onTap: () => void
   zoneRef: React.MutableRefObject<HTMLButtonElement | null>
+  holdProgress?: number
 }) {
   const { setNodeRef, isOver } = useDroppable({ id })
   const mergedRef = useCallback(
@@ -272,20 +296,27 @@ function ArrowZone({
     [setNodeRef, zoneRef],
   )
 
+  const fill = Math.min(1, Math.max(0, holdProgress))
+
   return (
     <button
       ref={mergedRef}
       type="button"
-      className={`poco-press flex h-6 w-full shrink-0 items-center justify-center border-b border-[var(--border-subtle)] transition-colors duration-200 ${
+      className={`poco-press relative flex h-6 w-full shrink-0 items-center justify-center overflow-hidden border-b border-[var(--border-subtle)] transition-colors duration-200 ${
         highlight || isOver ? 'bg-[color-mix(in_srgb,var(--accent-soft)_75%,var(--bg-subtle))]' : 'bg-[var(--bg-base)]'
       }`}
       onClick={onTap}
       aria-label={direction === 'up' ? 'Show previous four days' : 'Show next four days'}
     >
+      <span
+        className="pointer-events-none absolute inset-y-0 left-0 bg-[color-mix(in_srgb,var(--accent)_22%,var(--accent-soft))]"
+        style={{ width: `${fill * 100}%`, transition: 'width 60ms linear' }}
+        aria-hidden
+      />
       <Icon
         name="chevron-down"
         size={14}
-        className={direction === 'up' ? 'rotate-180 text-[var(--text-secondary)]' : 'text-[var(--text-secondary)]'}
+        className={`relative z-10 ${direction === 'up' ? 'rotate-180 text-[var(--text-secondary)]' : 'text-[var(--text-secondary)]'}`}
       />
     </button>
   )
@@ -306,15 +337,22 @@ export function WeekPage() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [activeTask, setActiveTask] = useState<Task | null>(null)
   const [zoneHighlight, setZoneHighlight] = useState<'prev' | 'next' | null>(null)
+  const [flipHoldProgress, setFlipHoldProgress] = useState(0)
   const [unschedFlash, setUnschedFlash] = useState(false)
   const [binFlash, setBinFlash] = useState(false)
 
   const zonePrevRef = useRef<HTMLButtonElement | null>(null)
   const zoneNextRef = useRef<HTMLButtonElement | null>(null)
-  const flipTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const activeZoneRef = useRef<'prev' | 'next' | null>(null)
+  const flipTickRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const pageIndexRef = useRef(pageIndex)
+  const lastDragPointerRef = useRef<{ x: number; y: number } | null>(null)
+  const dwellStartRef = useRef<number | null>(null)
   const prevPageRef = useRef(pageIndex)
   const [pageAnim, setPageAnim] = useState<'next' | 'prev' | null>(null)
+
+  useLayoutEffect(() => {
+    pageIndexRef.current = pageIndex
+  }, [pageIndex])
 
   useLayoutEffect(() => {
     const prev = prevPageRef.current
@@ -397,63 +435,90 @@ export function WeekPage() {
     }),
   )
 
-  const stopFlipInterval = useCallback(() => {
-    if (flipTimerRef.current != null) {
-      clearInterval(flipTimerRef.current)
-      flipTimerRef.current = null
+  const stopFlipTick = useCallback(() => {
+    if (flipTickRef.current != null) {
+      clearInterval(flipTickRef.current)
+      flipTickRef.current = null
     }
+    dwellStartRef.current = null
+    setFlipHoldProgress(0)
+    setZoneHighlight(null)
   }, [])
 
-  const clearFlipTimer = useCallback(() => {
-    stopFlipInterval()
-    activeZoneRef.current = null
-    setZoneHighlight(null)
-  }, [stopFlipInterval])
-
-  const startFlipIfNeeded = useCallback(
-    (clientX: number, clientY: number) => {
-      const inPrev = pageIndex > 0 && pointInRect(clientX, clientY, zonePrevRef.current)
-      const inNext = pointInRect(clientX, clientY, zoneNextRef.current)
-      const z: 'prev' | 'next' | null = inPrev ? 'prev' : inNext ? 'next' : null
-
-      if (z !== activeZoneRef.current) {
-        activeZoneRef.current = z
-        setZoneHighlight(z)
-        stopFlipInterval()
-        if (z) {
-          flipTimerRef.current = window.setInterval(() => {
-            setPageIndex((p) => (z === 'next' ? p + 1 : Math.max(0, p - 1)))
-          }, PAGE_FLIP_MS)
-        }
-      }
-    },
-    [pageIndex, stopFlipInterval],
-  )
-
   useEffect(() => {
-    if (!activeTask) return
+    if (!activeTask) {
+      lastDragPointerRef.current = null
+      return
+    }
+
     const onMove = (ev: PointerEvent) => {
-      startFlipIfNeeded(ev.clientX, ev.clientY)
+      lastDragPointerRef.current = { x: ev.clientX, y: ev.clientY }
     }
     const onUp = () => {
-      stopFlipInterval()
-      setZoneHighlight(null)
-      activeZoneRef.current = null
+      lastDragPointerRef.current = null
+      stopFlipTick()
     }
+
     window.addEventListener('pointermove', onMove, { passive: true })
     window.addEventListener('pointerup', onUp)
     window.addEventListener('pointercancel', onUp)
+
+    flipTickRef.current = window.setInterval(() => {
+      const lp = lastDragPointerRef.current
+      if (!lp) return
+
+      const pi = pageIndexRef.current
+      const inPrev = pi > 0 && pointInRect(lp.x, lp.y, zonePrevRef.current, ZONE_HIT_PAD_PX)
+      const inNext = pointInRect(lp.x, lp.y, zoneNextRef.current, ZONE_HIT_PAD_PX)
+      const z: 'prev' | 'next' | null = inPrev ? 'prev' : inNext ? 'next' : null
+
+      if (!z) {
+        dwellStartRef.current = null
+        setZoneHighlight(null)
+        setFlipHoldProgress(0)
+        return
+      }
+
+      setZoneHighlight(z)
+      const now = Date.now()
+      if (dwellStartRef.current == null) dwellStartRef.current = now
+
+      const elapsed = now - dwellStartRef.current
+      setFlipHoldProgress(Math.min(1, elapsed / PAGE_FLIP_MS))
+
+      if (elapsed >= PAGE_FLIP_MS) {
+        setPageIndex((p) => (z === 'next' ? p + 1 : Math.max(0, p - 1)))
+        dwellStartRef.current = now
+        setFlipHoldProgress(0)
+      }
+    }, FLIP_TICK_MS)
+
     return () => {
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerup', onUp)
       window.removeEventListener('pointercancel', onUp)
-      stopFlipInterval()
+      if (flipTickRef.current != null) {
+        clearInterval(flipTickRef.current)
+        flipTickRef.current = null
+      }
+      dwellStartRef.current = null
+      setFlipHoldProgress(0)
+      setZoneHighlight(null)
     }
-  }, [activeTask, startFlipIfNeeded, stopFlipInterval])
+  }, [activeTask, stopFlipTick])
 
   const onDragStart = useCallback(
     (e: DragStartEvent) => {
       setZoneHighlight(null)
+      setFlipHoldProgress(0)
+      dwellStartRef.current = null
+      const ae = e.activatorEvent
+      if (ae && 'clientX' in ae && typeof (ae as PointerEvent).clientX === 'number') {
+        const pe = ae as PointerEvent
+        lastDragPointerRef.current = { x: pe.clientX, y: pe.clientY }
+      } else {
+        lastDragPointerRef.current = null
+      }
       const id = String(e.active.id)
       const t = tasks.find((x) => x.id === id)
       setActiveTask(t ?? null)
@@ -464,8 +529,7 @@ export function WeekPage() {
   const onDragEnd = useCallback(
     (e: DragEndEvent) => {
       setActiveTask(null)
-      setZoneHighlight(null)
-      clearFlipTimer()
+      stopFlipTick()
       const { active, over } = e
       if (!over) return
       const taskId = String(active.id)
@@ -490,7 +554,7 @@ export function WeekPage() {
         triggerHaptic(12)
       }
     },
-    [clearFlipTimer, clearWeekPlan, planTaskOnDate],
+    [clearWeekPlan, planTaskOnDate, stopFlipTick],
   )
 
   const scrumAccent = useCallback(
@@ -522,14 +586,16 @@ export function WeekPage() {
           {smEnabled ? ' · coloured strip: Scrum Master task' : ''}
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            className="poco-press rounded-none border border-[var(--border-default)] bg-[var(--bg-elevated)] px-2.5 py-1.5 text-xs font-semibold text-[var(--accent)]"
-            onClick={goToday}
-          >
-            Today
-          </button>
-          <label className="ml-auto flex cursor-pointer items-center gap-2 text-xs text-[var(--text-secondary)]">
+          {pageIndex > 0 ? (
+            <button
+              type="button"
+              className="poco-press rounded-none border border-[var(--border-default)] bg-[var(--bg-elevated)] px-2.5 py-1.5 text-xs font-semibold text-[var(--accent)]"
+              onClick={goToday}
+            >
+              Today
+            </button>
+          ) : null}
+          <label className={`flex cursor-pointer items-center gap-2 text-xs text-[var(--text-secondary)] ${pageIndex > 0 ? '' : 'ml-auto'}`}>
             <input
               type="checkbox"
               className="accent-[var(--accent)]"
@@ -540,6 +606,15 @@ export function WeekPage() {
           </label>
         </div>
       </header>
+
+      {activeTask && zoneHighlight ? (
+        <p
+          role="status"
+          className="shrink-0 border-b border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-4 py-1.5 text-center text-[11px] leading-snug text-[var(--text-secondary)] md:px-6"
+        >
+          Keep holding to flip pages
+        </p>
+      ) : null}
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-[calc(var(--poco-mobile-nav-height)+1rem)] pt-2 md:px-6 md:pb-6">
         <DndContext
@@ -554,6 +629,7 @@ export function WeekPage() {
                 id={ZONE_PREV_ID}
                 direction="up"
                 highlight={zoneHighlight === 'prev'}
+                holdProgress={zoneHighlight === 'prev' ? flipHoldProgress : 0}
                 onTap={() => setPageIndex((p) => Math.max(0, p - 1))}
                 zoneRef={zonePrevRef}
               />
@@ -601,6 +677,7 @@ export function WeekPage() {
               id={ZONE_NEXT_ID}
               direction="down"
               highlight={zoneHighlight === 'next'}
+              holdProgress={zoneHighlight === 'next' ? flipHoldProgress : 0}
               onTap={() => setPageIndex((p) => p + 1)}
               zoneRef={zoneNextRef}
             />
