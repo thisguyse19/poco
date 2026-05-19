@@ -23,9 +23,9 @@ export function PocoMinuteCarousel({
     />
   )
   if (variant === 'toolbar') {
-    return <div className="flex h-[72px] max-w-[5.5rem] min-w-[4.5rem] shrink-0 items-stretch justify-end">{picker}</div>
+    return <div className="flex h-[84px] max-w-[5.5rem] min-w-[4.5rem] shrink-0 items-stretch justify-end">{picker}</div>
   }
-  return <div className="min-h-[4.5rem]">{picker}</div>
+  return <div className="min-h-[5.25rem]">{picker}</div>
 }
 
 function pad(n: number) {

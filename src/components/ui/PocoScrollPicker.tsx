@@ -2,11 +2,12 @@ import { useCallback, useId, useLayoutEffect, useMemo, useRef } from 'react'
 
 const ROW_DEFAULT = 28
 const VISIBLE_DEFAULT = 84
-const ROW_COMPACT = 24
-const VISIBLE_COMPACT = 72
-/** Detail sheet: larger type, compact wheel window */
-const ROW_PROMINENT = 32
-const VISIBLE_PROMINENT = 76
+/** Toolbar / side-by-side wheels: room for text-sm labels */
+const ROW_COMPACT = 28
+const VISIBLE_COMPACT = 84
+/** Detail sheet date & time: larger type */
+const ROW_PROMINENT = 36
+const VISIBLE_PROMINENT = 92
 
 type PocoScrollPickerProps<T extends string | number> = {
   value: T
@@ -91,9 +92,9 @@ export function PocoScrollPicker<T extends string | number>({
                 align === 'start' ? 'justify-start pl-2 text-left' : 'justify-center text-center'
               } ${
                 prominent
-                  ? 'text-base leading-none'
+                  ? 'text-lg font-semibold leading-none'
                   : compact
-                    ? 'text-xs font-medium'
+                    ? 'text-sm font-semibold'
                     : 'text-sm font-medium'
               } ${selected ? 'text-[var(--text-primary)]' : 'text-[var(--text-tertiary)]'}`}
               style={{ height: row }}

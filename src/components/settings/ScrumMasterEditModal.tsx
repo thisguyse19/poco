@@ -106,13 +106,13 @@ export function ScrumMasterEditModal({ open, onClose, value, onSave }: Props) {
         </div>
 
         <p className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Daily stand up</p>
-        <div className="flex min-h-[72px] items-stretch justify-center gap-2 rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-2">
+        <div className="flex min-h-[84px] items-stretch justify-center gap-2 rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-2">
           <PocoHourCarousel variant="toolbar" hour0to23={up.h} onChange={(h) => setDraft((d) => ({ ...d, standUpTime: normalizeTimeHHMM(`${h}:${up.m}`) }))} />
           <PocoMinuteCarousel variant="toolbar" minute0to55Step5={up.m} onChange={(m) => setDraft((d) => ({ ...d, standUpTime: normalizeTimeHHMM(`${up.h}:${m}`) }))} />
         </div>
 
         <p className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Daily stand down</p>
-        <div className="flex min-h-[72px] items-stretch justify-center gap-2 rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-2">
+        <div className="flex min-h-[84px] items-stretch justify-center gap-2 rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-2">
           <PocoHourCarousel variant="toolbar" hour0to23={down.h} onChange={(h) => setDraft((d) => ({ ...d, standDownTime: normalizeTimeHHMM(`${h}:${down.m}`) }))} />
           <PocoMinuteCarousel variant="toolbar" minute0to55Step5={down.m} onChange={(m) => setDraft((d) => ({ ...d, standDownTime: normalizeTimeHHMM(`${down.h}:${m}`) }))} />
         </div>
