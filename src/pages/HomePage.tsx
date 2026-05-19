@@ -11,6 +11,8 @@ import {
   getScrumBanner,
   isStandDownCollectionWindow,
   isStandUpCollectionWindow,
+  applyScrumScheduleBannerCompletionGuards,
+  isScrumMasterRhythmActive,
   scrumEndStandDownLabel,
   scrumEndStandUpLabel,
   scrumLiveSubtitle,
@@ -86,8 +88,18 @@ export function HomePage() {
 
   const scheduleBanner = useMemo(() => {
     void clock
-    return getScrumBanner(sm)
-  }, [sm, clock])
+    void sessTick
+    const s = getScrumSession()
+    const base = getScrumBanner(sm)
+    return applyScrumScheduleBannerCompletionGuards(base, s)
+  }, [sm, clock, sessTick])
+
+  const smRhythmActive = useMemo(() => {
+    void clock
+    void sessTick
+    const s = getScrumSession()
+    return isScrumMasterRhythmActive(sm, s)
+  }, [sm, clock, sessTick])
 
   const banner = useMemo(() => {
     const f = getActiveFarewell(session)
@@ -121,7 +133,6 @@ export function HomePage() {
 
   const standUpLive = Boolean(session.standUpLive)
   const standDownLive = Boolean(session.standDownLive)
-  const farewellActive = Boolean(getActiveFarewell(session))
 
   useEffect(() => {
     const live = standUpLive || standDownLive
@@ -179,13 +190,6 @@ export function HomePage() {
 
   const headerDimmed = searchOpen || searchQuery.trim().length > 0
 
-  const smUiGlow =
-    sm.enabled &&
-    (standUpLive ||
-      standDownLive ||
-      scheduleBanner.visible ||
-      farewellActive)
-
   const planSnapshotIds = () =>
     tasks.filter((t) => t.scheduledFor === 'today' && t.category === SCRUM_MASTER_CATEGORY).map((t) => t.id)
 
@@ -222,7 +226,7 @@ export function HomePage() {
         }
       : {
           categoryLock: null,
-          scrumGlow: smUiGlow,
+          scrumGlow: false,
           showEndScrum: false,
           endScrumLabel: 'End',
           onEndScrum: () => {},
@@ -257,6 +261,7 @@ export function HomePage() {
         },
         standUpLive,
         standDownLive,
+        smRhythmActive,
       }
     : null
 

@@ -9,6 +9,8 @@ import { clearStandSessions, setStandDownLive, setStandUpLive } from '../../util
 import { storage } from '../../services/storage'
 import { useTaskStore } from '../../stores/taskStore'
 import { useTimerStore } from '../../stores/timerStore'
+import { useSettingsStore } from '../../stores/settingsStore'
+import { previewScrumNotification } from '../../hooks/useScrumNotifications'
 
 const KONAMI = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'] as const
 
@@ -16,6 +18,7 @@ export function SettingsDevLab() {
   const [state, setState] = useState(() => pocoDevLab.get())
   const [msg, setMsg] = useState<string | null>(null)
   const addTask = useTaskStore((s) => s.addTask)
+  const sm = useSettingsStore((s) => s.settings.scrumMaster)
   /** Plain object selector must be shallow-stable for React 19 + useSyncExternalStore (see Settings page crash). */
   const timerSnap = useTimerStore(
     useShallow((s) => ({
@@ -164,6 +167,34 @@ export function SettingsDevLab() {
             }}
           >
             Clear live session
+          </button>
+          <button
+            type="button"
+            className="poco-press rounded-none border border-[var(--border-default)] px-3 py-2 text-xs font-semibold"
+            onClick={() => {
+              if (typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
+                setMsg('Grant notification permission first (e.g. Test notification), then try again.')
+                return
+              }
+              previewScrumNotification('su-0', sm.name, sm.personality)
+              setMsg('Fired a sample stand-up notification (same copy as the real reminder).')
+            }}
+          >
+            Preview stand-up notify
+          </button>
+          <button
+            type="button"
+            className="poco-press rounded-none border border-[var(--border-default)] px-3 py-2 text-xs font-semibold"
+            onClick={() => {
+              if (typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
+                setMsg('Grant notification permission first (e.g. Test notification), then try again.')
+                return
+              }
+              previewScrumNotification('sd-0', sm.name, sm.personality)
+              setMsg('Fired a sample stand-down notification.')
+            }}
+          >
+            Preview stand-down notify
           </button>
         </div>
       </div>

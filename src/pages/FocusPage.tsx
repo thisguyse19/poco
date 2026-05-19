@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { PageHeader } from '../components/tasks/PageHeader'
 import { TimerControls } from '../components/focus/TimerControls'
-import { FocusStats } from '../components/focus/FocusStats'
+import { FocusLogSection } from '../components/focus/FocusLogSection'
 import { PocoBottomSheet } from '../components/ui/PocoBottomSheet'
 import { Icon } from '../components/ui/Icon'
 import { useTimer } from '../hooks/useTimer'
@@ -120,7 +120,7 @@ export function FocusPage() {
             onReset={reset}
             onSkip={skipToNextPhase}
           />
-          <FocusStats />
+          <FocusLogSection focusActive={isRunning && mode === 'focus'} />
         </div>
       </div>
 

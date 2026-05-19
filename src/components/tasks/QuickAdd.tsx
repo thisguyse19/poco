@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Icon } from '../ui/Icon'
 import { parseQuickAdd, type NlpPreviewChip } from '../../utils/nlp'
 import { formatNlpDateChipDisplay } from '../../utils/formatNlpChip'
@@ -69,6 +69,14 @@ export function QuickAdd({
 
   const parsed = useMemo(() => parseQuickAdd(text), [text])
 
+  useLayoutEffect(() => {
+    const el = inputRef.current
+    if (!el || !open) return
+    el.style.height = 'auto'
+    const max = 10 * 22
+    el.style.height = `${Math.min(max, Math.max(44, el.scrollHeight))}px`
+  }, [text, open])
+
   useEffect(() => {
     if (!open) return
     const id = requestAnimationFrame(() => inputRef.current?.focus())
@@ -122,13 +130,13 @@ export function QuickAdd({
             scrumGlow ? 'poco-scrum-glow-border poco-scrum-placeholder-glow' : ''
           }`}
         >
-          <div className="flex h-[2.75rem] items-center gap-2">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center text-[var(--accent)]" aria-hidden>
+          <div className="flex min-h-[2.75rem] items-start gap-2 py-1.5">
+            <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center text-[var(--accent)]" aria-hidden>
               <Icon name="plus" size={18} />
             </span>
             <textarea
               ref={inputRef}
-              className={`poco-input max-h-[2.75rem] min-h-0 flex-1 resize-none rounded-none border-0 bg-transparent px-1 py-1 text-sm leading-snug outline-none ${
+              className={`poco-input min-h-[2.75rem] max-h-[220px] min-w-0 flex-1 resize-none overflow-y-auto rounded-none border-0 bg-transparent px-1 py-1.5 text-sm leading-snug outline-none ${
                 scrumGlow ? 'poco-scrum-input-inner-glow' : ''
               }`}
               placeholder={ph}
@@ -147,7 +155,7 @@ export function QuickAdd({
             />
             <button
               type="button"
-              className="poco-press shrink-0 rounded-none bg-[var(--accent)] p-2 text-[var(--text-inverse)]"
+              className="poco-press mt-0.5 shrink-0 rounded-none bg-[var(--accent)] p-2 text-[var(--text-inverse)]"
               aria-label="Add task"
               onClick={submit}
             >
@@ -155,7 +163,7 @@ export function QuickAdd({
             </button>
             <button
               type="button"
-              className="poco-press shrink-0 p-2 text-[var(--text-tertiary)]"
+              className="poco-press mt-0.5 shrink-0 p-2 text-[var(--text-tertiary)]"
               aria-label="Close"
               onClick={() => {
                 setOpen(false)
