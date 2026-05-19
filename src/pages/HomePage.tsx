@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { HomeSearchControl } from '../components/tasks/HomeSearchControl'
 import { QuickAdd } from '../components/tasks/QuickAdd'
 import { TaskList, type TaskListScrum } from '../components/tasks/TaskList'
-import { ReviewModal } from '../components/reviews/ReviewModal'
 import { ScrumSprintStrip } from '../components/scrum/ScrumSprintStrip'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useTaskStore } from '../stores/taskStore'
@@ -33,15 +32,6 @@ import {
   setStandUpLive,
 } from '../utils/scrumSession'
 import { useScrumNotifications, requestScrumNotificationPermission } from '../hooks/useScrumNotifications'
-
-function shouldShowReview(hour: number, dismissed: string | null, thresholdHour: number): boolean {
-  if (hour < thresholdHour) return false
-  if (!dismissed) return true
-  const d = new Date(dismissed)
-  const today = toLocalISODate()
-  const dismissedDay = toLocalISODate(d)
-  return dismissedDay !== today
-}
 
 export function HomePage() {
   const settings = useSettingsStore((s) => s.settings)
@@ -144,11 +134,6 @@ export function HomePage() {
     }
     if (!live) prevLive.current = false
   }, [standUpLive, standDownLive])
-
-  const showReview = useMemo(
-    () => shouldShowReview(new Date().getHours(), settings.reviewDismissedAt, settings.endOfDayReviewHour),
-    [settings.reviewDismissedAt, settings.endOfDayReviewHour],
-  )
 
   const greeting = useMemo(() => {
     if (standUpLive) {
@@ -306,7 +291,6 @@ export function HomePage() {
         scrumGlow={scrumQuick.scrumGlow}
       />
       <TaskList key={taskListKey} wallNowMs={wallMs} searchQuery={searchQuery} scrum={scrumList} />
-      {showReview ? <ReviewModal /> : null}
     </div>
   )
 }

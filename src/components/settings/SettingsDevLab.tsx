@@ -25,6 +25,7 @@ export function SettingsDevLab() {
   const navigate = useNavigate()
   const [state, setState] = useState(() => pocoDevLab.get())
   const [msg, setMsg] = useState<string | null>(null)
+  const [pwaCheckModal, setPwaCheckModal] = useState<{ title: string; message: string } | null>(null)
   const addTask = useTaskStore((s) => s.addTask)
   const sm = useSettingsStore((s) => s.settings.scrumMaster)
   /** Plain object selector must be shallow-stable for React 19 + useSyncExternalStore (see Settings page crash). */
@@ -129,16 +130,27 @@ export function SettingsDevLab() {
   const checkPwaUpdate = async () => {
     const outcome = await ensurePocoServiceWorkerWithOutcome()
     if (!outcome.ok) {
-      setMsg(outcome.message)
+      setPwaCheckModal({
+        title: 'Update check failed',
+        message: outcome.message,
+      })
       return
     }
     const reg = outcome.registration
     const has = await probeServiceWorkerUpdate(reg)
     if (has) {
       window.dispatchEvent(new CustomEvent('poco-pwa-update-pending'))
-      setMsg('Update found — use the bar at the bottom of the screen, or tap “Reload now”.')
+      setPwaCheckModal({
+        title: 'Update available',
+        message:
+          'The check completed successfully. A newer version of poco is ready to install. Use the update bar at the bottom of the screen, or tap “Reload if update waiting” here after you close this dialog.',
+      })
     } else {
-      setMsg('No waiting update (same service worker on the server, or already current).')
+      setPwaCheckModal({
+        title: 'Up to date',
+        message:
+          'The check completed successfully. No newer version is waiting on the server—you already have the latest build for this device.',
+      })
     }
   }
 
@@ -351,6 +363,12 @@ export function SettingsDevLab() {
       </button>
 
       <PocoMessageDialog open={Boolean(msg)} title="Lab" message={msg ?? ''} onClose={() => setMsg(null)} />
+      <PocoMessageDialog
+        open={pwaCheckModal !== null}
+        title={pwaCheckModal?.title ?? ''}
+        message={pwaCheckModal?.message ?? ''}
+        onClose={() => setPwaCheckModal(null)}
+      />
     </section>
   )
 }

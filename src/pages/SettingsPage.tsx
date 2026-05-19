@@ -2,7 +2,6 @@ import { useCallback, useRef, useState } from 'react'
 import { PageHeader } from '../components/tasks/PageHeader'
 import { PocoConfirmDialog } from '../components/ui/PocoConfirmDialog'
 import { PocoMessageDialog } from '../components/ui/PocoMessageDialog'
-import { PocoHourCarousel } from '../components/ui/PocoHourCarousel'
 import { PocoFocusMinutesCarousel } from '../components/ui/PocoFocusMinutesCarousel'
 import { SettingsDevLab } from '../components/settings/SettingsDevLab'
 import { AppearanceControlGroup } from '../components/settings/AppearanceControlGroup'
@@ -200,17 +199,6 @@ export function SettingsPage() {
               onChange={(e) => updateSettings({ confirmDelete: e.target.checked })}
             />
           </label>
-          <div className="flex min-h-[84px] flex-row items-stretch gap-3 rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2">
-            <div className="flex min-w-0 flex-1 flex-col justify-center py-0.5">
-              <span className="text-sm font-medium">End-of-day review time</span>
-              <p className="text-xs text-[var(--text-tertiary)]">After this hour, the home review sheet may appear.</p>
-            </div>
-            <PocoHourCarousel
-              variant="toolbar"
-              hour0to23={settings.endOfDayReviewHour}
-              onChange={(h) => updateSettings({ endOfDayReviewHour: h })}
-            />
-          </div>
         </section>
 
         <section className="mb-8 space-y-3">
