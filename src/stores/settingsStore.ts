@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { Settings, ThemeName } from '../types'
+import type { ScrumMasterSettings, Settings, ThemeName } from '../types'
 import { storage } from '../services/storage'
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -31,7 +31,6 @@ export const DEFAULT_SETTINGS: Settings = {
     personality: 'warm',
     sprintTitle: '',
     sprintGoal: '',
-    sprintEndDate: null,
   },
   scrumMasterGateComplete: true,
   scrumMasterGatePromptVersion: 3,
@@ -48,14 +47,11 @@ const migratedGateIncomplete =
 const initial: Settings = {
   ...DEFAULT_SETTINGS,
   ...saved,
-  scrumMaster: {
-    ...DEFAULT_SETTINGS.scrumMaster,
-    ...saved.scrumMaster,
-    personality: saved.scrumMaster?.personality ?? DEFAULT_SETTINGS.scrumMaster.personality,
-    sprintTitle: saved.scrumMaster?.sprintTitle ?? DEFAULT_SETTINGS.scrumMaster.sprintTitle,
-    sprintGoal: saved.scrumMaster?.sprintGoal ?? DEFAULT_SETTINGS.scrumMaster.sprintGoal,
-    sprintEndDate: saved.scrumMaster?.sprintEndDate ?? DEFAULT_SETTINGS.scrumMaster.sprintEndDate,
-  },
+  scrumMaster: (() => {
+    const merged = { ...DEFAULT_SETTINGS.scrumMaster, ...saved.scrumMaster } as Record<string, unknown>
+    delete merged.sprintEndDate
+    return merged as unknown as ScrumMasterSettings
+  })(),
   scrumMasterGateComplete: migratedGateIncomplete
     ? false
     : (saved.scrumMasterGateComplete ?? DEFAULT_SETTINGS.scrumMasterGateComplete),

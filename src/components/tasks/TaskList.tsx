@@ -9,9 +9,25 @@ import { PocoConfirmDialog } from '../ui/PocoConfirmDialog'
 import { TaskDetailSheet } from './TaskDetailSheet'
 import { ScrumMasterBanner } from '../scrum/ScrumMasterBanner'
 import type { ScrumBannerView } from '../../utils/scrumMaster'
-import { SCRUM_MASTER_CATEGORY } from '../../utils/scrumMaster'
+import {
+  SCRUM_MASTER_CATEGORY,
+  isScrumMasterCompletedLingering,
+  scrumGatherIntoSectionTail,
+  scrumStandDownReviewBody,
+  scrumStandDownReviewHeading,
+  scrumTaskListCategorySubtitle,
+} from '../../utils/scrumMaster'
 import type { ScrumMasterPersonality } from '../../types'
 import type { StandUpPlanSnapshot } from '../../utils/scrumSession'
+
+function sortTodayTasksWithSmLingerAtTop(tasks: Task[], nowMs: number): Task[] {
+  const linger = tasks.filter((t) => isScrumMasterCompletedLingering(t, nowMs))
+  const rest = tasks.filter((t) => !isScrumMasterCompletedLingering(t, nowMs))
+  const lingerSorted = [...linger].sort(
+    (a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime(),
+  )
+  return [...lingerSorted, ...sortTodayTasks(rest)]
+}
 
 function sectionTitle(text: string) {
   return (
@@ -56,7 +72,16 @@ export type TaskListScrum = {
   standDownLive: boolean
 }
 
-export function TaskList({ searchQuery = '', scrum }: { searchQuery?: string; scrum?: TaskListScrum | null }) {
+export function TaskList({
+  searchQuery = '',
+  wallNowMs,
+  scrum,
+}: {
+  searchQuery?: string
+  /** Wall time for Scrum Master completed-task linger (updated on Home’s clock tick). */
+  wallNowMs: number
+  scrum?: TaskListScrum | null
+}) {
   const tasks = useTaskStore((s) => s.tasks)
   const deleteTask = useTaskStore((s) => s.deleteTask)
   const restoreTask = useTaskStore((s) => s.restoreTask)
@@ -102,6 +127,7 @@ export function TaskList({ searchQuery = '', scrum }: { searchQuery?: string; sc
   )
 
   const { inbox, today, tomorrow, someday, completed } = useMemo(() => {
+    const nowMs = wallNowMs
     const inbox: Task[] = []
     const today: Task[] = []
     const tomorrow: Task[] = []
@@ -110,6 +136,10 @@ export function TaskList({ searchQuery = '', scrum }: { searchQuery?: string; sc
     for (const t of tasks) {
       if (!taskMatchesSearch(t, searchQuery)) continue
       if (t.completed) {
+        if (t.scheduledFor === 'today' && isScrumMasterCompletedLingering(t, nowMs)) {
+          today.push(t)
+          continue
+        }
         completed.push(t)
         continue
       }
@@ -119,9 +149,10 @@ export function TaskList({ searchQuery = '', scrum }: { searchQuery?: string; sc
       else someday.push(t)
     }
     return { inbox, today, tomorrow, someday, completed }
-  }, [tasks, searchQuery])
+  }, [tasks, searchQuery, wallNowMs])
 
   const todayByCategory = useMemo(() => {
+    const nowMs = wallNowMs
     const sorted = sortTodayTasks(today)
     const groups = new Map<string, Task[]>()
     for (const t of sorted) {
@@ -132,31 +163,40 @@ export function TaskList({ searchQuery = '', scrum }: { searchQuery?: string; sc
     const keys = [...groups.keys()].sort((a, b) => a.localeCompare(b))
     const sm = keys.filter((k) => k === SCRUM_MASTER_CATEGORY)
     const rest = keys.filter((k) => k !== SCRUM_MASTER_CATEGORY)
-    return [...sm, ...rest].map((cat) => ({ cat, items: groups.get(cat)! }))
-  }, [today])
+    return [...sm, ...rest].map((cat) => ({
+      cat,
+      items:
+        cat === SCRUM_MASTER_CATEGORY ? sortTodayTasksWithSmLingerAtTop(groups.get(cat)!, nowMs) : sortTodayTasks(groups.get(cat)!),
+    }))
+  }, [today, wallNowMs])
 
   const smTodayTasks = useMemo(() => today.filter((t) => t.category === SCRUM_MASTER_CATEGORY), [today])
 
   const scrumCategoryTitle = useCallback(
     (cat: string, count: number) => {
-      if (cat !== SCRUM_MASTER_CATEGORY || !scrum?.enabled) return { title: cat, subtitle: `${count} ${count === 1 ? 'task' : 'tasks'}` }
+      if (cat !== SCRUM_MASTER_CATEGORY || !scrum?.enabled)
+        return { title: cat, subtitle: `${count} ${count === 1 ? 'task' : 'tasks'}` }
       const n = scrum.masterName
-      if (scrum.standDownCollection || scrum.standDownLive) {
-        return { title: `${n} · Scrum Master`, subtitle: 'Sprint review · planned vs shipped' }
+      const smMode: 'idle' | 'standUp' | 'standDown' =
+        scrum.standDownLive || scrum.standDownCollection
+          ? 'standDown'
+          : scrum.standUpLive || scrum.standUpCollection
+            ? 'standUp'
+            : 'idle'
+      return {
+        title: `${n} · Scrum Master`,
+        subtitle: scrumTaskListCategorySubtitle(scrum.personality, smMode, count),
       }
-      if (scrum.standUpCollection || scrum.standUpLive) {
-        return { title: `${n} · Scrum Master`, subtitle: 'Today’s sprint commitments' }
-      }
-      return { title: `${n} · Scrum Master`, subtitle: `${count} ${count === 1 ? 'task' : 'tasks'}` }
     },
     [scrum],
   )
 
   const standDownReview = useMemo(() => {
-    if (!scrum?.enabled || (!scrum.standDownCollection && !scrum.standDownLive)) return null
+    if (!scrum?.enabled || !scrum.standDownLive) return null
     const day = toLocalISODate()
     const plan = scrum.standUpPlan
     const extraDone = tasks.filter((t) => {
+      if (t.category === SCRUM_MASTER_CATEGORY) return false
       if (!t.completed || !t.completedAt || t.scheduledFor !== 'today') return false
       if (toLocalISODate(new Date(t.completedAt)) !== day) return false
       if (plan?.date === day && plan.taskIds.includes(t.id)) return false
@@ -164,16 +204,13 @@ export function TaskList({ searchQuery = '', scrum }: { searchQuery?: string; sc
     }).length
 
     if (!plan || plan.date !== day || plan.taskIds.length === 0) {
+      const params = { kind: 'noPlan' as const, extraOutsidePlan: extraDone }
       return (
         <div className="mb-3 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3 py-2 text-xs leading-relaxed text-[var(--text-secondary)]">
-          <p className="font-semibold text-[var(--text-primary)]">Sprint review · today</p>
-          <p className="mt-1">
-            Capture what actually shipped: check off tasks you completed today, including work that was not on this
-            morning’s stand-up plan.
-            {extraDone > 0
-              ? ` ${extraDone} extra completion${extraDone === 1 ? '' : 's'} already logged outside the stand-up list.`
-              : ''}
+          <p className="font-semibold text-[var(--text-primary)]">
+            {scrumStandDownReviewHeading(scrum.personality, params)}
           </p>
+          <p className="mt-1">{scrumStandDownReviewBody(scrum.personality, params)}</p>
         </div>
       )
     }
@@ -182,19 +219,27 @@ export function TaskList({ searchQuery = '', scrum }: { searchQuery?: string; sc
     const plannedDone = plan.taskIds.filter((id) => tasks.find((x) => x.id === id)?.completed).length
     const plannedOpen = plannedTotal - plannedDone
 
+    const params = {
+      kind: 'withPlan' as const,
+      plannedDone,
+      plannedTotal,
+      plannedOpen,
+      extraOutsidePlan: extraDone,
+    }
     return (
       <div className="mb-3 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3 py-2 text-xs leading-relaxed text-[var(--text-secondary)]">
-        <p className="font-semibold text-[var(--text-primary)]">Sprint review vs stand-up plan</p>
-        <p className="mt-1">
-          From stand up: {plannedDone}/{plannedTotal} commitment{plannedTotal === 1 ? '' : 's'} marked done
-          {plannedOpen > 0 ? ` · ${plannedOpen} still open (note carry-over for tomorrow’s sprint)` : ' · all stand-up items cleared or checked off'}
-          {extraDone > 0
-            ? ` · +${extraDone} extra task${extraDone === 1 ? '' : 's'} completed today outside that plan`
-            : ''}
+        <p className="font-semibold text-[var(--text-primary)]">
+          {scrumStandDownReviewHeading(scrum.personality, params)}
         </p>
+        <p className="mt-1">{scrumStandDownReviewBody(scrum.personality, params)}</p>
       </div>
     )
   }, [scrum, tasks])
+
+  const sortedFlatToday = useMemo(
+    () => sortTodayTasksWithSmLingerAtTop(today, wallNowMs),
+    [today, wallNowMs],
+  )
 
   const gatherScrum = () => {
     setReconciling(true)
@@ -244,13 +289,13 @@ export function TaskList({ searchQuery = '', scrum }: { searchQuery?: string; sc
               onClick={gatherScrum}
               className="poco-scrum-glow-border poco-press mb-3 w-full rounded-[var(--radius-sm)] bg-[var(--bg-base)] px-3 py-2 text-left text-xs font-semibold text-[var(--text-secondary)]"
             >
-              <span className="poco-scrum-text-gradient">{scrum.masterName}</span> · Gather stand-up tasks into their own section
+              <span className="poco-scrum-text-gradient">{scrum.masterName}</span> · {scrumGatherIntoSectionTail(scrum.personality)}
             </button>
           ) : null}
 
           {scrum?.enabled && scrum.flatToday ? (
             <div className={`flex flex-col gap-[var(--list-row-gap)] ${reconciling ? 'opacity-30 transition-opacity duration-300' : ''}`}>
-              {sortTodayTasks(today).map((t) => renderTask(t, t.category === SCRUM_MASTER_CATEGORY))}
+              {sortedFlatToday.map((t) => renderTask(t, t.category === SCRUM_MASTER_CATEGORY))}
             </div>
           ) : todayByCategory.length > 0 ? (
             <div className="flex flex-col gap-4">

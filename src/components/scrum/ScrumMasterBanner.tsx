@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ScrumBannerView } from '../../utils/scrumMaster'
-import { buildFarewellBannerLine, buildScrumBannerLine } from '../../utils/scrumMaster'
+import { buildFarewellBannerLine, buildScrumBannerLine, scrumVoiceLeadIn } from '../../utils/scrumMaster'
 import type { ScrumMasterPersonality } from '../../types'
 
 type VisibleBanner = Extract<ScrumBannerView, { visible: true }>
@@ -73,7 +73,7 @@ export function ScrumMasterBanner({ name, banner, personality, onTapStart }: Pro
   const inner = (
     <>
       <p className="font-serif text-base font-semibold leading-snug text-[var(--text-primary)]">
-        <span className="poco-scrum-text-gradient">{name}</span> says…
+        <span className="poco-scrum-text-gradient">{name}</span> {scrumVoiceLeadIn(personality)}
       </p>
       <p className="mt-1 text-sm text-[var(--text-secondary)]">{line}</p>
     </>

@@ -68,15 +68,6 @@ export function ScrumMasterEditModal({ open, onClose, value, onSave }: Props) {
           value={draft.sprintGoal}
           onChange={(e) => setDraft((d) => ({ ...d, sprintGoal: e.target.value }))}
         />
-        <label className="flex flex-col gap-1 text-xs font-semibold text-[var(--text-tertiary)]">
-          Sprint end date
-          <input
-            type="date"
-            className="poco-input rounded-none border border-[var(--border-subtle)] bg-[var(--bg-base)] px-3 py-2 text-sm font-normal text-[var(--text-primary)]"
-            value={draft.sprintEndDate ?? ''}
-            onChange={(e) => setDraft((d) => ({ ...d, sprintEndDate: e.target.value ? e.target.value : null }))}
-          />
-        </label>
 
         <p className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Personality</p>
         <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

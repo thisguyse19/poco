@@ -11,7 +11,13 @@ import {
   getScrumBanner,
   isStandDownCollectionWindow,
   isStandUpCollectionWindow,
+  scrumEndStandDownLabel,
+  scrumEndStandUpLabel,
   scrumLiveSubtitle,
+  scrumNotifyOptInCta,
+  scrumQuickAddStandDownPlaceholder,
+  scrumQuickAddStandUpPlaceholder,
+  scrumSessionHeaderParts,
   SCRUM_MASTER_CATEGORY,
 } from '../utils/scrumMaster'
 import { effectiveScrumFlatToday, writeScrumFlatPreference } from '../utils/scrumFlatStorage'
@@ -40,6 +46,7 @@ export function HomePage() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [clock, setClock] = useState(0)
+  const [wallMs, setWallMs] = useState(() => Date.now())
   const [sessTick, setSessTick] = useState(0)
   const [taskListKey, setTaskListKey] = useState(0)
   const [smSessionEnter, setSmSessionEnter] = useState(false)
@@ -52,6 +59,7 @@ export function HomePage() {
   useEffect(() => {
     const id = window.setInterval(() => {
       setClock((c) => c + 1)
+      setWallMs(Date.now())
     }, 15_000)
     return () => window.clearInterval(id)
   }, [])
@@ -119,16 +127,20 @@ export function HomePage() {
 
   const greeting = useMemo(() => {
     if (standUpLive) {
+      const { emphasis, after } = scrumSessionHeaderParts(sm.personality, 'standUp')
       return (
         <>
-          <span className="poco-scrum-title-glow">Stand up</span> has started.
+          <span className="poco-scrum-title-glow">{emphasis}</span>
+          {after}
         </>
       )
     }
     if (standDownLive) {
+      const { emphasis, after } = scrumSessionHeaderParts(sm.personality, 'standDown')
       return (
         <>
-          <span className="poco-scrum-title-glow">Stand down</span> has started.
+          <span className="poco-scrum-title-glow">{emphasis}</span>
+          {after}
         </>
       )
     }
@@ -136,7 +148,7 @@ export function HomePage() {
     const seg = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'
     const n = settings.profileName?.trim()
     return n ? `${seg}, ${n}` : seg
-  }, [settings.profileName, standUpLive, standDownLive])
+  }, [settings.profileName, standUpLive, standDownLive, sm.personality])
 
   const subtitle = useMemo(() => {
     if (standUpLive) return scrumLiveSubtitle(sm.personality, true)
@@ -157,8 +169,6 @@ export function HomePage() {
     sm.enabled &&
     (standUpLive ||
       standDownLive ||
-      standUpColl ||
-      standDownColl ||
       scheduleBanner.visible ||
       farewellActive)
 
@@ -175,10 +185,10 @@ export function HomePage() {
   } = standUpLive
     ? {
         categoryLock: SCRUM_MASTER_CATEGORY,
-        placeholderOverride: 'What did you commit to finish today?',
+        placeholderOverride: scrumQuickAddStandUpPlaceholder(sm.personality),
         scrumGlow: true,
         showEndScrum: true,
-        endScrumLabel: 'End stand up',
+        endScrumLabel: scrumEndStandUpLabel(sm.personality),
         onEndScrum: () => {
           endStandUpSession(planSnapshotIds())
           setSessTick((x) => x + 1)
@@ -187,10 +197,10 @@ export function HomePage() {
     : standDownLive
       ? {
           categoryLock: SCRUM_MASTER_CATEGORY,
-          placeholderOverride: 'Note carry-overs or extra work you shipped today…',
+          placeholderOverride: scrumQuickAddStandDownPlaceholder(sm.personality),
           scrumGlow: true,
           showEndScrum: true,
-          endScrumLabel: 'End stand down',
+          endScrumLabel: scrumEndStandDownLabel(sm.personality),
           onEndScrum: () => {
             endStandDownSession()
             setSessTick((x) => x + 1)
@@ -256,7 +266,7 @@ export function HomePage() {
               className="mt-2 text-left text-xs font-semibold text-[var(--accent)]"
               onClick={() => void requestScrumNotificationPermission()}
             >
-              Turn on stand up &amp; stand down reminders
+              {scrumNotifyOptInCta(sm.personality)}
             </button>
           ) : null}
         </div>
@@ -280,7 +290,7 @@ export function HomePage() {
         endScrumLabel={scrumQuick.endScrumLabel}
         onEndScrum={scrumQuick.onEndScrum}
       />
-      <TaskList key={taskListKey} searchQuery={searchQuery} scrum={scrumList} />
+      <TaskList key={taskListKey} wallNowMs={wallMs} searchQuery={searchQuery} scrum={scrumList} />
       {showReview ? <ReviewModal /> : null}
     </div>
   )
