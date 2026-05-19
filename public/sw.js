@@ -1,8 +1,9 @@
 /* poco service worker: offline shell + user-confirmed updates.
+ * Served at {origin}{base}/sw.js with scope {base}/ so scope matches Vite base (e.g. /poco/).
  * Network-first for app URLs so new deploys are not stuck behind a stale precache. */
 const SCOPE = self.registration.scope
 const CORE = [SCOPE, SCOPE + 'index.html']
-const CACHE = 'poco-shell-v6'
+const CACHE = 'poco-shell-v7'
 
 function scopePath() {
   try {
