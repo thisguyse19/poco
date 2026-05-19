@@ -13,6 +13,7 @@ import { SCRUM_MASTER_PERSONALITIES } from '../utils/scrumMaster'
 import { pocoDevLab } from '../utils/pocoDevLab'
 import { triggerHaptic } from '../utils/haptics'
 import { requestScrumNotificationPermission } from '../hooks/useScrumNotifications'
+import { notificationSettingsHint } from '../utils/notifyDelivery'
 
 export function SettingsPage() {
   const { settings, updateSettings, resetSettings } = useSettingsStore()
@@ -129,7 +130,10 @@ export function SettingsPage() {
               className="poco-press rounded-none border border-[var(--border-subtle)] bg-[var(--bg-base)] px-3 py-3 text-left text-sm font-semibold text-[var(--text-primary)]"
               onClick={() => void requestScrumNotificationPermission()}
             >
-              Enable browser reminders for stand up &amp; stand down
+              <span className="block">Notifications</span>
+              <span className="mt-1 block text-xs font-normal text-[var(--text-secondary)]">
+                {notificationSettingsHint()}
+              </span>
             </button>
             <button
               type="button"

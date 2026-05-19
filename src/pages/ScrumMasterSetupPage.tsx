@@ -11,6 +11,7 @@ import {
   scrumNamesForGender,
 } from '../utils/scrumMaster'
 import { requestScrumNotificationPermission } from '../hooks/useScrumNotifications'
+import { notificationSettingsHint } from '../utils/notifyDelivery'
 
 export function ScrumMasterSetupPage() {
   const navigate = useNavigate()
@@ -154,10 +155,13 @@ export function ScrumMasterSetupPage() {
           <div className="mt-auto flex flex-col gap-3 pt-4">
             <button
               type="button"
-              className="poco-press rounded-[var(--radius-sm)] border border-[var(--border-default)] bg-[var(--bg-subtle)] py-2.5 text-sm font-semibold text-[var(--text-primary)]"
+              className="poco-press rounded-[var(--radius-sm)] border border-[var(--border-default)] bg-[var(--bg-subtle)] py-2.5 text-left text-sm font-semibold text-[var(--text-primary)]"
               onClick={() => void requestScrumNotificationPermission()}
             >
-              Allow browser reminders
+              <span className="block px-1">Notifications</span>
+              <span className="mt-1 block px-1 text-xs font-normal text-[var(--text-secondary)]">
+                {notificationSettingsHint()}
+              </span>
             </button>
             <div className="flex justify-between gap-3">
               <button type="button" className="poco-press text-sm font-semibold text-[var(--text-secondary)]" onClick={() => navigate(-1)}>

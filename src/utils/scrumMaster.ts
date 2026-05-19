@@ -416,11 +416,11 @@ export function scrumSessionHeaderParts(
 
 export function scrumNotifyOptInCta(personality: ScrumMasterPersonality): string {
   return pSuffix(personality, {
-    warm: 'Turn on stand up & stand down reminders',
-    coach: 'Enable reminders for stand up and stand down',
-    minimal: 'Enable reminders',
+    warm: 'Turn on notifications for stand up and stand down',
+    coach: 'Enable notifications for stand up and stand down',
+    minimal: 'Enable notifications',
     playful: 'Ping me for the daily opening and closing credits',
-    stern: 'Enable stand up and stand down reminders',
+    stern: 'Enable stand up and stand down notifications',
   })
 }
 

@@ -49,7 +49,7 @@ export function ScrumMasterIntroGate() {
             className="poco-press rounded-[var(--radius-sm)] border border-[var(--border-default)] bg-[var(--bg-base)] px-4 py-3 text-sm font-semibold text-[var(--text-primary)]"
             onClick={onReminders}
           >
-            Allow reminders (optional)
+            Notifications (optional)
           </button>
           <button
             type="button"
