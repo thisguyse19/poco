@@ -1,14 +1,80 @@
-const SW_PATH = '/poco/sw.js'
-const SW_SCOPE = '/poco/'
+const BASE_PATH = import.meta.env.BASE_URL
 
-/** Ensure the poco service worker is registered (idempotent). */
-export async function ensurePocoServiceWorker(): Promise<ServiceWorkerRegistration | null> {
-  if (!('serviceWorker' in navigator)) return null
+/** Same-origin URLs for the poco shell worker (avoids path-resolution quirks on mobile / hash routes). */
+function pocoServiceWorkerUrls(): { scopeUrl: string; scriptUrl: string } {
+  const scopeUrl = new URL(BASE_PATH, window.location.origin).href
+  const scriptUrl = new URL('sw.js', scopeUrl).href
+  return { scopeUrl, scriptUrl }
+}
+
+function normalizeScopeUrl(u: string): string {
+  return u.replace(/\/$/, '') || u
+}
+
+/** Used when `register()` rejects but the page may already have an active registration (e.g. flaky network). */
+async function getExistingPocoRegistration(): Promise<ServiceWorkerRegistration | undefined> {
+  const sw = navigator.serviceWorker
+  const want = normalizeScopeUrl(pocoServiceWorkerUrls().scopeUrl)
   try {
-    return await navigator.serviceWorker.register(SW_PATH, { scope: SW_SCOPE, updateViaCache: 'none' })
+    const byClient = await sw.getRegistration()
+    if (byClient && normalizeScopeUrl(byClient.scope) === want) return byClient
   } catch {
-    return null
+    /* ignore */
   }
+  try {
+    const all = await sw.getRegistrations()
+    return all.find((r) => normalizeScopeUrl(r.scope) === want)
+  } catch {
+    return undefined
+  }
+}
+
+export type PocoServiceWorkerOutcome =
+  | { ok: true; registration: ServiceWorkerRegistration }
+  | { ok: false; message: string }
+
+/**
+ * Ensure the poco service worker is registered (idempotent).
+ * Uses `import.meta.env.BASE_URL` so the script path matches the Vite base.
+ * If `register()` throws (transient network, etc.) but a registration already exists, returns that registration.
+ */
+export async function ensurePocoServiceWorkerWithOutcome(): Promise<PocoServiceWorkerOutcome> {
+  if (typeof navigator === 'undefined') {
+    return { ok: false, message: 'Service workers are not available in this environment.' }
+  }
+  if (!('serviceWorker' in navigator) || !navigator.serviceWorker) {
+    return { ok: false, message: 'This browser does not support service workers.' }
+  }
+  if (!window.isSecureContext) {
+    return {
+      ok: false,
+      message: 'Service workers require a secure context (HTTPS). Open poco over https:// and try again.',
+    }
+  }
+
+  const sw = navigator.serviceWorker
+  const { scopeUrl, scriptUrl } = pocoServiceWorkerUrls()
+
+  try {
+    const registration = await sw.register(scriptUrl, { scope: scopeUrl, updateViaCache: 'none' })
+    return { ok: true, registration }
+  } catch (e) {
+    const detail = e instanceof Error ? e.message : String(e)
+    const existing = await getExistingPocoRegistration()
+    if (existing) {
+      return { ok: true, registration: existing }
+    }
+    return {
+      ok: false,
+      message: `Could not register the service worker (${detail}). Check your connection, or that ${scriptUrl} is reachable.`,
+    }
+  }
+}
+
+/** Returns the registration when possible; use `ensurePocoServiceWorkerWithOutcome` if you need an error message. */
+export async function ensurePocoServiceWorker(): Promise<ServiceWorkerRegistration | null> {
+  const o = await ensurePocoServiceWorkerWithOutcome()
+  return o.ok ? o.registration : null
 }
 
 /**
