@@ -21,7 +21,7 @@ export const OOBE_TOUR_STEPS: OobeTourStepDef[] = [
     path: '/',
     anchor: null,
     title: 'Welcome',
-    body: 'These are sample tasks—nothing you do here is permanent until the tour ends. Explore freely: the app stays fully usable. Tap Next when you are ready for your first hands-on step.',
+    body: 'These are sample tasks—nothing you do here is permanent until the tour ends. The rest of the screen soft-blurs so your eyes stay on the highlighted spot. Tap Next when you are ready for your first hands-on step.',
   },
   {
     path: '/',

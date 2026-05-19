@@ -86,7 +86,13 @@ function PlannerTaskCard({
   } = listeners ?? {}
   const style = transform ? { transform: CSS.Translate.toString(transform) } : undefined
 
-  const borderEmphasis = (armed && !isDragging) || isDragging
+  const borderEmphasis = armed && !isDragging
+
+  useEffect(() => {
+    if (!isDragging) return
+    const id = window.setTimeout(() => setArmed(false), 0)
+    return () => window.clearTimeout(id)
+  }, [isDragging])
 
   useEffect(
     () => () => {
@@ -110,7 +116,7 @@ function PlannerTaskCard({
       {...attributes}
       className={`relative touch-none select-none rounded-none bg-[var(--bg-elevated)] px-2.5 py-2.5 text-left ${
         borderEmphasis ? 'border border-[var(--accent)]' : 'border border-[var(--border-subtle)]'
-      } ${scrumAccent ? 'poco-scrum-week-mark' : ''} ${isDragging ? 'z-10 opacity-70' : ''} ${
+      } ${scrumAccent ? 'poco-scrum-week-mark' : ''} ${isDragging ? 'z-10 opacity-0' : ''} ${
         task.completed ? 'opacity-60' : ''
       } ${dragDisabled ? 'pointer-events-none opacity-50' : ''}`}
       onPointerDown={(e) => {
@@ -122,7 +128,7 @@ function PlannerTaskCard({
       onPointerUp={(e) => {
         dndPointerUp?.(e)
         clearArmTimer()
-        if (!isDragging) setArmed(false)
+        setArmed(false)
       }}
       onPointerCancel={(e) => {
         dndPointerCancel?.(e)
@@ -195,15 +201,20 @@ function DayCell({
   return (
     <div
       ref={setNodeRef}
-      className={`flex min-h-0 min-w-0 flex-col overflow-hidden bg-[var(--bg-subtle)] p-2 ${
-        isToday
-          ? 'border border-[var(--accent)]'
-          : 'border border-[var(--border-subtle)]'
-      } ${past ? 'opacity-70' : ''} ${isOver && !past ? 'bg-[var(--accent-soft)]' : ''}`}
+      className={`flex min-h-0 min-w-0 flex-col overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-subtle)] p-2 ${
+        past ? 'opacity-70' : ''
+      } ${isOver && !past ? 'bg-[var(--accent-soft)]' : ''}`}
     >
-      <div className="mb-2 shrink-0 border-b border-[var(--border-subtle)] pb-1.5">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">{formatIsoWeekdayShortUk(iso)}</p>
-        {past ? <p className="text-[10px] text-[var(--text-tertiary)]">Past</p> : null}
+      <div className="mb-2 flex shrink-0 items-baseline justify-between gap-2 border-b border-[var(--border-subtle)] pb-1.5">
+        <p className="min-w-0 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
+          {formatIsoWeekdayShortUk(iso)}
+        </p>
+        {isToday ? (
+          <span className="shrink-0 rounded-none border border-[var(--accent)] bg-[var(--accent-soft)] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[var(--accent)]">
+            TODAY
+          </span>
+        ) : null}
+        {past ? <span className="shrink-0 text-[10px] text-[var(--text-tertiary)]">Past</span> : null}
       </div>
       <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto [-webkit-overflow-scrolling:touch]">{children}</div>
     </div>
@@ -257,12 +268,14 @@ function ArrowZone({
   highlight,
   onTap,
   zoneRef,
+  flipProgress = 0,
 }: {
   id: string
   direction: 'up' | 'down'
   highlight: boolean
   onTap: () => void
   zoneRef: React.MutableRefObject<HTMLButtonElement | null>
+  flipProgress?: number
 }) {
   const { setNodeRef, isOver } = useDroppable({ id })
   const mergedRef = useCallback(
@@ -273,20 +286,27 @@ function ArrowZone({
     [setNodeRef, zoneRef],
   )
 
+  const fill = Math.min(1, Math.max(0, flipProgress))
+
   return (
     <button
       ref={mergedRef}
       type="button"
-      className={`poco-press flex h-6 w-full shrink-0 items-center justify-center border-b border-[var(--border-subtle)] transition-colors duration-200 ${
+      className={`poco-press relative flex h-7 w-full shrink-0 items-center justify-center overflow-hidden border-b border-[var(--border-subtle)] transition-colors duration-200 ${
         highlight || isOver ? 'bg-[color-mix(in_srgb,var(--accent-soft)_75%,var(--bg-subtle))]' : 'bg-[var(--bg-base)]'
       }`}
       onClick={onTap}
       aria-label={direction === 'up' ? 'Show previous four days' : 'Show next four days'}
     >
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 bg-[var(--accent)]/35"
+        style={{ height: `${fill * 100}%` }}
+      />
       <Icon
         name="chevron-down"
         size={14}
-        className={direction === 'up' ? 'rotate-180 text-[var(--text-secondary)]' : 'text-[var(--text-secondary)]'}
+        className={`relative z-[1] text-[var(--text-secondary)] ${direction === 'up' ? 'rotate-180' : ''}`}
       />
     </button>
   )
@@ -301,19 +321,24 @@ export function WeekPage() {
   const smEnabled = useSettingsStore((s) => s.settings.scrumMaster.enabled)
 
   const [pageIndex, setPageIndex] = useState(0)
+  const pageIndexRef = useRef(pageIndex)
+
   const [clock, setClock] = useState(0)
   const [showCompleted, setShowCompleted] = useState(false)
   const [detailTask, setDetailTask] = useState<Task | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [activeTask, setActiveTask] = useState<Task | null>(null)
   const [zoneHighlight, setZoneHighlight] = useState<'prev' | 'next' | null>(null)
+  const [flipProgress, setFlipProgress] = useState(0)
   const [unschedFlash, setUnschedFlash] = useState(false)
   const [binFlash, setBinFlash] = useState(false)
 
   const zonePrevRef = useRef<HTMLButtonElement | null>(null)
   const zoneNextRef = useRef<HTMLButtonElement | null>(null)
   const flipTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const flipStartTimeRef = useRef(0)
   const activeZoneRef = useRef<'prev' | 'next' | null>(null)
+  const startFlipIfNeededRef = useRef<(clientX: number, clientY: number) => void>(() => {})
   const prevPageRef = useRef(pageIndex)
   const [pageAnim, setPageAnim] = useState<'next' | 'prev' | null>(null)
 
@@ -409,11 +434,17 @@ export function WeekPage() {
     stopFlipInterval()
     activeZoneRef.current = null
     setZoneHighlight(null)
+    setFlipProgress(0)
   }, [stopFlipInterval])
 
-  const startFlipIfNeeded = useCallback(
-    (clientX: number, clientY: number) => {
-      const inPrev = pageIndex > 0 && pointInRect(clientX, clientY, zonePrevRef.current)
+  useLayoutEffect(() => {
+    pageIndexRef.current = pageIndex
+  }, [pageIndex])
+
+  useLayoutEffect(() => {
+    startFlipIfNeededRef.current = (clientX: number, clientY: number) => {
+      const p = pageIndexRef.current
+      const inPrev = p > 0 && pointInRect(clientX, clientY, zonePrevRef.current)
       const inNext = pointInRect(clientX, clientY, zoneNextRef.current)
       const z: 'prev' | 'next' | null = inPrev ? 'prev' : inNext ? 'next' : null
 
@@ -421,25 +452,33 @@ export function WeekPage() {
         activeZoneRef.current = z
         setZoneHighlight(z)
         stopFlipInterval()
+        setFlipProgress(0)
         if (z) {
+          flipStartTimeRef.current = performance.now()
           flipTimerRef.current = window.setInterval(() => {
-            setPageIndex((p) => (z === 'next' ? p + 1 : Math.max(0, p - 1)))
-          }, PAGE_FLIP_MS)
+            const now = performance.now()
+            const elapsed = now - flipStartTimeRef.current
+            setFlipProgress(Math.min(1, elapsed / PAGE_FLIP_MS))
+            if (elapsed >= PAGE_FLIP_MS) {
+              flipStartTimeRef.current = now
+              setFlipProgress(0)
+              const zone = activeZoneRef.current
+              if (!zone) return
+              setPageIndex((cur) => (zone === 'next' ? cur + 1 : Math.max(0, cur - 1)))
+            }
+          }, 32)
         }
       }
-    },
-    [pageIndex, stopFlipInterval],
-  )
+    }
+  }, [stopFlipInterval])
 
   useEffect(() => {
     if (!activeTask) return
     const onMove = (ev: PointerEvent) => {
-      startFlipIfNeeded(ev.clientX, ev.clientY)
+      startFlipIfNeededRef.current(ev.clientX, ev.clientY)
     }
     const onUp = () => {
-      stopFlipInterval()
-      setZoneHighlight(null)
-      activeZoneRef.current = null
+      clearFlipTimer()
     }
     window.addEventListener('pointermove', onMove, { passive: true })
     window.addEventListener('pointerup', onUp)
@@ -448,18 +487,18 @@ export function WeekPage() {
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerup', onUp)
       window.removeEventListener('pointercancel', onUp)
-      stopFlipInterval()
+      clearFlipTimer()
     }
-  }, [activeTask, startFlipIfNeeded, stopFlipInterval])
+  }, [activeTask, clearFlipTimer])
 
   const onDragStart = useCallback(
     (e: DragStartEvent) => {
-      setZoneHighlight(null)
+      clearFlipTimer()
       const id = String(e.active.id)
       const t = tasks.find((x) => x.id === id)
       setActiveTask(t ?? null)
     },
-    [tasks],
+    [tasks, clearFlipTimer],
   )
 
   const onDragEnd = useCallback(
@@ -525,13 +564,15 @@ export function WeekPage() {
           {smEnabled ? ' · coloured strip: Scrum Master task' : ''}
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            className="poco-press rounded-none border border-[var(--border-default)] bg-[var(--bg-elevated)] px-2.5 py-1.5 text-xs font-semibold text-[var(--accent)]"
-            onClick={goToday}
-          >
-            Today
-          </button>
+          {pageIndex > 0 ? (
+            <button
+              type="button"
+              className="poco-press rounded-none border border-[var(--border-default)] bg-[var(--bg-elevated)] px-2.5 py-1.5 text-xs font-semibold text-[var(--accent)]"
+              onClick={goToday}
+            >
+              Today
+            </button>
+          ) : null}
           <label className="ml-auto flex cursor-pointer items-center gap-2 text-xs text-[var(--text-secondary)]">
             <input
               type="checkbox"
@@ -545,6 +586,9 @@ export function WeekPage() {
       </header>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-[calc(var(--poco-mobile-nav-height)+1rem)] pt-2 md:px-6 md:pb-6">
+        {activeTask && zoneHighlight ? (
+          <p className="mb-1 text-center text-[11px] font-medium text-[var(--accent)]">Keep holding to flip pages</p>
+        ) : null}
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -559,6 +603,7 @@ export function WeekPage() {
                 highlight={zoneHighlight === 'prev'}
                 onTap={() => setPageIndex((p) => Math.max(0, p - 1))}
                 zoneRef={zonePrevRef}
+                flipProgress={zoneHighlight === 'prev' ? flipProgress : 0}
               />
             ) : null}
 
@@ -607,6 +652,7 @@ export function WeekPage() {
               highlight={zoneHighlight === 'next'}
               onTap={() => setPageIndex((p) => p + 1)}
               zoneRef={zoneNextRef}
+              flipProgress={zoneHighlight === 'next' ? flipProgress : 0}
             />
           </div>
 

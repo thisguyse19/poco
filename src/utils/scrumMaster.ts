@@ -30,13 +30,13 @@ export function scrumPersonalityMeta(id: ScrumMasterPersonality): { title: strin
   if (id === 'boldR21') {
     return {
       title: 'Bold R21',
-      hint: 'Unlocked: spicy adult voice — no corporate filter. Keep consent and basic decency intact.',
+      hint: 'Velvet-rope voice: sensual, teasing, hungry for momentum—no sanitized boardroom romance.',
     }
   }
   if (id === 'snarkyR21') {
     return {
       title: 'Snarky R21',
-      hint: 'Unlocked: rude, profane, direct — non-sexual. Not for screenshots to HR.',
+      hint: 'Swears like a loading dock, roasts like a jury—vulgar, not sexual, zero corporate deodorant.',
     }
   }
   const row = SCRUM_MASTER_PERSONALITIES.find((p) => p.id === id)
@@ -206,19 +206,17 @@ type PersonalityLinesCore = {
 }
 
 function spiceBoldR21FromBold(bold: string): string {
-  const t = bold.trim()
-  if (!t) {
-    return ` Bold R21: blunt, flirt-forward, no corporate plastic wrap on the wording—adults only, still no harassment cosplay.`
+  if (!bold.trim()) {
+    return ` Bold R21: slow-burn heat in the wording—sensual push, blunt pull, no laminated HR romance.`
   }
-  return `${bold} Bold R21 layer: hotter phrasing, less “synergy”, more “say what you mean and mean it”.`
+  return `${bold} Bold R21: same spine, dirtier subtext—whisper-close lines, zero “circle back” foreplay.`
 }
 
 function spiceSnarkyR21FromSnarky(snarky: string): string {
-  const t = snarky.trim()
-  if (!t) {
-    return ` Snarky R21: swear when the cosmos demands it, roast bad ideas loudly, punch up not sideways—non-sexual, still career-limiting.`
+  if (!snarky.trim()) {
+    return ` Snarky R21: profanity as punctuation, roast the plan not the person—crass, not sexual, allergic to polite lies.`
   }
-  return `${snarky} Snarky R21: cruder words, meaner jokes, that professionalism costume is half off.`
+  return `${snarky} Snarky R21: louder swears, meaner punchlines, that LinkedIn polish can choke on dust.`
 }
 
 function pSuffix(p: ScrumMasterPersonality, lines: PersonalityLinesCore): string {
@@ -746,8 +744,8 @@ export function scrumNotifyPayload(
   personality: ScrumMasterPersonality,
 ): { title: string; body: string } {
   const W = (title: string, body: string) => ({ title, body })
-  const NOTIFY_BOLD21 = '\n— Bold R21: spicier copy, no corporate babysitting.'
-  const NOTIFY_SNARKY21 = '\n— Snarky R21: ruder words, still non-sexual; HR would need therapy.'
+  const NOTIFY_BOLD21 = '\n— Bold R21: sensual, in-your-ear urgency—spicier than PG, still not a creep show.'
+  const NOTIFY_SNARKY21 = '\n— Snarky R21: filthy mouth, clean facts—vulgar roast energy, nothing sexual, HR can cry about it.'
   const line = (
     rec: Record<'warm' | 'coach' | 'minimal' | 'playful' | 'snarky' | 'bold', { title: string; body: string }>,
   ): { title: string; body: string } => {
