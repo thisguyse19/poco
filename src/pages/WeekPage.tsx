@@ -77,6 +77,12 @@ function PlannerTaskCard({
     id: task.id,
     disabled: dragDisabled,
   })
+  const {
+    onPointerDown: dndPointerDown,
+    onPointerUp: dndPointerUp,
+    onPointerCancel: dndPointerCancel,
+    ...restDraggableListeners
+  } = listeners ?? {}
   const style = transform ? { transform: CSS.Translate.toString(transform) } : undefined
 
   const borderEmphasis = (armed && !isDragging) || isDragging
@@ -99,23 +105,26 @@ function PlannerTaskCard({
     <div
       ref={setNodeRef}
       style={style}
-      {...listeners}
+      {...restDraggableListeners}
       {...attributes}
-      className={`relative touch-none select-none rounded-none bg-[var(--bg-elevated)] px-2.5 py-2.5 text-left touch-manipulation ${
-        borderEmphasis ? 'border-2 border-[var(--accent)]' : 'border border-[var(--border-subtle)]'
+      className={`relative touch-none select-none rounded-none bg-[var(--bg-elevated)] px-2.5 py-2.5 text-left ${
+        borderEmphasis ? 'border border-[var(--accent)]' : 'border border-[var(--border-subtle)]'
       } ${scrumAccent ? 'poco-scrum-week-mark' : ''} ${isDragging ? 'z-10 opacity-70' : ''} ${
         task.completed ? 'opacity-60' : ''
       } ${dragDisabled ? 'pointer-events-none opacity-50' : ''}`}
-      onPointerDown={() => {
+      onPointerDown={(e) => {
+        dndPointerDown?.(e)
         if (dragDisabled) return
         clearArmTimer()
         armTimer.current = setTimeout(() => setArmed(true), DRAG_HOLD_MS)
       }}
-      onPointerUp={() => {
+      onPointerUp={(e) => {
+        dndPointerUp?.(e)
         clearArmTimer()
         if (!isDragging) setArmed(false)
       }}
-      onPointerCancel={() => {
+      onPointerCancel={(e) => {
+        dndPointerCancel?.(e)
         clearArmTimer()
         setArmed(false)
       }}
@@ -187,7 +196,7 @@ function DayCell({
       ref={setNodeRef}
       className={`flex min-h-0 min-w-0 flex-col overflow-hidden bg-[var(--bg-subtle)] p-2 ${
         isToday
-          ? 'border-2 border-[var(--accent)]'
+          ? 'border border-[var(--accent)]'
           : 'border border-[var(--border-subtle)]'
       } ${past ? 'opacity-70' : ''} ${isOver && !past ? 'bg-[var(--accent-soft)]' : ''}`}
     >
@@ -205,12 +214,12 @@ function UnscheduledBlock({ children, flash }: { children: React.ReactNode; flas
   return (
     <div
       ref={setNodeRef}
-      className={`flex min-h-[7rem] shrink-0 flex-col overflow-hidden rounded-none border border-dashed p-2 transition-colors duration-200 ${
+      className={`flex min-h-0 min-w-0 flex-col overflow-hidden bg-[var(--bg-subtle)] p-2 ${
         flash
-          ? 'border-[var(--accent)] bg-[var(--accent-soft)]'
+          ? 'border border-[var(--accent)] bg-[var(--accent-soft)]'
           : isOver
-            ? 'border-[var(--accent)] bg-[var(--accent-soft)]'
-            : 'border-[var(--border-default)] bg-[var(--bg-base)]'
+            ? 'border border-[var(--accent)] bg-[var(--accent-soft)]'
+            : 'border border-dashed border-[var(--border-default)] bg-[var(--bg-base)]'
       }`}
     >
       <div className="mb-1.5 shrink-0 border-b border-[var(--border-subtle)] pb-1.5">
@@ -267,15 +276,15 @@ function ArrowZone({
     <button
       ref={mergedRef}
       type="button"
-      className={`poco-press flex h-9 w-full shrink-0 items-center justify-center gap-1 border-y border-[var(--border-subtle)] py-1 transition-colors duration-200 ${
-        highlight || isOver ? 'bg-[color-mix(in_srgb,var(--accent-soft)_75%,var(--bg-subtle))]' : 'bg-[var(--bg-subtle)]'
+      className={`poco-press flex h-6 w-full shrink-0 items-center justify-center border-b border-[var(--border-subtle)] transition-colors duration-200 ${
+        highlight || isOver ? 'bg-[color-mix(in_srgb,var(--accent-soft)_75%,var(--bg-subtle))]' : 'bg-[var(--bg-base)]'
       }`}
       onClick={onTap}
       aria-label={direction === 'up' ? 'Show previous four days' : 'Show next four days'}
     >
       <Icon
         name="chevron-down"
-        size={18}
+        size={14}
         className={direction === 'up' ? 'rotate-180 text-[var(--text-secondary)]' : 'text-[var(--text-secondary)]'}
       />
     </button>
@@ -324,13 +333,33 @@ export function WeekPage() {
     return toLocalISODate()
   }, [clock])
 
-  const windowStartIso = useMemo(() => addCalendarDaysFromIso(todayIso, pageIndex * 4), [todayIso, pageIndex])
-  const fourIsos = useMemo(
-    () => [0, 1, 2, 3].map((i) => addCalendarDaysFromIso(windowStartIso, i)),
-    [windowStartIso],
-  )
-  const windowSet = useMemo(() => new Set(fourIsos), [fourIsos])
-  const rangeLabel = formatIsoWeekRangeUk(fourIsos[0]!, fourIsos[3]!)
+  const columnDayIsos = useMemo(() => {
+    if (pageIndex === 0) {
+      return [0, 1, 2].map((i) => addCalendarDaysFromIso(todayIso, i))
+    }
+    const start = addCalendarDaysFromIso(todayIso, 3 + (pageIndex - 1) * 4)
+    return [0, 1, 2, 3].map((i) => addCalendarDaysFromIso(start, i))
+  }, [todayIso, pageIndex])
+
+  const weekSlots = useMemo((): Array<{ kind: 'day'; iso: string } | { kind: 'unscheduled' }> => {
+    if (pageIndex === 0) {
+      return [
+        { kind: 'day', iso: columnDayIsos[0]! },
+        { kind: 'day', iso: columnDayIsos[1]! },
+        { kind: 'day', iso: columnDayIsos[2]! },
+        { kind: 'unscheduled' },
+      ]
+    }
+    return columnDayIsos.map((iso) => ({ kind: 'day' as const, iso }))
+  }, [pageIndex, columnDayIsos])
+
+  const windowSet = useMemo(() => new Set(columnDayIsos), [columnDayIsos])
+  const rangeLabel = useMemo(() => {
+    if (pageIndex === 0) {
+      return formatIsoWeekRangeUk(columnDayIsos[0]!, columnDayIsos[2]!)
+    }
+    return formatIsoWeekRangeUk(columnDayIsos[0]!, columnDayIsos[3]!)
+  }, [pageIndex, columnDayIsos])
 
   const ctx = useMemo(
     () => ({ todayIso, tomorrowIso: tomorrowIsoFrom(todayIso), showCompleted }),
@@ -339,7 +368,7 @@ export function WeekPage() {
 
   const { byDay, unscheduled } = useMemo(() => {
     const byDay = new Map<string, Task[]>()
-    for (const iso of fourIsos) byDay.set(iso, [])
+    for (const iso of columnDayIsos) byDay.set(iso, [])
     const uns: Task[] = []
 
     for (const t of tasks) {
@@ -355,12 +384,12 @@ export function WeekPage() {
         uns.push(t)
       }
     }
-    for (const iso of fourIsos) {
+    for (const iso of columnDayIsos) {
       byDay.set(iso, [...(byDay.get(iso) ?? [])].sort(sortWeekColumnTasks))
     }
     uns.sort(sortWeekColumnTasks)
     return { byDay, unscheduled: uns }
-  }, [tasks, ctx, fourIsos, windowSet])
+  }, [tasks, ctx, columnDayIsos, windowSet])
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -519,68 +548,68 @@ export function WeekPage() {
           onDragStart={onDragStart}
           onDragEnd={onDragEnd}
         >
-          {pageIndex > 0 ? (
-            <ArrowZone
-              id={ZONE_PREV_ID}
-              direction="up"
-              highlight={zoneHighlight === 'prev'}
-              onTap={() => setPageIndex((p) => Math.max(0, p - 1))}
-              zoneRef={zonePrevRef}
-            />
-          ) : null}
-
-          <div
-            className={`flex min-h-0 flex-1 flex-col overflow-hidden ${
-              pageAnim === 'next' ? 'poco-week-page-snap-next' : pageAnim === 'prev' ? 'poco-week-page-snap-prev' : ''
-            }`}
-            onAnimationEnd={(e) => {
-              if (e.target === e.currentTarget) setPageAnim(null)
-            }}
-          >
-            {pageIndex > 0 ? <UnscheduledBin flash={binFlash} /> : null}
-
-            {pageIndex === 0 ? (
-              <UnscheduledBlock flash={unschedFlash}>
-                {unscheduled.map((t) => (
-                  <PlannerTaskCard
-                    key={t.id}
-                    task={t}
-                    scrumAccent={scrumAccent(t)}
-                    onOpenDetail={setDetailTask}
-                  />
-                ))}
-              </UnscheduledBlock>
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            {pageIndex > 0 ? (
+              <ArrowZone
+                id={ZONE_PREV_ID}
+                direction="up"
+                highlight={zoneHighlight === 'prev'}
+                onTap={() => setPageIndex((p) => Math.max(0, p - 1))}
+                zoneRef={zonePrevRef}
+              />
             ) : null}
 
-            <div className="mt-2 grid min-h-0 flex-1 grid-cols-2 grid-rows-2 gap-2 overflow-hidden">
-              {fourIsos.map((iso) => (
-                <DayCell key={iso} iso={iso} todayIso={todayIso}>
-                  {(byDay.get(iso) ?? []).map((t) => (
-                    <PlannerTaskCard
-                      key={t.id}
-                      task={t}
-                      scrumAccent={scrumAccent(t)}
-                      onOpenDetail={setDetailTask}
-                      dragDisabled={iso < todayIso}
-                    />
-                  ))}
-                </DayCell>
-              ))}
-            </div>
-          </div>
+            {pageIndex > 0 ? <UnscheduledBin flash={binFlash} /> : null}
 
-          <ArrowZone
-            id={ZONE_NEXT_ID}
-            direction="down"
-            highlight={zoneHighlight === 'next'}
-            onTap={() => setPageIndex((p) => p + 1)}
-            zoneRef={zoneNextRef}
-          />
+            <div
+              className={`grid min-h-0 flex-1 grid-cols-2 grid-rows-2 gap-2 overflow-hidden pt-1 ${
+                pageAnim === 'next' ? 'poco-week-page-snap-next' : pageAnim === 'prev' ? 'poco-week-page-snap-prev' : ''
+              }`}
+              onAnimationEnd={(e) => {
+                if (e.target === e.currentTarget) setPageAnim(null)
+              }}
+            >
+              {weekSlots.map((slot) =>
+                slot.kind === 'unscheduled' ? (
+                  <UnscheduledBlock key="unscheduled" flash={unschedFlash}>
+                    {unscheduled.map((t) => (
+                      <PlannerTaskCard
+                        key={t.id}
+                        task={t}
+                        scrumAccent={scrumAccent(t)}
+                        onOpenDetail={setDetailTask}
+                      />
+                    ))}
+                  </UnscheduledBlock>
+                ) : (
+                  <DayCell key={slot.iso} iso={slot.iso} todayIso={todayIso}>
+                    {(byDay.get(slot.iso) ?? []).map((t) => (
+                      <PlannerTaskCard
+                        key={t.id}
+                        task={t}
+                        scrumAccent={scrumAccent(t)}
+                        onOpenDetail={setDetailTask}
+                        dragDisabled={slot.iso < todayIso}
+                      />
+                    ))}
+                  </DayCell>
+                ),
+              )}
+            </div>
+
+            <ArrowZone
+              id={ZONE_NEXT_ID}
+              direction="down"
+              highlight={zoneHighlight === 'next'}
+              onTap={() => setPageIndex((p) => p + 1)}
+              zoneRef={zoneNextRef}
+            />
+          </div>
 
           <DragOverlay dropAnimation={null}>
             {activeTask ? (
               <div
-                className={`max-w-[min(92vw,22rem)] rounded-none border-2 border-[var(--accent)] bg-[var(--bg-elevated)] px-3 py-2.5 shadow-lg ${
+                className={`max-w-[min(92vw,22rem)] rounded-none border border-[var(--accent)] bg-[var(--bg-elevated)] px-3 py-2.5 shadow-lg ${
                   activeTask.completed ? 'opacity-60' : ''
                 }`}
               >
