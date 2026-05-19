@@ -30,13 +30,13 @@ export function scrumPersonalityMeta(id: ScrumMasterPersonality): { title: strin
   if (id === 'boldR21') {
     return {
       title: 'Bold R21',
-      hint: 'Velvet-rope voice: sensual, teasing, hungry for momentum—no sanitized boardroom romance.',
+      hint: 'Dirty-honest, flirty-blunt copy: hungry verbs, zero “per my last email,” 18+ in tone only.',
     }
   }
   if (id === 'snarkyR21') {
     return {
       title: 'Snarky R21',
-      hint: 'Swears like a loading dock, roasts like a jury—vulgar, not sexual, zero corporate deodorant.',
+      hint: 'Swears for seasoning, roasts the plan—vulgar mouth, not sexual content, allergic to LinkedIn cosplay.',
     }
   }
   const row = SCRUM_MASTER_PERSONALITIES.find((p) => p.id === id)
@@ -196,41 +196,11 @@ export function isScrumInlinePhase(sm: ScrumMasterSettings, d = new Date()): boo
   return true
 }
 
-type PersonalityLinesCore = {
-  warm: string
-  coach: string
-  minimal: string
-  playful: string
-  snarky: string
-  bold: string
-}
+/** Every personality gets a full line — no “base + appended R21 tail”. */
+type PersonalityLinesAll = Record<ScrumMasterPersonality, string>
 
-function spiceBoldR21FromBold(bold: string): string {
-  if (!bold.trim()) {
-    return ` Bold R21: slow-burn heat in the wording—sensual push, blunt pull, no laminated HR romance.`
-  }
-  return `${bold} Bold R21: same spine, dirtier subtext—whisper-close lines, zero “circle back” foreplay.`
-}
-
-function spiceSnarkyR21FromSnarky(snarky: string): string {
-  if (!snarky.trim()) {
-    return ` Snarky R21: profanity as punctuation, roast the plan not the person—crass, not sexual, allergic to polite lies.`
-  }
-  return `${snarky} Snarky R21: louder swears, meaner punchlines, that LinkedIn polish can choke on dust.`
-}
-
-function pSuffix(p: ScrumMasterPersonality, lines: PersonalityLinesCore): string {
-  const full: Record<ScrumMasterPersonality, string> = {
-    warm: lines.warm,
-    coach: lines.coach,
-    minimal: lines.minimal,
-    playful: lines.playful,
-    snarky: lines.snarky,
-    bold: lines.bold,
-    boldR21: spiceBoldR21FromBold(lines.bold),
-    snarkyR21: spiceSnarkyR21FromSnarky(lines.snarky),
-  }
-  return full[p] ?? ''
+function personaLine(personality: ScrumMasterPersonality, lines: PersonalityLinesAll): string {
+  return lines[personality]
 }
 
 /** Stand-down: end-of-day review vs stand-up plan + extra completions (Agile). */
@@ -239,93 +209,122 @@ function buildStandDownScheduleLine(dm: number, personality: ScrumMasterPersonal
   if (dm < 0) {
     const m = Math.abs(dm)
     if (m === 1) {
-      return `Stand down starts in one minute — time to prep your “done vs planned” recap.${pSuffix(personality, {
-        warm: ' You have done more than you think.',
-        coach: ' Gather completions before the bell.',
-        minimal: '',
-        playful: ' One minute until the end-of-day boss battle (it is friendly, promise).',
-        snarky: ' Be ready.',
-        bold: ' Sixty seconds—line up proof before we compare notes.',
-      })}`
+      return personaLine(personality, {
+        warm: 'Stand down starts in one minute — time to prep your “done vs planned” recap. You have done more than you think.',
+        coach:
+          'Stand down starts in one minute — time to prep your “done vs planned” recap. Gather completions before the bell.',
+        minimal: 'Stand down in 1 min — prep done vs planned.',
+        playful:
+          'Stand down starts in one minute — time to prep your “done vs planned” recap. One minute until the end-of-day boss battle (it is friendly, promise).',
+        snarky: 'Stand down starts in one minute — time to prep your “done vs planned” recap. Be ready.',
+        bold: 'Stand down starts in one minute — time to prep your “done vs planned” recap. Sixty seconds—line up proof before we compare notes.',
+        boldR21:
+          'One minute until stand down—strip the polite version, stack what you actually shipped, and say it like you mean it in the dark. 18+ copy only; consent still matters with real people.',
+        snarkyR21:
+          'Stand down in sixty fucking seconds—prep your “done vs planned” recap like an adult, not a LinkedIn poet. Nothing sexual here—just ugly truth and a shorter fuse.',
+      })
     }
     if (m <= 5) {
-      return `${m} minutes until stand down.${tap}${pSuffix(personality, {
-        warm: ' We will look at what you committed at stand up.',
-        coach: ' Line up shipped work vs this morning’s plan.',
-        minimal: `${m} min to review.`,
-        playful: ' Scoreboard time — chalk up the wins before the buzzer.',
-        snarky: '',
-        bold: ' Short runway—make shipped work easy to defend.',
-      })}`
+      return personaLine(personality, {
+        warm: `${m} minutes until stand down.${tap} We will look at what you committed at stand up.`,
+        coach: `${m} minutes until stand down.${tap} Line up shipped work vs this morning’s plan.`,
+        minimal: `${m} minutes until stand down.${tap} ${m} min to review.`,
+        playful: `${m} minutes until stand down.${tap} Scoreboard time — chalk up the wins before the buzzer.`,
+        snarky: `${m} minutes until stand down.${tap}`,
+        bold: `${m} minutes until stand down.${tap} Short runway—make shipped work easy to defend.`,
+        boldR21: `${m} minutes until stand down.${tap} Clock’s ticking—get your story straight while it’s still hot enough to blush at. Keep the horny in the wording, not in how you treat coworkers.`,
+        snarkyR21: `${m} minutes until stand down.${tap} Quit sandbagging: line up what shipped vs what you promised before I start swearing louder. Crude, not porn—just facts with teeth.`,
+      })
     }
     if (m <= 15) {
-      return `${m} minutes until stand down — end-of-day review.${pSuffix(personality, {
-        warm: ' Planned vs done, plus anything extra you finished.',
-        coach: ' Note scope that slipped so tomorrow is honest.',
-        minimal: '',
-        playful: ' Sprint day finale — cue the highlight reel.',
-        snarky: ` ${m} minutes.`,
-        bold: ' Buffer time—tomorrow-you reads your receipts.',
-      })}`
+      return personaLine(personality, {
+        warm: `${m} minutes until stand down — end-of-day review. Planned vs done, plus anything extra you finished.`,
+        coach: `${m} minutes until stand down — end-of-day review. Note scope that slipped so tomorrow is honest.`,
+        minimal: `${m} minutes until stand down — end-of-day review.`,
+        playful: `${m} minutes until stand down — end-of-day review. Sprint day finale — cue the highlight reel.`,
+        snarky: `${m} minutes until stand down — end-of-day review. ${m} minutes.`,
+        bold: `${m} minutes until stand down — end-of-day review. Buffer time—tomorrow-you reads your receipts.`,
+        boldR21: `${m} minutes until stand down—end-of-day review with the gloves off: what got touched, what got finished, what you only flirted with. Say it dirty-clear, not creepy-weird.`,
+        snarkyR21: `${m} minutes until stand down—review time. Planned vs done, plus the shit you “forgot” to mention. Non-sexual, just loud: stop cosplaying productivity.`,
+      })
     }
     if (m <= 29) {
-      return `${m} minutes until stand down.${pSuffix(personality, {
-        warm: ' You will reconcile what you promised at stand up with what shipped.',
-        coach: ' Think shipped, carry-over, and surprises.',
-        minimal: '',
-        playful: ' Plot twist watch: what quietly shipped while nobody was looking?',
-        snarky: '',
-        bold: ' Plenty of runway—separate motion from proof you would show someone.',
-      })}`
+      return personaLine(personality, {
+        warm: `${m} minutes until stand down. You will reconcile what you promised at stand up with what shipped.`,
+        coach: `${m} minutes until stand down. Think shipped, carry-over, and surprises.`,
+        minimal: `${m} minutes until stand down.`,
+        playful: `${m} minutes until stand down. Plot twist watch: what quietly shipped while nobody was looking?`,
+        snarky: `${m} minutes until stand down.`,
+        bold: `${m} minutes until stand down. Plenty of runway—separate motion from proof you would show someone.`,
+        boldR21: `${m} minutes until stand down—long runway to admit what you actually did with your hands today. Sensual honesty beats a clean KPI bedtime story.`,
+        snarkyR21: `${m} minutes until stand down—plenty of time to stop lying to yourself on the record. Vulgar mouth, clean math: what shipped vs what you promised.`,
+      })
     }
-    return `${m} minutes until stand down — your daily sprint review.${pSuffix(personality, {
-      warm: ' Plenty of time to mentally stack wins and misses.',
-      coach: ' Capture evidence of done work while memory is fresh.',
-      minimal: `${m} min to stand down.`,
-      playful: ' Grab confetti for the wins and a sticky note for the “whoops”.',
-      snarky: '',
-      bold: ' Heads-up—stack wins and misses before the clock gets judgy.',
-    })}`
+    return personaLine(personality, {
+      warm: `${m} minutes until stand down — your daily sprint review. Plenty of time to mentally stack wins and misses.`,
+      coach: `${m} minutes until stand down — your daily sprint review. Capture evidence of done work while memory is fresh.`,
+      minimal: `${m} minutes until stand down — your daily sprint review.${m} min to stand down.`,
+      playful: `${m} minutes until stand down — your daily sprint review. Grab confetti for the wins and a sticky note for the “whoops”.`,
+      snarky: `${m} minutes until stand down — your daily sprint review.`,
+      bold: `${m} minutes until stand down — your daily sprint review. Heads-up—stack wins and misses before the clock gets judgy.`,
+      boldR21: `${m} minutes until stand down—your daily sprint slice, narrated like a late-night confession: wins, misses, and the stuff you almost got away with. Adults only in the copy.`,
+      snarkyR21: `${m} minutes until stand down—daily review, no deodorant on the language. Stack wins, flag the bullshit, and don’t you dare confuse “crass” with “sexual.”`,
+    })
   }
   if (dm === 0) {
-    return `Time for stand down — review what completed today against this morning’s plan.${pSuffix(personality, {
-      warm: ' Include bonus tasks you finished that were not on the original list.',
-      coach: ' Mark done, log carry-over, name one improvement for tomorrow’s sprint day.',
-      minimal: ' Tap to start.',
-      playful: ' Retro hat on — tap when ready.',
-      snarky: ' Tap to begin the review.',
-      bold: ' Tap in—let the numbers tell the straight story.',
-    })}`
+    return personaLine(personality, {
+      warm:
+        'Time for stand down — review what completed today against this morning’s plan. Include bonus tasks you finished that were not on the original list.',
+      coach:
+        'Time for stand down — review what completed today against this morning’s plan. Mark done, log carry-over, name one improvement for tomorrow’s sprint day.',
+      minimal: 'Time for stand down — review what completed today against this morning’s plan. Tap to start.',
+      playful: 'Time for stand down — review what completed today against this morning’s plan. Retro hat on — tap when ready.',
+      snarky: 'Time for stand down — review what completed today against this morning’s plan. Tap to begin the review.',
+      bold: 'Time for stand down — review what completed today against this morning’s plan. Tap in—let the numbers tell the straight story.',
+      boldR21:
+        'Time for stand down—drag today’s truth across the finish line: what you finished, what you dodged, what you’d whisper if nobody was grading you. 18+ tone; behave in real life.',
+      snarkyR21:
+        'Time for stand down—open the app and reconcile the fucking day: planned vs shipped, no poetry. Not porn, just rude clarity and receipts.',
+    })
   }
   const after = dm
   if (after === 1) {
-    return `Stand down is open — walk your board: planned commitments, then extras you shipped.${pSuffix(personality, {
-      warm: '',
-      coach: '',
-      minimal: '',
-      playful: ' Main character energy: celebrate the plot points you actually moved.',
-      snarky: '',
-      bold: ' Own the board—confidence yes, fiction no.',
-    })}`
+    return personaLine(personality, {
+      warm: 'Stand down is open — walk your board: planned commitments, then extras you shipped.',
+      coach: 'Stand down is open — walk your board: planned commitments, then extras you shipped.',
+      minimal: 'Stand down is open — walk your board: planned commitments, then extras you shipped.',
+      playful:
+        'Stand down is open — walk your board: planned commitments, then extras you shipped. Main character energy: celebrate the plot points you actually moved.',
+      snarky: 'Stand down is open — walk your board: planned commitments, then extras you shipped.',
+      bold: 'Stand down is open — walk your board: planned commitments, then extras you shipped. Own the board—confidence yes, fiction no.',
+      boldR21:
+        'Stand down is open—walk the board like you mean it: what you promised with your eyes open, what you actually touched. Hot, blunt, zero “synergy” pillow talk.',
+      snarkyR21:
+        'Stand down is open—walk the board and stop cosplaying competence. Planned shit vs shipped shit, plus the extras. Crass words, not sexual ones.',
+    })
   }
   if (after <= 5) {
-    return `${after} minute${after === 1 ? '' : 's'} into stand down. Check off what landed today.${pSuffix(personality, {
-      warm: '',
-      coach: ' Compare to your stand-up snapshot.',
-      minimal: '',
-      playful: ' Tick boxes like you are popping bubble wrap.',
-      snarky: '',
-      bold: ' Still time—tighten the record while memory is sharp.',
-    })}`
+    return personaLine(personality, {
+      warm: `${after} minute${after === 1 ? '' : 's'} into stand down. Check off what landed today.`,
+      coach: `${after} minute${after === 1 ? '' : 's'} into stand down. Check off what landed today. Compare to your stand-up snapshot.`,
+      minimal: `${after} minute${after === 1 ? '' : 's'} into stand down. Check off what landed today.`,
+      playful: `${after} minute${after === 1 ? '' : 's'} into stand down. Check off what landed today. Tick boxes like you are popping bubble wrap.`,
+      snarky: `${after} minute${after === 1 ? '' : 's'} into stand down. Check off what landed today.`,
+      bold: `${after} minute${after === 1 ? '' : 's'} into stand down. Check off what landed today. Still time—tighten the record while memory is sharp.`,
+      boldR21: `${after} minute${after === 1 ? '' : 's'} into stand down—tick what actually got finished while the memory still feels intimate. No HR-safe striptease, just honest heat in the wording.`,
+      snarkyR21: `${after} minute${after === 1 ? '' : 's'} into stand down—check the boxes before your brain starts rewriting history like a PR department. Foul language, zero sex creep.`,
+    })
   }
-  return `${after} minutes into stand down. Close the loop on today’s sprint slice.${pSuffix(personality, {
-    warm: '',
-    coach: '',
-    minimal: '',
-    playful: ' Bonus round: anything sparkly that was not on the morning list?',
-    snarky: '',
-    bold: ' Close the loop—half-truths sour overnight.',
-  })}`
+  return personaLine(personality, {
+    warm: `${after} minutes into stand down. Close the loop on today’s sprint slice.`,
+    coach: `${after} minutes into stand down. Close the loop on today’s sprint slice.`,
+    minimal: `${after} minutes into stand down. Close the loop on today’s sprint slice.`,
+    playful: `${after} minutes into stand down. Close the loop on today’s sprint slice. Bonus round: anything sparkly that was not on the morning list?`,
+    snarky: `${after} minutes into stand down. Close the loop on today’s sprint slice.`,
+    bold: `${after} minutes into stand down. Close the loop on today’s sprint slice. Close the loop—half-truths sour overnight.`,
+    boldR21: `${after} minutes into stand down—close the loop while the day’s still willing to kiss you back. Say what shipped, what didn’t, and what you’re hiding behind charm.`,
+    snarkyR21: `${after} minutes into stand down—close the fucking loop. Half-truths rot; write the ugly version before you sleep. Not sexual—just mean and accurate.`,
+  })
 }
 
 /** Banner body for scheduled stand up / stand down (not farewell). */
@@ -344,136 +343,176 @@ export function buildScrumBannerLine(
     const m = Math.abs(dm)
     const tap = ' Tap here to start when you are ready.'
     if (m === 1) {
-      return `${Event} starts in one minute.${pSuffix(personality, {
-        warm: " I'll be right here.",
-        coach: " Let's line up your intentions.",
-        minimal: '',
-        playful: ' Deep breath — then we roll.',
-        snarky: ' Be on time.',
-        bold: ' Pick commitments you will still like at midnight.',
-      })}`
+      return personaLine(personality, {
+        warm: "Stand up starts in one minute. I'll be right here.",
+        coach: "Stand up starts in one minute. Let's line up your intentions.",
+        minimal: 'Stand up — 1 min.',
+        playful: 'Stand up starts in one minute. Deep breath — then we roll.',
+        snarky: 'Stand up starts in one minute. Be on time.',
+        bold: 'Stand up starts in one minute. Pick commitments you will still like at midnight.',
+        boldR21:
+          'Stand up in sixty seconds—name what you’re actually going to finish today, like you’re whispering it against someone’s neck. 18+ wording only; don’t be a creep IRL.',
+        snarkyR21:
+          'Stand up in one fucking minute—show up sober enough to tell the truth about what ships today. Not sex noise, just zero tolerance for your own bullshit.',
+      })
     }
     if (m <= 5) {
-      return `${m} minute${m === 1 ? '' : 's'} until your ${event}.${tap}${pSuffix(personality, {
-        warm: '',
-        coach: ' Keep scope tight.',
-        minimal: '',
-        playful: ' Cue the tiny hype music in your head.',
-        snarky: '',
-        bold: ' Keep only what survives daylight.',
-      })}`
+      return personaLine(personality, {
+        warm: `${m} minute${m === 1 ? '' : 's'} until your ${event}.${tap}`,
+        coach: `${m} minute${m === 1 ? '' : 's'} until your ${event}.${tap} Keep scope tight.`,
+        minimal: `${m} minute${m === 1 ? '' : 's'} until stand up.`,
+        playful: `${m} minute${m === 1 ? '' : 's'} until your ${event}.${tap} Cue the tiny hype music in your head.`,
+        snarky: `${m} minute${m === 1 ? '' : 's'} until your ${event}.${tap}`,
+        bold: `${m} minute${m === 1 ? '' : 's'} until your ${event}.${tap} Keep only what survives daylight.`,
+        boldR21: `${m} minute${m === 1 ? '' : 's'} until stand up.${tap} Strip the fantasy list—keep what you’d still chase after midnight.`,
+        snarkyR21: `${m} minute${m === 1 ? '' : 's'} until stand up.${tap} Cut the crap scope: what actually ships today, not what looks cute on a slide.`,
+      })
     }
     if (m <= 15) {
-      return `${m} minutes until your ${event}.${tap}${pSuffix(personality, {
-        warm: ' No rush — just gathering.',
-        coach: ' Preview your top outcomes.',
-        minimal: `${m} min to ${event}.`,
-        playful: ' The day is warming up.',
-        snarky: `${m} minutes. Prepare.`,
-        bold: ` ${m} min—name a few crisp wins.`,
-      })}`
+      return personaLine(personality, {
+        warm: `${m} minutes until your ${event}.${tap} No rush — just gathering.`,
+        coach: `${m} minutes until your ${event}.${tap} Preview your top outcomes.`,
+        minimal: `${m} minutes until your ${event}.${tap}${m} min to ${event}.`,
+        playful: `${m} minutes until your ${event}.${tap} The day is warming up.`,
+        snarky: `${m} minutes until your ${event}.${tap}${m} minutes. Prepare.`,
+        bold: `${m} minutes until your ${event}.${tap} ${m} min—name a few crisp wins.`,
+        boldR21: `${m} minutes until stand up.${tap} Slow burn the plan: what you’ll finish, what you’ll sweat for, what you’re only flirting with.`,
+        snarkyR21: `${m} minutes until stand up.${tap} ${m} minutes to stop lying on the list—pick outcomes, not performance art.`,
+      })
     }
     if (m <= 29) {
-      return `${m} minutes until your ${event}.${pSuffix(personality, {
-        warm: ` ${Event} is coming up soon.`,
-        coach: ' Block distractions early.',
-        minimal: '',
-        playful: ' Coffee window closing soon.',
-        snarky: ` ${m} minutes out.`,
-        bold: ` ${m} min out—scope vs ambition: pick a lane.`,
-      })}`
+      return personaLine(personality, {
+        warm: `${m} minutes until your ${event}. ${Event} is coming up soon.`,
+        coach: `${m} minutes until your ${event}. Block distractions early.`,
+        minimal: `${m} minutes until stand up.`,
+        playful: `${m} minutes until your ${event}. Coffee window closing soon.`,
+        snarky: `${m} minutes until your ${event}. ${m} minutes out.`,
+        bold: `${m} minutes until your ${event}. ${m} min out—scope vs ambition: pick a lane.`,
+        boldR21: `${m} minutes until stand up—long runway to decide what you’re taking to bed tonight: real commitments, not “we’ll see.”`,
+        snarkyR21: `${m} minutes until stand up—${m} minutes to quit rehearsing excuses. Loud words, clean targets, still not porn.`,
+      })
     }
-    return `${m} minutes until your ${event}.${pSuffix(personality, {
-      warm: ' Plenty of runway — I will nudge you closer in.',
-      coach: ' Use the time to clear your desk mentally.',
-      minimal: `${m} min to ${event}.`,
-      playful: ' Still in the green room.',
-      snarky: ` ${Event} in ${m} minutes.`,
-      bold: ` Soon—put your best work up front.`,
-    })}`
+    return personaLine(personality, {
+      warm: `${m} minutes until your ${event}. Plenty of runway — I will nudge you closer in.`,
+      coach: `${m} minutes until your ${event}. Use the time to clear your desk mentally.`,
+      minimal: `${m} minutes until your ${event}.${m} min to ${event}.`,
+      playful: `${m} minutes until your ${event}. Still in the green room.`,
+      snarky: `${m} minutes until your ${event}. ${Event} in ${m} minutes.`,
+      bold: `${m} minutes until your ${event}. Soon—put your best work up front.`,
+      boldR21: `${m} minutes until stand up—enough runway to pick the work you’ll actually touch, not the work you’ll only flirt with in a status meeting.`,
+      snarkyR21: `${m} minutes until stand up—enough time to delete the fantasy tasks and write the ugly honest list. Swearing allowed; sexual harassment isn’t.`,
+    })
   }
 
   if (dm === 0) {
-    return `Time for your ${event}.${pSuffix(personality, {
-      warm: ' Tap here whenever you are ready — I will stay with you.',
-      coach: ' Tap to open the flow and name your top focus.',
-      minimal: ' Tap to start.',
-      playful: ' Tap — let us make today feel doable.',
-      snarky: ' Tap to begin now.',
-      bold: ' Tap in—say what you want today to remember.',
-    })}`
+    return personaLine(personality, {
+      warm: 'Time for your stand up. Tap here whenever you are ready — I will stay with you.',
+      coach: 'Time for your stand up. Tap to open the flow and name your top focus.',
+      minimal: 'Time for your stand up. Tap to start.',
+      playful: 'Time for your stand up. Tap — let us make today feel doable.',
+      snarky: 'Time for your stand up. Tap to begin now.',
+      bold: 'Time for your stand up. Tap in—say what you want today to remember.',
+      boldR21:
+        'Time for stand up—open the app and say what you’re finishing today like you mean it: hungry, blunt, no “circle back” foreplay. Adults-only tone in text; behave in person.',
+      snarkyR21:
+        'Time for stand up—open the fucking app and write the real list before your brain starts cosplaying productivity. Crude, not sexual—just honest.',
+    })
   }
 
   const after = dm
   if (after === 1) {
-    return `${Event} has just begun.${pSuffix(personality, {
-      warm: ' Tap to keep going in the flow.',
-      coach: ' Capture commitments while they are fresh.',
-      minimal: ' In progress.',
-      playful: ' Momentum mode: on.',
-      snarky: ' Stay on task.',
-      bold: ' Momentum suits you—lock the plan before it drifts.',
-    })}`
+    return personaLine(personality, {
+      warm: 'Stand up has just begun. Tap to keep going in the flow.',
+      coach: 'Stand up has just begun. Capture commitments while they are fresh.',
+      minimal: 'Stand up has just begun. In progress.',
+      playful: 'Stand up has just begun. Momentum mode: on.',
+      snarky: 'Stand up has just begun. Stay on task.',
+      bold: 'Stand up has just begun. Momentum suits you—lock the plan before it drifts.',
+      boldR21:
+        'Stand up just started—lock the plan while adrenaline’s hot: what you’ll ship, what you’ll sweat, what you’re done pretending about.',
+      snarkyR21:
+        'Stand up just started—stop fucking around and write commitments you can defend when tonight calls you out.',
+    })
   }
   if (after <= 5) {
-    return `${after} minute${after === 1 ? '' : 's'} into your ${event}. Tap to open the flow.${pSuffix(personality, {
-      warm: '',
-      coach: ' Adjust if priorities shifted.',
-      minimal: '',
-      playful: ' Shuffle the deck — keep only the hits.',
-      snarky: '',
-      bold: ' Swap swagger for specifics while it is easy.',
-    })}`
+    return personaLine(personality, {
+      warm: `${after} minute${after === 1 ? '' : 's'} into your stand up. Tap to open the flow.`,
+      coach: `${after} minute${after === 1 ? '' : 's'} into your stand up. Tap to open the flow. Adjust if priorities shifted.`,
+      minimal: `${after} minute${after === 1 ? '' : 's'} into stand up. Tap.`,
+      playful: `${after} minute${after === 1 ? '' : 's'} into your stand up. Tap to open the flow. Shuffle the deck — keep only the hits.`,
+      snarky: `${after} minute${after === 1 ? '' : 's'} into your stand up. Tap to open the flow.`,
+      bold: `${after} minute${after === 1 ? '' : 's'} into your stand up. Tap to open the flow. Swap swagger for specifics while it is easy.`,
+      boldR21: `${after} minute${after === 1 ? '' : 's'} into stand up—tap in and tighten the list while honesty still feels sexy, not scary.`,
+      snarkyR21: `${after} minute${after === 1 ? '' : 's'} into stand up—tap the flow and fix the plan before it rots. Mean words, zero sex creep.`,
+    })
   }
-  return `${after} minutes into your ${event}. Tap to open the flow.${pSuffix(personality, {
-    warm: ' Still time to refine your list.',
-    coach: ' Check that nothing critical slipped.',
-    minimal: '',
-    playful: ' Mid-arc polish pass — tighten the story beats.',
-    snarky: ' Close the loop before the window ends.',
-    bold: ' Finish strong—vague promises do not ship.',
-  })}`
+  return personaLine(personality, {
+    warm: `${after} minutes into your stand up. Tap to open the flow. Still time to refine your list.`,
+    coach: `${after} minutes into your stand up. Tap to open the flow. Check that nothing critical slipped.`,
+    minimal: `${after} minutes into stand up. Tap.`,
+    playful: `${after} minutes into your stand up. Tap to open the flow. Mid-arc polish pass — tighten the story beats.`,
+    snarky: `${after} minutes into your stand up. Tap to open the flow. Close the loop before the window ends.`,
+    bold: `${after} minutes into your stand up. Tap to open the flow. Finish strong—vague promises do not ship.`,
+    boldR21: `${after} minutes into stand up—still time to make the list feel like a dare you’ll actually follow through on.`,
+    snarkyR21: `${after} minutes into stand up—close the loop before you start rewriting history like a LinkedIn coward. Crass, not sexual.`,
+  })
 }
 
 export function buildFarewellBannerLine(kind: 'farewellUp' | 'farewellDown', personality: ScrumMasterPersonality): string {
   if (kind === 'farewellUp') {
-    return pSuffix(personality, {
+    return personaLine(personality, {
       warm: 'Have a calm, productive day. I will meet you at stand down to review what shipped versus this morning’s plan.',
       coach: 'Ship with intent — capture outcomes as you go so stand down is quick and honest.',
       minimal: 'Have a good day.',
       playful: 'You crushed the plot — I will host the silly little awards show at stand down.',
       snarky: 'Execute. We reconcile at stand down.',
       bold: 'Ship something solid—bring receipts to stand down.',
+      boldR21:
+        'Go be hot at your job—then drag the receipts to stand down so tonight can undress the plan honestly. Text-only spice; don’t harass humans.',
+      snarkyR21:
+        'Go ship real shit today—stand down will call you out on the fairy tale later. Loud mouth, clean targets, nothing sexual in the insults.',
     })
   }
-  return pSuffix(personality, {
+  return personaLine(personality, {
     warm: 'Rest well — tomorrow is a fresh sprint day. I will see you at stand up.',
     coach: 'Close the laptop with a clear picture of done vs carry-over. See you tomorrow.',
     minimal: 'See you tomorrow.',
     playful: 'Curtain call! Toss me the bloopers and the bloomin’ brilliant bits before you log off.',
     snarky: 'Day closed. Be back on time tomorrow.',
     bold: 'Shut down clean—tomorrow starts fresher.',
+    boldR21:
+      'Shut it down like you mean it—leave the day stripped, satisfied, and too honest for a status email. Tomorrow we flirt with the next list.',
+    snarkyR21:
+      'Close the damn day—tomorrow’s stand up will roast you if you leave loose ends. Crude talk, not sexual harassment.',
   })
 }
 
 export function scrumLiveSubtitle(personality: ScrumMasterPersonality, standUp: boolean): string {
   if (standUp) {
-    return pSuffix(personality, {
+    return personaLine(personality, {
       warm: 'Add what you intend to finish — I will keep it visible today.',
       coach: 'Name outcomes, not busywork. One line per commitment is enough.',
       minimal: 'Today’s commitments.',
       playful: 'Chuck commitments in like confetti — we will sweep the floor later.',
       snarky: 'List what must ship today. Drop the rest.',
       bold: 'Ship today—skip wishful thinking.',
+      boldR21:
+        'Write what you’ll actually finish today like you’re texting someone you want to impress naked—specific, hungry, no corporate lingerie.',
+      snarkyR21:
+        'List what the fuck ships today—drop the vanity tasks before they embarrass you at stand down. Vulgar, not sexual.',
     })
   }
-  return pSuffix(personality, {
+  return personaLine(personality, {
     warm: 'Tick off what completed today against your stand-up plan — note extras you finished and what carries forward.',
     coach: 'Sprint review: planned vs done, blockers, carry-over. Log it while it is fresh.',
     minimal: 'Planned vs shipped today.',
     playful: 'Sticker-chart energy: check the real wins, laugh at the surprises, park the rest for tomorrow’s episode.',
     snarky: 'Account for every commitment from stand up. Move unfinished work deliberately.',
     bold: 'Plan vs done—keep it crisp and honest.',
+    boldR21:
+      'Stand-down review: planned vs done, with the lights low and the excuses naked. Say what shipped, what didn’t, what you’re still teasing.',
+    snarkyR21:
+      'Stand-down math: planned vs done, carry-over, and the shit you “forgot” to log. Swear if it helps—don’t confuse crass with creepy.',
   })
 }
 
@@ -488,13 +527,15 @@ export function isScrumMasterCompletedLingering(task: Task, nowMs: number): bool
 }
 
 export function scrumVoiceLeadIn(personality: ScrumMasterPersonality): string {
-  return pSuffix(personality, {
+  return personaLine(personality, {
     warm: 'says…',
     coach: 'says…',
     minimal: '—',
     playful: 'chimes in…',
     snarky: 'states…',
     bold: 'whispers…',
+    boldR21: 'breathes in your ear…',
+    snarkyR21: 'spits it out…',
   })
 }
 
@@ -505,92 +546,108 @@ export function scrumSessionHeaderParts(
   if (phase === 'standUp') {
     return {
       emphasis: 'Stand up',
-      after: pSuffix(personality, {
+      after: personaLine(personality, {
         warm: ' has started.',
         coach: ' is live — lock your intentions.',
         minimal: ' live.',
         playful: ' is live — cue the drumroll for today’s hero arc.',
         snarky: ' has started. Focus.',
         bold: ' is live—commitments you can stand by later.',
+        boldR21: ' is live—lock the kind of intentions you’d defend with your shirt half unbuttoned.',
+        snarkyR21: ' is live—stop fucking around and write the real list.',
       }),
     }
   }
   return {
     emphasis: 'Stand down',
-    after: pSuffix(personality, {
+    after: personaLine(personality, {
       warm: ' has started.',
       coach: ' is live — reconcile shipped vs planned.',
       minimal: ' live.',
       playful: ' is on — roll credits on today’s sprint slice.',
       snarky: ' has started. Account for the day.',
       bold: ' is live—facts first, polish second.',
+      boldR21: ' is live—strip the story to what you actually did with your hands today.',
+      snarkyR21: ' is live—reconcile the fucking day before your backlog files a restraining order.',
     }),
   }
 }
 
 export function scrumNotifyOptInCta(personality: ScrumMasterPersonality): string {
-  return pSuffix(personality, {
+  return personaLine(personality, {
     warm: 'Turn on notifications for stand up and stand down',
     coach: 'Enable notifications for stand up and stand down',
     minimal: 'Enable notifications',
     playful: 'Ping me for the daily opening and closing credits',
     snarky: 'Enable stand up and stand down notifications',
     bold: 'Enable alerts for stand up and stand down.',
+    boldR21: 'Turn on alerts—I’ll nag you like someone who actually wants you to show up.',
+    snarkyR21: 'Enable notifications or miss the ritual and cry about it later.',
   })
 }
 
 export function scrumQuickAddStandUpPlaceholder(personality: ScrumMasterPersonality): string {
-  return pSuffix(personality, {
+  return personaLine(personality, {
     warm: 'What did you commit to finish today?',
     coach: 'Name the outcomes you will finish today (one line each).',
     minimal: 'Commitments…',
     playful: 'Drop the quests you are actually finishing today — no side-quest smuggling.',
     snarky: 'List today’s must-ship commitments.',
     bold: 'What finishes today—be specific.',
+    boldR21: 'What are you finishing today—say it like you’d dare someone to hold you to it.',
+    snarkyR21: 'What the fuck ships today—one line each, no fairy tales.',
   })
 }
 
 export function scrumQuickAddStandDownPlaceholder(personality: ScrumMasterPersonality): string {
-  return pSuffix(personality, {
+  return personaLine(personality, {
     warm: 'Note carry-overs or extra work you shipped today…',
     coach: 'Carry-over, blockers, extras shipped today…',
     minimal: 'Carry-over & extras…',
     playful: 'Spill the tea: carry-overs, bonus wins, sneaky little extras…',
     snarky: 'Log carry-over and off-plan completions.',
     bold: 'Carry-over and extras—spell them out.',
+    boldR21: 'Spill carry-over and bonus wins—honest, messy, nothing you’d hide under the sheets.',
+    snarkyR21: 'Log carry-over and off-plan shit—ugly truth beats a clean lie.',
   })
 }
 
 export function scrumEndStandUpLabel(personality: ScrumMasterPersonality): string {
-  return pSuffix(personality, {
+  return personaLine(personality, {
     warm: 'End stand up',
     coach: 'End stand-up session',
     minimal: 'End',
     playful: 'Wrap the huddle',
     snarky: 'End stand up',
     bold: 'Call it: stand up done',
+    boldR21: 'Kill stand up—before the flirting with deadlines gets old.',
+    snarkyR21: 'End stand up—before this meeting becomes a hostage situation.',
   })
 }
 
 export function scrumEndStandDownLabel(personality: ScrumMasterPersonality): string {
-  return pSuffix(personality, {
+  return personaLine(personality, {
     warm: 'End stand down',
     coach: 'End stand-down session',
     minimal: 'End',
     playful: 'That’s a wrap on stand down',
     snarky: 'End stand down',
     bold: 'Call it: stand down done',
+    boldR21: 'Close stand down—leave the day breathless and accounted for.',
+    snarkyR21: 'End stand down—put the day out of its misery.',
   })
 }
 
 export function scrumGatherIntoSectionTail(personality: ScrumMasterPersonality): string {
-  return pSuffix(personality, {
+  return personaLine(personality, {
     warm: 'Gather stand-up tasks into their own section',
     coach: 'Group stand-up commitments under a dedicated heading',
     minimal: 'Sectionize stand-up tasks',
     playful: 'Herd today’s stand-up goodies into their glitter corral',
     snarky: 'Move stand-up tasks into the Scrum Master section',
     bold: 'Sweep stand-up tasks somewhere they cannot ghost you later.',
+    boldR21: 'Corral stand-up tasks somewhere they can’t ghost you after midnight.',
+    snarkyR21: 'Stuff stand-up tasks under Scrum Master so they stop hiding like cowards.',
   })
 }
 
@@ -601,23 +658,27 @@ export function scrumTaskListCategorySubtitle(
 ): string {
   const n = `${openCount} ${openCount === 1 ? 'task' : 'tasks'}`
   if (mode === 'standDown') {
-    return pSuffix(personality, {
+    return personaLine(personality, {
       warm: 'Sprint review · planned vs shipped',
       coach: 'Planned vs shipped · carry-over',
       minimal: 'Review',
       playful: 'Scoreboard vs script · honest bloopers welcome',
       snarky: 'Planned vs shipped',
       bold: 'Planned vs shipped—tight review.',
+      boldR21: 'Planned vs shipped—get intimate with the truth.',
+      snarkyR21: 'Planned vs shipped—stop lying on the scoreboard.',
     })
   }
   if (mode === 'standUp') {
-    return pSuffix(personality, {
+    return personaLine(personality, {
       warm: 'Today’s sprint commitments',
       coach: 'Commitments for today’s sprint slice',
       minimal: 'Commitments',
       playful: 'Today’s “yes I’m doing this” pile',
       snarky: 'Today’s commitments',
       bold: 'Bold commitments that still fit reality.',
+      boldR21: 'Today’s commitments—hot enough to mean it, tight enough to ship.',
+      snarkyR21: 'Today’s commitments—write them like you’re tired of your own bullshit.',
     })
   }
   return n
@@ -629,22 +690,26 @@ export type StandDownReviewParams =
 
 export function scrumStandDownReviewHeading(personality: ScrumMasterPersonality, params: StandDownReviewParams): string {
   if (params.kind === 'noPlan') {
-    return pSuffix(personality, {
+    return personaLine(personality, {
       warm: 'Sprint review · today',
       coach: 'Stand-down review · today',
       minimal: 'Review · today',
       playful: 'Today’s mini-retro',
       snarky: 'Sprint review · today',
       bold: 'Today’s review—short, sharp, and dangerously honest.',
+      boldR21: 'Today’s review—short, sweaty, and allergic to polite fiction.',
+      snarkyR21: 'Sprint review today—brace for the truth hammer.',
     })
   }
-  return pSuffix(personality, {
+  return personaLine(personality, {
     warm: 'Sprint review vs stand-up plan',
     coach: 'Review vs this morning’s plan',
     minimal: 'Plan vs done',
     playful: 'Script check: morning plan vs what actually filmed',
     snarky: 'Planned work vs completions',
     bold: 'Morning promises, afternoon evidence—make the introductions uncomfortable in the best way.',
+    boldR21: 'Morning promises meet afternoon evidence—make that reunion filthy-honest.',
+    snarkyR21: 'Morning plan vs what you actually did—time to feel bad in a useful way.',
   })
 }
 
@@ -652,43 +717,51 @@ function extraDoneFragment(personality: ScrumMasterPersonality, n: number): stri
   if (n <= 0) return ''
   const unit = n === 1 ? 'completion' : 'completions'
   const taskU = n === 1 ? 'task' : 'tasks'
-  return pSuffix(personality, {
+  return personaLine(personality, {
     warm: ` ${n} extra ${unit} already logged outside today’s stand-up list.`,
     coach: ` ${n} off-plan ${taskU} completed today (still worth noting).`,
     minimal: ` +${n} off-plan.`,
     playful: ` Plus ${n} sneaky-little off-list ${taskU} already tickled “done” (plot twists, not cheating).`,
     snarky: ` ${n} completions today were outside the stand-up plan.`,
     bold: ` ${n} off-plan ${unit}—impressive hustle; make sure the paper trail looks as good as you do.`,
+    boldR21: ` ${n} off-plan ${unit}—dirty little wins still count if you log them naked-honest.`,
+    snarkyR21: ` ${n} off-plan ${unit}—stop pretending those didn’t happen, you clever bastard.`,
   })
 }
 
 function extraDoneFragmentWithPlan(personality: ScrumMasterPersonality, n: number): string {
   if (n <= 0) return ''
   const taskU = n === 1 ? 'task' : 'tasks'
-  return pSuffix(personality, {
+  return personaLine(personality, {
     warm: ` · +${n} extra ${taskU} completed today outside that plan`,
     coach: ` · +${n} off-plan ${taskU} shipped today`,
     minimal: ` · +${n} off-plan`,
     playful: ` · +${n} bonus-scene ${taskU} not on the morning call sheet`,
     snarky: ` · +${n} done today outside the stand-up plan`,
     bold: ` · +${n} off-plan ${taskU}—tip your hat to the wins, side-eye the excuses.`,
+    boldR21: ` · +${n} off-plan ${taskU}—confess the bonus heat; it counts if it shipped.`,
+    snarkyR21: ` · +${n} off-plan ${taskU}—yeah, you did extra shit—own it without the humblebrag.`,
   })
 }
 
 export function scrumStandDownReviewBody(personality: ScrumMasterPersonality, params: StandDownReviewParams): string {
   if (params.kind === 'noPlan') {
-    const base = pSuffix(personality, {
+    const base = personaLine(personality, {
       warm: 'Capture what actually shipped: check off tasks you completed today, including work that was not on this morning’s stand-up plan.',
       coach: 'Mark what shipped today, including anything not captured at stand up — clarity now saves tomorrow.',
       minimal: 'Check off what shipped today.',
       playful: 'Honk the horn for anything you actually shipped today — even the bonus scenes that were not on this morning’s marquee.',
       snarky: 'Record every completion from today, including off-plan work.',
       bold: 'Log what really shipped—bonus wins count, vague vibes do not get a plus-one.',
+      boldR21:
+        'Log what actually shipped today—off-plan wins too—like you’re confessing after a good night: specific, breathless, no fake modesty.',
+      snarkyR21:
+        'Write down every fucking completion today, including the off-plan stuff you “forgot” to mention. Not porn, just receipts.',
     })
     return base + extraDoneFragment(personality, params.extraOutsidePlan)
   }
   const { plannedDone, plannedTotal, plannedOpen, extraOutsidePlan } = params
-  const mid = pSuffix(personality, {
+  const mid = personaLine(personality, {
     warm:
       plannedOpen > 0
         ? ` · ${plannedOpen} still open (note carry-over for tomorrow’s sprint)`
@@ -710,15 +783,25 @@ export function scrumStandDownReviewBody(personality: ScrumMasterPersonality, pa
       plannedOpen > 0
         ? ` · ${plannedOpen} still open—name the carry-over before nostalgia rewrites the night`
         : ` · plan cleared—rare, hot, and extremely your brand`,
+    boldR21:
+      plannedOpen > 0
+        ? ` · ${plannedOpen} still open—admit what you’ll hammer out tomorrow before you seduce yourself with “almost done”`
+        : ` · plan cleared—dangerously honest, stupidly rare`,
+    snarkyR21:
+      plannedOpen > 0
+        ? ` · ${plannedOpen} still open—write carry-over like you mean it, not like HR is reading over your shoulder`
+        : ` · all closed—don’t get cute, get accurate`,
   })
   return (
-    pSuffix(personality, {
+    personaLine(personality, {
       warm: `From stand up: ${plannedDone}/${plannedTotal} commitment${plannedTotal === 1 ? '' : 's'} marked done`,
       coach: `Stand-up plan: ${plannedDone}/${plannedTotal} marked done`,
       minimal: `${plannedDone}/${plannedTotal} done`,
       playful: `Morning bingo: ${plannedDone}/${plannedTotal} squares flipped`,
       snarky: `Stand-up plan: ${plannedDone}/${plannedTotal} done`,
       bold: `Stand-up score: ${plannedDone}/${plannedTotal}—no participation trophies, only the good kind of tension.`,
+      boldR21: `Stand-up score ${plannedDone}/${plannedTotal}—kiss the wins, flag the misses, keep it consensual with reality.`,
+      snarkyR21: `Stand-up score ${plannedDone}/${plannedTotal}—math doesn’t care about your feelings, so write it down anyway.`,
     }) +
     mid +
     extraDoneFragmentWithPlan(personality, extraOutsidePlan)
@@ -744,17 +827,9 @@ export function scrumNotifyPayload(
   personality: ScrumMasterPersonality,
 ): { title: string; body: string } {
   const W = (title: string, body: string) => ({ title, body })
-  const NOTIFY_BOLD21 = '\n— Bold R21: sensual, in-your-ear urgency—spicier than PG, still not a creep show.'
-  const NOTIFY_SNARKY21 = '\n— Snarky R21: filthy mouth, clean facts—vulgar roast energy, nothing sexual, HR can cry about it.'
-  const line = (
-    rec: Record<'warm' | 'coach' | 'minimal' | 'playful' | 'snarky' | 'bold', { title: string; body: string }>,
-  ): { title: string; body: string } => {
-    const full = {
-      ...rec,
-      boldR21: { title: rec.bold.title, body: `${rec.bold.body}${NOTIFY_BOLD21}` },
-      snarkyR21: { title: rec.snarky.title, body: `${rec.snarky.body}${NOTIFY_SNARKY21}` },
-    } as Record<ScrumMasterPersonality, { title: string; body: string }>
-    const v = full[personality] ?? full.warm
+  type NotifyRow = { title: string; body: string }
+  const line = (rec: Record<ScrumMasterPersonality, NotifyRow>): { title: string; body: string } => {
+    const v = rec[personality] ?? rec.warm
     return { title: v.title.replace('{name}', name), body: v.body }
   }
   switch (key) {
@@ -766,6 +841,14 @@ export function scrumNotifyPayload(
         playful: W('{name} · Stand up soon', 'Ten-minute trailer drop — stretch, hydrate, hype the day.'),
         snarky: W('{name} · Stand up soon', 'Stand up in ten minutes. Be ready.'),
         bold: W('{name} · Stand up soon', 'Ten minutes—pick what deserves the spotlight and your best smolder.'),
+        boldR21: W(
+          '{name} · Stand up soon',
+          'Ten minutes—pick commitments you’d still chase after midnight, not busywork that only looks good under office lights.',
+        ),
+        snarkyR21: W(
+          '{name} · Stand up soon',
+          'Stand up in ten minutes—trim the fantasy list before it makes you look stupid. Crass, not creepy.',
+        ),
       })
     case 'su-5':
       return line({
@@ -775,6 +858,11 @@ export function scrumNotifyPayload(
         playful: W('{name} · Stand up', 'Five minutes until go-time — wiggle the jitters out.'),
         snarky: W('{name} · Stand up', 'Five minutes to stand up.'),
         bold: W('{name} · Stand up', 'Five minutes—lose the fantasy wardrobe, keep what still fits reality.'),
+        boldR21: W(
+          '{name} · Stand up',
+          'Five minutes—cut anything you wouldn’t still want pressed up against a deadline tonight.',
+        ),
+        snarkyR21: W('{name} · Stand up', 'Five minutes to stand up—delete the cosplay tasks. Meaner words, zero sex trash.'),
       })
     case 'su-1':
       return line({
@@ -784,6 +872,8 @@ export function scrumNotifyPayload(
         playful: W('{name} · Stand up', 'Sixty-second drumroll — mic check for your day.'),
         snarky: W('{name} · Stand up', 'One minute. Open poco.'),
         bold: W('{name} · Stand up', 'One minute—open poco like you are meeting someone worth impressing.'),
+        boldR21: W('{name} · Stand up', 'One minute—open poco and say what you’ll finish like you mean it, breath and all.'),
+        snarkyR21: W('{name} · Stand up', 'One minute. Open poco or admit you’re scared of your own list.'),
       })
     case 'su-0':
       return line({
@@ -793,6 +883,11 @@ export function scrumNotifyPayload(
         playful: W('{name} · Stand up', 'And… scene! Stand up is open — jump in whenever you are ready.'),
         snarky: W('{name} · Stand up', 'Stand up. Open poco now.'),
         bold: W('{name} · Stand up', 'Stand up is open—bring commitments sharp enough to flirt with daylight.'),
+        boldR21: W(
+          '{name} · Stand up',
+          'Stand up is open—write what you’ll actually finish today like you’re done being coy with yourself.',
+        ),
+        snarkyR21: W('{name} · Stand up', 'Stand up. Open poco now and stop lying on the record.'),
       })
     case 'sd-30':
       return line({
@@ -802,6 +897,11 @@ export function scrumNotifyPayload(
         playful: W('{name} · Stand down', 'Half-hour trailer for the finale — gather receipts for what shipped.'),
         snarky: W('{name} · Stand down', 'Stand down soon. Prepare review.'),
         bold: W('{name} · Stand down', 'Stand down incoming—separate signal from swagger while you still look composed.'),
+        boldR21: W(
+          '{name} · Stand down',
+          'Stand down soon—start stacking proof of what you actually touched today, not the story you tell strangers.',
+        ),
+        snarkyR21: W('{name} · Stand down', 'Stand down soon—prep the review or get roasted later. Your call.'),
       })
     case 'sd-15':
       return line({
@@ -811,6 +911,14 @@ export function scrumNotifyPayload(
         playful: W('{name} · Stand down', 'Quarter-hour pep talk before the closing credits.'),
         snarky: W('{name} · Stand down', 'Fifteen minutes to stand down.'),
         bold: W('{name} · Stand down', 'Fifteen minutes—turn memory into evidence before it starts telling little white lies.'),
+        boldR21: W(
+          '{name} · Stand down',
+          'Fifteen minutes—turn mushy memory into receipts while it still feels a little indecent to admit the truth.',
+        ),
+        snarkyR21: W(
+          '{name} · Stand down',
+          'Fifteen minutes to stand down—capture carry-over before your brain starts editing the highlight reel.',
+        ),
       })
     case 'sd-5':
       return line({
@@ -820,6 +928,11 @@ export function scrumNotifyPayload(
         playful: W('{name} · Stand down', 'Five minutes until the silly little awards show for your day.'),
         snarky: W('{name} · Stand down', 'Five minutes to stand down.'),
         bold: W('{name} · Stand down', 'Five minutes—make peace with the plan before the debrief steals your thunder.'),
+        boldR21: W(
+          '{name} · Stand down',
+          'Five minutes—kiss the plan goodbye if it’s a lie, hug it tight if it’s real—then prove it with numbers.',
+        ),
+        snarkyR21: W('{name} · Stand down', 'Five minutes to stand down—line up done vs planned before I start swearing.'),
       })
     case 'sd-1':
       return line({
@@ -829,6 +942,8 @@ export function scrumNotifyPayload(
         playful: W('{name} · Stand down', 'Sixty seconds to cue the “what actually happened” montage.'),
         snarky: W('{name} · Stand down', 'One minute. Open poco.'),
         bold: W('{name} · Stand down', 'One minute—open poco and drop the act; the numbers want honesty.'),
+        boldR21: W('{name} · Stand down', 'One minute—open poco and strip the story to what your hands actually did.'),
+        snarkyR21: W('{name} · Stand down', 'One minute. Open poco—stand down doesn’t care about your excuses.'),
       })
     case 'sd-0':
       return line({
@@ -838,6 +953,11 @@ export function scrumNotifyPayload(
         playful: W('{name} · Stand down', 'Roll credits on today — stand down is open for hot takes and honest ticks.'),
         snarky: W('{name} · Stand down', 'Stand down. Review the day now.'),
         bold: W('{name} · Stand down', 'Stand down—let the scoreboard flirt with the truth, then walk away clean.'),
+        boldR21: W(
+          '{name} · Stand down',
+          'Stand down—drag the truth out of today while it’s still warm: planned vs shipped, no pillow talk.',
+        ),
+        snarkyR21: W('{name} · Stand down', 'Stand down. Review the day now—planned vs shipped, no fairy tales.'),
       })
     case 'su-after1':
       return line({
@@ -847,6 +967,11 @@ export function scrumNotifyPayload(
         playful: W('{name} · Stand up', 'Still in the opening credits — tweak your quest log while it feels fun.'),
         snarky: W('{name} · Stand up', 'Refine today’s commitments now.'),
         bold: W('{name} · Stand up', 'Polish the list—confidence is attractive, specificity is what gets you dinner.'),
+        boldR21: W(
+          '{name} · Stand up',
+          'Refine the list—make it tight enough to sting, honest enough to survive stand down.',
+        ),
+        snarkyR21: W('{name} · Stand up', 'Refine commitments now—stop cosplaying productivity.'),
       })
     case 'sd-after1':
       return line({
@@ -856,6 +981,14 @@ export function scrumNotifyPayload(
         playful: W('{name} · Stand down', 'Tag the cliffhangers and the bonus wins you sneaked in today.'),
         snarky: W('{name} · Stand down', 'Log carry-over and off-plan work from today.'),
         bold: W('{name} · Stand down', 'Log carry-over and extras—future-you loves a paper trail more than a mystery.'),
+        boldR21: W(
+          '{name} · Stand down',
+          'Log carry-over and sneaky wins—confess the messy stuff while it still feels a little too honest.',
+        ),
+        snarkyR21: W(
+          '{name} · Stand down',
+          'Log carry-over and off-plan shit—your backlog isn’t your therapist, stop whispering lies to it.',
+        ),
       })
   }
 }
