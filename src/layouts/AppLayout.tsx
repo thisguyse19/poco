@@ -7,6 +7,7 @@ import { useSettingsStore } from '../stores/settingsStore'
 import { useTimerStore } from '../stores/timerStore'
 import { pocoDevLab } from '../utils/pocoDevLab'
 import { triggerHaptic } from '../utils/haptics'
+import { ScrumMasterIntroGate } from '../components/scrum/ScrumMasterIntroGate'
 
 function navClass(active: boolean) {
   const base =
@@ -39,6 +40,7 @@ export function AppLayout() {
   const location = useLocation()
   const navigate = useNavigate()
   const profileName = useSettingsStore((s) => s.settings.profileName)
+  const scrumGateComplete = useSettingsStore((s) => s.settings.scrumMasterGateComplete)
   const timerRunning = useTimerStore((s) => s.isRunning)
   const hideNav = location.pathname === '/focus' && timerRunning
 
@@ -148,6 +150,8 @@ export function AppLayout() {
             document.body,
           )
         : null}
+
+      {!scrumGateComplete ? <ScrumMasterIntroGate /> : null}
     </div>
   )
 }

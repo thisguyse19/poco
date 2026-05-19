@@ -28,14 +28,21 @@ export const DEFAULT_SETTINGS: Settings = {
     name: 'Maya',
     standUpTime: '09:00',
     standDownTime: '17:30',
+    personality: 'warm',
   },
+  scrumMasterGateComplete: true,
 }
 
 const saved = storage.getSettings()
 const initial: Settings = {
   ...DEFAULT_SETTINGS,
   ...saved,
-  scrumMaster: { ...DEFAULT_SETTINGS.scrumMaster, ...saved.scrumMaster },
+  scrumMaster: {
+    ...DEFAULT_SETTINGS.scrumMaster,
+    ...saved.scrumMaster,
+    personality: saved.scrumMaster?.personality ?? DEFAULT_SETTINGS.scrumMaster.personality,
+  },
+  scrumMasterGateComplete: saved.scrumMasterGateComplete ?? DEFAULT_SETTINGS.scrumMasterGateComplete,
 }
 
 type SettingsState = {
@@ -71,6 +78,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       ...DEFAULT_SETTINGS,
       onboardingComplete: prev.onboardingComplete,
       profileName: prev.profileName,
+      scrumMasterGateComplete: prev.scrumMasterGateComplete,
       scrumMaster: prev.scrumMaster,
     }
     set({ settings: next })

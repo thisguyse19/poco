@@ -8,6 +8,7 @@ import { HomePage } from '../pages/HomePage'
 import { FocusPage } from '../pages/FocusPage'
 import { SettingsPage } from '../pages/SettingsPage'
 import { OnboardingPage } from '../pages/OnboardingPage'
+import { ScrumMasterSetupPage } from '../pages/ScrumMasterSetupPage'
 
 export function AppRoutes() {
   useTheme()
@@ -26,6 +27,7 @@ export function AppRoutes() {
 
   return (
     <Routes>
+      <Route path="/scrum-master-setup" element={<ScrumMasterSetupPage />} />
       <Route element={<AppLayout />}>
         <Route index element={<HomePage />} />
         <Route path="focus" element={<FocusPage />} />

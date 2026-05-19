@@ -141,6 +141,7 @@ export const storage = {
 /** Defaults used when merging partial import */
 const DEFAULT_EXPORT_SETTINGS: Settings = {
   onboardingComplete: true,
+  scrumMasterGateComplete: true,
   theme: 'light',
   density: 'default',
   fontScale: 'md',
@@ -165,5 +166,6 @@ const DEFAULT_EXPORT_SETTINGS: Settings = {
     name: 'Maya',
     standUpTime: '09:00',
     standDownTime: '17:30',
+    personality: 'warm',
   },
 }

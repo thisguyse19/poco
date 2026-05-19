@@ -457,7 +457,7 @@ input[type='number']::-webkit-outer-spin-button {
   animation: none !important;
 }
 
-/* Scrum Master: calm iridescent accent (not noisy) */
+/* Scrum Master: iridescent accent — visible day-round on panels & banner */
 @property --poco-scrum-a {
   syntax: '<angle>';
   inherits: false;
@@ -473,36 +473,45 @@ input[type='number']::-webkit-outer-spin-button {
   border: 1.5px solid transparent;
   background:
     linear-gradient(var(--bg-base), var(--bg-base)) padding-box,
-    conic-gradient(from var(--poco-scrum-a), #6b8cae, #8a7daa, #7a9f8a, #c4a574, #6b8cae) border-box;
+    conic-gradient(from var(--poco-scrum-a), #3d8bd4, #a855f7, #22c55e, #f59e0b, #3d8bd4) border-box;
   animation: poco-scrum-spin 14s linear infinite;
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 12%, transparent), 0 0 24px color-mix(in srgb, #8a7daa 18%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent),
+    0 0 32px color-mix(in srgb, #a855f7 32%, transparent),
+    0 0 48px color-mix(in srgb, #3d8bd4 18%, transparent);
 }
 [data-reduce-motion='true'] .poco-scrum-glow-border {
   animation: none;
   background:
     linear-gradient(var(--bg-base), var(--bg-base)) padding-box,
-    linear-gradient(135deg, #6b8cae, #8a7daa, #7a9f8a) border-box;
+    linear-gradient(135deg, #3d8bd4, #a855f7, #22c55e) border-box;
 }
 .poco-scrum-banner {
+  --poco-scrum-a: 0deg;
+  border: 1.5px solid transparent;
   background:
     linear-gradient(var(--bg-base), var(--bg-base)) padding-box,
-    conic-gradient(from var(--poco-scrum-a, 0deg), #6b8cae55, #8a7daa55, #7a9f8a55, #c4a57455, #6b8cae55) border-box;
-  border: 1.5px solid transparent;
-  animation: poco-scrum-spin 18s linear infinite;
+    conic-gradient(from var(--poco-scrum-a), #3d8bd4, #a855f7, #22c55e, #f59e0b, #3d8bd4) border-box;
+  animation: poco-scrum-spin 16s linear infinite;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, #a855f7 35%, transparent),
+    0 0 36px color-mix(in srgb, #a855f7 38%, transparent),
+    0 0 56px color-mix(in srgb, #3d8bd4 22%, transparent);
 }
 [data-reduce-motion='true'] .poco-scrum-banner {
   animation: none;
-  border-color: color-mix(in srgb, var(--accent) 35%, var(--border-subtle));
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border-subtle));
   background: var(--bg-base);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 .poco-scrum-text-gradient {
-  background: linear-gradient(120deg, #5a7a92, #7d6f9a, #5f8a6a, #b89a68);
+  background: linear-gradient(120deg, #2563eb, #9333ea, #16a34a, #d97706);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 .poco-scrum-placeholder-glow textarea::placeholder {
-  background: linear-gradient(120deg, #5a7a92, #7d6f9a, #5f8a6a);
+  background: linear-gradient(120deg, #2563eb, #9333ea, #16a34a);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -512,5 +521,71 @@ input[type='number']::-webkit-outer-spin-button {
   animation: poco-scrum-spin 12s linear infinite;
 }
 [data-reduce-motion='true'] .poco-scrum-row-pulse {
+  animation: none;
+}
+
+.poco-scrum-panel {
+  --poco-scrum-a: 0deg;
+  margin-bottom: 0.25rem;
+  border-radius: var(--radius-sm);
+  padding: 3px;
+  border: 1.5px solid transparent;
+  background:
+    linear-gradient(var(--bg-base), var(--bg-base)) padding-box,
+    conic-gradient(from var(--poco-scrum-a), #3d8bd4, #a855f7, #22c55e, #f59e0b, #3d8bd4) border-box;
+  animation: poco-scrum-spin 18s linear infinite;
+  box-shadow:
+    0 0 40px color-mix(in srgb, #a855f7 28%, transparent),
+    inset 0 0 28px color-mix(in srgb, #3d8bd4 14%, transparent);
+}
+[data-reduce-motion='true'] .poco-scrum-panel {
+  animation: none;
+  background: var(--bg-base);
+  border-color: color-mix(in srgb, #a855f7 40%, var(--border-subtle));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #a855f7 20%, transparent);
+}
+
+.poco-scrum-title-glow {
+  background: linear-gradient(120deg, #2563eb, #9333ea, #16a34a, #d97706);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: poco-scrum-text-shimmer 5s ease-in-out infinite;
+  text-shadow: 0 0 18px color-mix(in srgb, #a855f7 45%, transparent);
+}
+@keyframes poco-scrum-text-shimmer {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+[data-reduce-motion='true'] .poco-scrum-title-glow {
+  animation: none;
+  background-position: 0% 50%;
+}
+
+.poco-scrum-input-inner-glow {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, #a855f7 35%, transparent),
+    inset 0 0 14px color-mix(in srgb, #3d8bd4 22%, transparent);
+  border-radius: 2px;
+}
+
+@keyframes poco-sm-session-root {
+  from {
+    opacity: 0.45;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.poco-sm-session-enter {
+  animation: poco-sm-session-root 520ms var(--ease-out-soft) both;
+}
+[data-reduce-motion='true'] .poco-sm-session-enter {
   animation: none;
 }

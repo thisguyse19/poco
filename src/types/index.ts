@@ -69,6 +69,9 @@ export type LandingView = 'tasks' | 'focus'
 
 export type ScrumMasterGender = 'male' | 'female'
 
+/** Coaching tone for Scrum Master copy and nudges */
+export type ScrumMasterPersonality = 'warm' | 'coach' | 'minimal' | 'playful' | 'stern'
+
 export interface ScrumMasterSettings {
   enabled: boolean
   gender: ScrumMasterGender
@@ -77,10 +80,13 @@ export interface ScrumMasterSettings {
   /** Local day wall time "HH:mm" */
   standUpTime: string
   standDownTime: string
+  personality: ScrumMasterPersonality
 }
 
 export interface Settings {
   onboardingComplete: boolean
+  /** After main onboarding, one-time Scrum Master intro + optional setup has been finished or skipped */
+  scrumMasterGateComplete: boolean
   theme: ThemeName
   density: DensityName
   /** Root rem scale for body copy */
