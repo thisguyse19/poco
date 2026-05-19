@@ -63,6 +63,18 @@ export function PwaUpdateToast() {
     return () => document.removeEventListener('visibilitychange', onVis)
   }, [])
 
+  /** Hourly update check while the tab stays open (e.g. long-lived PWA). */
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      const reg = regRef.current
+      if (!reg) return
+      void probeServiceWorkerUpdate(reg).then((w) => {
+        if (w) setWaiting(true)
+      })
+    }, 60 * 60 * 1000)
+    return () => window.clearInterval(id)
+  }, [])
+
   const onUpdate = useCallback(() => {
     const reg = regRef.current
     if (!reg) return

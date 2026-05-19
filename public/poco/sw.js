@@ -1,7 +1,16 @@
-/* poco — offline shell; user-confirmed updates */
+/* poco service worker: offline shell + user-confirmed updates.
+ * Network-first for app URLs so new deploys are not stuck behind a stale precache. */
 const SCOPE = self.registration.scope
 const CORE = [SCOPE, SCOPE + 'index.html']
-const CACHE = 'poco-shell-v4'
+const CACHE = 'poco-shell-v6'
+
+function scopePath() {
+  try {
+    return new URL(SCOPE).pathname
+  } catch {
+    return '/poco/'
+  }
+}
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(CORE).catch(() => undefined)))
@@ -39,10 +48,39 @@ self.addEventListener('message', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event
   if (request.method !== 'GET') return
+
+  let url
+  try {
+    url = new URL(request.url)
+  } catch {
+    return
+  }
+
+  if (url.origin !== new URL(SCOPE).origin) return
+
+  const pathPrefix = scopePath().replace(/\/$/, '') || '/poco'
+  if (!(url.pathname === pathPrefix || url.pathname.startsWith(`${pathPrefix}/`))) return
+
   event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached
-      return fetch(request).catch(() => caches.match(SCOPE))
-    }),
+    fetch(request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.ok) {
+          const isShell =
+            url.pathname === pathPrefix ||
+            url.pathname === `${pathPrefix}/` ||
+            url.pathname === `${pathPrefix}/index.html` ||
+            (url.pathname.startsWith(`${pathPrefix}/`) && url.pathname.endsWith('/index.html'))
+          if (isShell) {
+            const copy = networkResponse.clone()
+            void caches.open(CACHE).then((cache) => cache.put(request, copy).catch(() => undefined))
+          }
+        }
+        return networkResponse
+      })
+      .catch(() =>
+        caches
+          .match(request)
+          .then((cached) => cached || caches.match(SCOPE + 'index.html') || caches.match(SCOPE)),
+      ),
   )
 })
