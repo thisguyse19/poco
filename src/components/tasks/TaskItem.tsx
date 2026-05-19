@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Priority, ScheduledFor, Task } from '../../types'
 import { formatTaskDueDisplay } from '../../utils/formatTaskDue'
@@ -113,12 +113,18 @@ export function TaskItem({
   const [dragDelta, setDragDelta] = useState(0)
   const [dragOriginOpen, setDragOriginOpen] = useState(false)
   const [gestureActive, setGestureActive] = useState(false)
-  const startX = useRef(0)
   const dragDeltaRef = useRef(0)
   const dragRafRef = useRef<number | null>(null)
-  const maxOvershootRef = useRef(0)
   const suppressNextClick = useRef(false)
   const [justCompleted, setJustCompleted] = useState(false)
+  const swipeSurfaceRef = useRef<HTMLDivElement>(null)
+  const touchSessionRef = useRef<{ axis: null | 'h' | 'v'; startX: number; startY: number; anchorX: number }>({
+    axis: null,
+    startX: 0,
+    startY: 0,
+    anchorX: 0,
+  })
+  const dragOriginOpenAtGestureRef = useRef(false)
 
   const rowSwipeOpen = swipeOpenId === task.id
 
@@ -170,57 +176,129 @@ export function TaskItem({
     })
   }, [])
 
-  const onTouchStart = (e: React.TouchEvent) => {
-    if (task.completed) return
-    suppressNextClick.current = false
-    startX.current = e.touches[0].clientX
-    setDragOriginOpen(rowSwipeOpen)
-    setGestureActive(true)
-    setDragDelta(0)
-    dragDeltaRef.current = 0
-    maxOvershootRef.current = 0
-  }
+  const handlersRef = useRef({
+    taskCompleted: task.completed,
+    taskId: task.id,
+    rowSwipeOpen,
+    onRequestDelete,
+    closeSwipe,
+    openSwipe,
+    setDragOriginOpen,
+    setGestureActive,
+    setDragDelta,
+    scheduleDragFrame,
+  })
 
-  const onTouchMove = (e: React.TouchEvent) => {
-    if (task.completed) return
-    const delta = e.touches[0].clientX - startX.current
-    dragDeltaRef.current = delta
-    scheduleDragFrame()
-    if (Math.abs(delta) > 14) suppressNextClick.current = true
-    const tx = dragOriginOpen ? txOpenDrag(delta) : txClosed(delta)
-    maxOvershootRef.current = Math.max(maxOvershootRef.current, Math.max(0, -tx - SWIPE_BASE))
-  }
-
-  const onTouchEnd = () => {
-    if (task.completed) return
-    if (dragRafRef.current != null) {
-      cancelAnimationFrame(dragRafRef.current)
-      dragRafRef.current = null
+  useLayoutEffect(() => {
+    handlersRef.current = {
+      taskCompleted: task.completed,
+      taskId: task.id,
+      rowSwipeOpen,
+      onRequestDelete,
+      closeSwipe,
+      openSwipe,
+      setDragOriginOpen,
+      setGestureActive,
+      setDragDelta,
+      scheduleDragFrame,
     }
-    setDragDelta(dragDeltaRef.current)
-    const d = dragDeltaRef.current
-    const finalTx = dragOriginOpen ? txOpenDrag(d) : txClosed(d)
-    maxOvershootRef.current = Math.max(maxOvershootRef.current, Math.max(0, -finalTx - SWIPE_BASE))
+  }, [
+    task.completed,
+    task.id,
+    rowSwipeOpen,
+    onRequestDelete,
+    closeSwipe,
+    openSwipe,
+    setDragOriginOpen,
+    setGestureActive,
+    setDragDelta,
+    scheduleDragFrame,
+  ])
 
-    if (maxOvershootRef.current > 14) {
-      onRequestDelete(task.id)
-      triggerHaptic([30, 40, 30])
-      closeSwipe()
-    } else if (!dragOriginOpen) {
-      if (finalTx <= -SWIPE_BASE * 0.35) openSwipe()
-      else closeSwipe()
-    } else {
-      if (finalTx > -SWIPE_BASE * 0.38) closeSwipe()
-      else openSwipe()
-    }
-    setDragDelta(0)
-    dragDeltaRef.current = 0
-    maxOvershootRef.current = 0
-    setGestureActive(false)
-    window.setTimeout(() => {
+  useEffect(() => {
+    if (task.completed) return
+    const el = swipeSurfaceRef.current
+    if (!el) return
+
+    const onTouchStart = (e: TouchEvent) => {
+      const h = handlersRef.current
+      if (h.taskCompleted) return
+      const t = e.touches[0]
+      if (!t) return
       suppressNextClick.current = false
-    }, 32)
-  }
+      touchSessionRef.current = { axis: null, startX: t.clientX, startY: t.clientY, anchorX: t.clientX }
+      dragOriginOpenAtGestureRef.current = h.rowSwipeOpen
+      h.setDragOriginOpen(h.rowSwipeOpen)
+      h.setGestureActive(true)
+      h.setDragDelta(0)
+      dragDeltaRef.current = 0
+    }
+
+    const onTouchMove = (e: TouchEvent) => {
+      const h = handlersRef.current
+      if (h.taskCompleted) return
+      const t = e.touches[0]
+      if (!t) return
+      const sess = touchSessionRef.current
+      const rdx = t.clientX - sess.startX
+      const rdy = t.clientY - sess.startY
+      if (sess.axis === null) {
+        if (Math.abs(rdx) <= 10 && Math.abs(rdy) <= 10) return
+        sess.axis = Math.abs(rdx) > Math.abs(rdy) ? 'h' : 'v'
+        if (sess.axis === 'h') sess.anchorX = t.clientX
+      }
+      if (sess.axis === 'v') return
+      e.preventDefault()
+      const delta = t.clientX - sess.anchorX
+      dragDeltaRef.current = delta
+      h.scheduleDragFrame()
+      if (Math.abs(delta) > 14) suppressNextClick.current = true
+    }
+
+    const onTouchEnd = () => {
+      const h = handlersRef.current
+      if (h.taskCompleted) return
+      if (dragRafRef.current != null) {
+        cancelAnimationFrame(dragRafRef.current)
+        dragRafRef.current = null
+      }
+      h.setDragDelta(dragDeltaRef.current)
+      const d = dragDeltaRef.current
+      const originOpen = dragOriginOpenAtGestureRef.current
+      const finalTx = originOpen ? txOpenDrag(d) : txClosed(d)
+      const finalDeleteGrow = Math.max(0, -finalTx - SWIPE_BASE)
+
+      if (finalDeleteGrow > 14) {
+        h.onRequestDelete(h.taskId)
+        triggerHaptic([30, 40, 30])
+        h.closeSwipe()
+      } else if (!originOpen) {
+        if (finalTx <= -SWIPE_BASE * 0.35) h.openSwipe()
+        else h.closeSwipe()
+      } else {
+        if (finalTx > -SWIPE_BASE * 0.38) h.closeSwipe()
+        else h.openSwipe()
+      }
+      touchSessionRef.current.axis = null
+      h.setDragDelta(0)
+      dragDeltaRef.current = 0
+      h.setGestureActive(false)
+      window.setTimeout(() => {
+        suppressNextClick.current = false
+      }, 32)
+    }
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true })
+    el.addEventListener('touchmove', onTouchMove, { passive: false })
+    el.addEventListener('touchend', onTouchEnd)
+    el.addEventListener('touchcancel', onTouchEnd)
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart)
+      el.removeEventListener('touchmove', onTouchMove)
+      el.removeEventListener('touchend', onTouchEnd)
+      el.removeEventListener('touchcancel', onTouchEnd)
+    }
+  }, [task.completed, task.id])
 
   return (
     <div
@@ -286,14 +364,12 @@ export function TaskItem({
       ) : null}
 
       <div
+        ref={swipeSurfaceRef}
         data-swipe-open={rowSwipeOpen || dragDelta !== 0 ? task.id : undefined}
         className={`relative z-[1] bg-[var(--bg-elevated)] px-2 py-[var(--task-py)] will-change-transform [transition-timing-function:var(--ease-ios)] ${
           gestureActive || dragDelta !== 0 ? '' : 'transition-transform duration-200'
         } ${task.completed ? 'opacity-60' : ''} ${justCompleted ? 'animate-taskCompleteSoft' : ''}`}
-        style={{ transform: `translate3d(${displayTranslate}px,0,0)`, touchAction: 'pan-x pan-y' }}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
+        style={{ transform: `translate3d(${displayTranslate}px,0,0)`, touchAction: 'pan-y' }}
       >
         <div className="flex items-center gap-2">
           <button

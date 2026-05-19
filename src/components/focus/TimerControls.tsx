@@ -11,6 +11,8 @@ type Props = {
   sessionsCompleted: number
   focusSessionsInCycle: number
   compact?: boolean
+  /** Wider ring and typography on large screens (e.g. active focus session). */
+  phaseExpansive?: boolean
   /** Rendered directly above the timer ring (e.g. task picker chip) */
   topSlot?: ReactNode
   onToggle: () => void
@@ -39,6 +41,7 @@ export function TimerControls({
   sessionsCompleted,
   focusSessionsInCycle,
   compact,
+  phaseExpansive,
   topSlot,
   onToggle,
   onReset,
@@ -100,7 +103,11 @@ export function TimerControls({
         />
         <svg
           viewBox="0 0 140 140"
-          className={`relative z-[1] aspect-square w-[min(88vw,220px)] max-w-[220px] shrink-0 transition-[filter] duration-500 ${ringClass}`}
+          className={`relative z-[1] aspect-square shrink-0 transition-[filter] duration-500 ${ringClass} ${
+            phaseExpansive
+              ? 'w-[min(88vw,260px)] max-w-[260px] md:w-[min(52vw,400px)] md:max-w-[400px]'
+              : 'w-[min(88vw,220px)] max-w-[220px] md:max-w-[260px]'
+          }`}
           aria-hidden
         >
           <g transform="translate(70 70) rotate(-90) translate(-70 -70)">
@@ -122,7 +129,11 @@ export function TimerControls({
         </svg>
         <div
           className={`pointer-events-none absolute inset-0 z-[2] flex flex-col items-center justify-center font-serif ${
-            compact ? 'text-[2.5rem]' : 'text-[3.25rem]'
+            compact
+              ? 'text-[2.5rem]'
+              : phaseExpansive
+                ? 'text-[3.25rem] md:text-[4.25rem]'
+                : 'text-[3.25rem]'
           } tracking-tight text-[var(--text-primary)]`}
         >
           {formatted}
