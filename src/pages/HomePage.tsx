@@ -276,10 +276,7 @@ export function HomePage() {
           {subtitle.kind === 'single' ? (
             <p className="mt-1 text-sm text-[var(--text-secondary)]">{subtitle.text}</p>
           ) : (
-            <>
-              <p className="mt-1 text-sm text-[var(--text-secondary)]">{subtitle.dateLine}</p>
-              <p className="mt-0.5 text-sm text-[var(--text-secondary)]">Drag and rearrange your tasks for the next few days</p>
-            </>
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">{subtitle.dateLine}</p>
           )}
           {sm.enabled && notifyDefault ? (
             <button
