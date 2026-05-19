@@ -75,11 +75,33 @@ export function SettingsPage() {
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <PageHeader
         title="Settings"
-        subtitle="Tune appearance, focus, and data."
+        subtitle="Tune your profile, appearance, focus, and data."
         onTitleClick={onSettingsTitleTap}
         onSubtitleLongPress={onSubtitleLongPress}
       />
       <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-[calc(var(--poco-mobile-nav-height)+1rem)] pt-2 md:px-6">
+        <section className="mb-8 space-y-3">
+          <h3 className="font-serif text-lg">Profile</h3>
+          <div className="rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-3 text-sm">
+            <label htmlFor="settings-profile-name" className="block font-medium text-[var(--text-primary)]">
+              Your name
+            </label>
+            <p className="mt-1 text-xs text-[var(--text-tertiary)]">
+              Used in the Tasks home greeting and on the desktop sidebar.
+            </p>
+            <input
+              id="settings-profile-name"
+              type="text"
+              className="poco-input mt-3 w-full rounded-none border border-[var(--border-subtle)] bg-[var(--bg-base)] px-3 py-2.5 text-sm"
+              placeholder="Your name"
+              autoComplete="name"
+              enterKeyHint="done"
+              value={settings.profileName}
+              onChange={(e) => updateSettings({ profileName: e.target.value })}
+            />
+          </div>
+        </section>
+
         <section className="mb-8 space-y-3">
           <h3 className="font-serif text-lg">Appearance</h3>
 
