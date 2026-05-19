@@ -57,7 +57,7 @@ function taskMatchesSearch(t: Task, q: string): boolean {
   return blob.includes(needle)
 }
 
-/** When SM rhythm is off, bucket Scrum Master tasks under General so they share one list with a ◆ marker. */
+/** When SM rhythm is off, bucket Scrum Master tasks under General so they share one list with an SM marker. */
 function todayBucketCategory(t: Task, smRhythmActive: boolean): string {
   const c = t.category || 'General'
   if (smRhythmActive || c !== SCRUM_MASTER_CATEGORY) return c
@@ -79,8 +79,6 @@ export type TaskListScrum = {
   standDownLive: boolean
   /** When true, show the dedicated “Name · Scrum Master” category; otherwise SM tasks merge into General with a ◆ marker. */
   smRhythmActive: boolean
-  /** After stand down is ended for today, completed SM tasks move to Done instead of lingering under Today. */
-  standDownCompletedForDay: boolean
   /** Live stand up / stand down — end ritual control (shown under the SM banner). */
   endScrum: { label: string; onClick: () => void } | null
 }
@@ -149,15 +147,11 @@ export function TaskList({
     for (const t of tasks) {
       if (!taskMatchesSearch(t, searchQuery)) continue
       if (t.completed) {
-        if (scrum?.enabled && scrum.standDownCompletedForDay && t.scheduledFor === 'today' && t.category === SCRUM_MASTER_CATEGORY) {
-          completed.push(t)
-          continue
-        }
         if (t.scheduledFor === 'today' && isScrumMasterCompletedLingering(t, nowMs)) {
           today.push(t)
           continue
         }
-        if (t.scheduledFor === 'today' && t.category === SCRUM_MASTER_CATEGORY) {
+        if (scrum?.enabled && scrum.smRhythmActive && t.scheduledFor === 'today' && t.category === SCRUM_MASTER_CATEGORY) {
           today.push(t)
           continue
         }
@@ -306,7 +300,11 @@ export function TaskList({
       {inbox.length > 0 ? (
         <section className="mb-[var(--section-gap)]">
           {sectionTitle('Inbox')}
-          <div className="flex flex-col gap-[var(--list-row-gap)]">{inbox.map((t) => renderTask(t, false))}</div>
+          <div className="flex flex-col gap-[var(--list-row-gap)]">
+            {inbox.map((t) =>
+              renderTask(t, Boolean(scrum?.enabled && t.category === SCRUM_MASTER_CATEGORY)),
+            )}
+          </div>
         </section>
       ) : null}
 
@@ -388,7 +386,9 @@ export function TaskList({
         <section className="mb-[var(--section-gap)]">
           {sectionTitle('Tomorrow')}
           <div className="flex flex-col gap-[var(--list-row-gap)]">
-            {tomorrow.map((t) => renderTask(t, false))}
+            {tomorrow.map((t) =>
+              renderTask(t, Boolean(scrum?.enabled && t.category === SCRUM_MASTER_CATEGORY)),
+            )}
           </div>
         </section>
       ) : null}
@@ -397,7 +397,9 @@ export function TaskList({
         <section className="mb-[var(--section-gap)]">
           {sectionTitle('Someday')}
           <div className="flex flex-col gap-[var(--list-row-gap)]">
-            {someday.map((t) => renderTask(t, false))}
+            {someday.map((t) =>
+              renderTask(t, Boolean(scrum?.enabled && t.category === SCRUM_MASTER_CATEGORY)),
+            )}
           </div>
         </section>
       ) : null}
@@ -406,7 +408,12 @@ export function TaskList({
         <section className="mb-[var(--section-gap)]">
           {sectionTitle('Done')}
           <div className="flex flex-col gap-[var(--list-row-gap)] opacity-90">
-            {completed.map((t) => renderTask(t, false))}
+            {completed.map((t) =>
+              renderTask(
+                t,
+                Boolean(scrum?.enabled && t.category === SCRUM_MASTER_CATEGORY),
+              ),
+            )}
           </div>
         </section>
       ) : null}

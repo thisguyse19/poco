@@ -434,8 +434,8 @@ export function TaskItem({
               <div>
                 <div className="flex items-center gap-1.5">
                   {scrumMark ? (
-                    <span className="shrink-0 text-[10px] font-bold leading-none text-[var(--accent)]" title="Scrum Master">
-                      <span className="poco-scrum-text-gradient">◆</span>
+                    <span className="shrink-0 leading-none" title="Scrum Master">
+                      <Icon name="scrum" size={13} className="shrink-0" />
                     </span>
                   ) : null}
                   {priorityDot(task.priority)}

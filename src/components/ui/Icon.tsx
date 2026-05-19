@@ -1,3 +1,5 @@
+import { useId } from 'react'
+
 type IconName =
   | 'check'
   | 'plus'
@@ -21,6 +23,7 @@ type IconName =
   | 'flame'
   | 'search'
   | 'tag'
+  | 'scrum'
 
 export function Icon({
   name,
@@ -31,6 +34,7 @@ export function Icon({
   size?: number
   className?: string
 }) {
+  const scrumStrokeGradId = useId().replace(/:/g, '')
   const s = { width: size, height: size, display: 'block' } as const
   const stroke = 'currentColor'
   const common = { fill: 'none', stroke, strokeWidth: 1.75, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
@@ -183,6 +187,30 @@ export function Icon({
           <circle cx="8" cy="8" r="1.25" fill={stroke} stroke="none" />
         </svg>
       )
+    case 'scrum': {
+      const href = `url(#${scrumStrokeGradId})`
+      return (
+        <svg viewBox="0 0 24 24" style={s} className={className} aria-hidden>
+          <defs>
+            <linearGradient id={scrumStrokeGradId} x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#4a6e9b" />
+              <stop offset="38%" stopColor="#6d5aa0" />
+              <stop offset="72%" stopColor="#4a8f6e" />
+              <stop offset="100%" stopColor="#9a7d4a" />
+            </linearGradient>
+          </defs>
+          <circle cx="12" cy="12" r="9" fill="none" stroke={href} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+          <path
+            fill="none"
+            stroke={href}
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M8.5 12.5l2 2 5-6.5"
+          />
+        </svg>
+      )
+    }
     default:
       return <span style={s} className={className} />
   }
