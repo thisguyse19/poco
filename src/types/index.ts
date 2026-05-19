@@ -70,7 +70,7 @@ export type LandingView = 'tasks' | 'focus'
 export type ScrumMasterGender = 'male' | 'female'
 
 /** Coaching tone for Scrum Master copy and nudges */
-export type ScrumMasterPersonality = 'warm' | 'coach' | 'minimal' | 'playful' | 'stern'
+export type ScrumMasterPersonality = 'warm' | 'coach' | 'minimal' | 'playful' | 'stern' | 'bold'
 
 export interface ScrumMasterSettings {
   enabled: boolean
