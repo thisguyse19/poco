@@ -31,7 +31,7 @@ function sortTodayTasksWithSmLingerAtTop(tasks: Task[], nowMs: number): Task[] {
 
 function sectionTitle(text: string) {
   return (
-    <h3 className="px-1 py-1.5 font-sans text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--text-tertiary)]">
+    <h3 className="px-1 py-1.5 font-sans text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--text-tertiary)] md:px-0 md:py-2 md:text-xs">
       {text}
     </h3>
   )
@@ -300,7 +300,7 @@ export function TaskList({
       {inbox.length > 0 ? (
         <section className="mb-[var(--section-gap)]">
           {sectionTitle('Inbox')}
-          <div className="flex flex-col gap-[var(--list-row-gap)]">
+          <div className="flex flex-col gap-[var(--list-row-gap)] md:grid md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 md:gap-[var(--list-row-gap)]">
             {inbox.map((t) =>
               renderTask(t, Boolean(scrum?.enabled && t.category === SCRUM_MASTER_CATEGORY)),
             )}
@@ -323,7 +323,9 @@ export function TaskList({
           ) : null}
 
           {scrum?.enabled && scrum.flatToday ? (
-            <div className={`flex flex-col gap-[var(--list-row-gap)] ${reconciling ? 'opacity-30 transition-opacity duration-300' : ''}`}>
+            <div
+              className={`flex flex-col gap-[var(--list-row-gap)] md:grid md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 md:gap-[var(--list-row-gap)] ${reconciling ? 'opacity-30 transition-opacity duration-300' : ''}`}
+            >
               {sortedFlatToday.map((t) =>
                 renderTask(
                   t,
@@ -332,7 +334,7 @@ export function TaskList({
               )}
             </div>
           ) : todayByCategory.length > 0 ? (
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 md:grid md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 md:items-start md:gap-4">
               {todayByCategory.map(({ cat, items }) => {
                 const expanded = map[cat] !== false
                 const isSm = cat === SCRUM_MASTER_CATEGORY && scrum?.enabled && scrum.smRhythmActive
@@ -341,19 +343,19 @@ export function TaskList({
                   <>
                     <button
                       type="button"
-                      className="poco-press mb-1.5 flex w-full items-center gap-2.5 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-base)] px-2.5 py-1.5 text-left md:px-3 md:py-2"
+                      className="poco-press mb-1.5 flex w-full items-center gap-2.5 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-base)] px-2.5 py-1.5 text-left md:px-3 md:py-2.5"
                       onClick={() => toggle(cat)}
                     >
                       <span
-                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-none border border-[var(--border-default)] bg-[var(--bg-elevated)] text-xs font-bold text-[var(--accent)]"
+                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-none border border-[var(--border-default)] bg-[var(--bg-elevated)] text-xs font-bold text-[var(--accent)] md:h-7 md:w-7 md:text-sm"
                         aria-hidden
                       >
                         {expanded ? '−' : '+'}
                       </span>
-                      <span className="min-w-0 flex-1 truncate text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)]">
+                      <span className="min-w-0 flex-1 truncate text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)] md:text-sm">
                         {title}
                       </span>
-                      <span className="shrink-0 text-[10px] font-medium tabular-nums text-[var(--text-tertiary)]">{subtitle}</span>
+                      <span className="shrink-0 text-[10px] font-medium tabular-nums text-[var(--text-tertiary)] md:text-xs">{subtitle}</span>
                     </button>
                     {expanded ? (
                       <div className="flex flex-col gap-[var(--list-row-gap)] border-l border-[var(--border-subtle)] pl-2 md:pl-3">
@@ -382,32 +384,35 @@ export function TaskList({
         </section>
       ) : null}
 
-      {tomorrow.length > 0 ? (
-        <section className="mb-[var(--section-gap)]">
-          {sectionTitle('Tomorrow')}
-          <div className="flex flex-col gap-[var(--list-row-gap)]">
-            {tomorrow.map((t) =>
-              renderTask(t, Boolean(scrum?.enabled && t.category === SCRUM_MASTER_CATEGORY)),
-            )}
-          </div>
-        </section>
-      ) : null}
-
-      {someday.length > 0 ? (
-        <section className="mb-[var(--section-gap)]">
-          {sectionTitle('Someday')}
-          <div className="flex flex-col gap-[var(--list-row-gap)]">
-            {someday.map((t) =>
-              renderTask(t, Boolean(scrum?.enabled && t.category === SCRUM_MASTER_CATEGORY)),
-            )}
-          </div>
-        </section>
+      {tomorrow.length > 0 || someday.length > 0 ? (
+        <div className="mb-[var(--section-gap)] md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-2 xl:grid-cols-2 2xl:grid-cols-2">
+          {tomorrow.length > 0 ? (
+            <section className={someday.length > 0 ? 'mb-[var(--section-gap)] md:mb-0' : ''}>
+              {sectionTitle('Tomorrow')}
+              <div className="flex flex-col gap-[var(--list-row-gap)] md:gap-[var(--list-row-gap)]">
+                {tomorrow.map((t) =>
+                  renderTask(t, Boolean(scrum?.enabled && t.category === SCRUM_MASTER_CATEGORY)),
+                )}
+              </div>
+            </section>
+          ) : null}
+          {someday.length > 0 ? (
+            <section>
+              {sectionTitle('Someday')}
+              <div className="flex flex-col gap-[var(--list-row-gap)]">
+                {someday.map((t) =>
+                  renderTask(t, Boolean(scrum?.enabled && t.category === SCRUM_MASTER_CATEGORY)),
+                )}
+              </div>
+            </section>
+          ) : null}
+        </div>
       ) : null}
 
       {completed.length > 0 ? (
         <section className="mb-[var(--section-gap)]">
           {sectionTitle('Done')}
-          <div className="flex flex-col gap-[var(--list-row-gap)] opacity-90">
+          <div className="flex flex-col gap-[var(--list-row-gap)] opacity-90 md:grid md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 md:gap-[var(--list-row-gap)]">
             {completed.map((t) =>
               renderTask(
                 t,

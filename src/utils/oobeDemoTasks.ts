@@ -39,7 +39,7 @@ export function buildOobeDemoTasks(): Task[] {
   return [
     mk('Demo · Swipe this row to move it (Later, Tomorrow, or delete)', 'today', today),
     mk('Demo · Tap the + bar above to add a task in plain English', 'today', today),
-    mk('Demo · Open Week in the tab bar to drag tasks onto dates', 'today', today),
-    mk('Demo · This one is on tomorrow — try it in Week view', 'tomorrow', tomorrow),
+    mk('Demo · Open Ahead in the tab bar to drag tasks onto dates', 'today', today),
+    mk('Demo · This one is on tomorrow — try it in Ahead', 'tomorrow', tomorrow),
   ]
 }

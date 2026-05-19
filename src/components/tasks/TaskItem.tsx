@@ -369,7 +369,7 @@ export function TaskItem({
       <div
         ref={swipeSurfaceRef}
         data-swipe-open={rowSwipeOpen || dragDelta !== 0 ? task.id : undefined}
-        className={`relative z-[1] bg-[var(--bg-elevated)] px-2 py-[var(--task-py)] will-change-transform [transition-timing-function:var(--ease-ios)] ${
+        className={`relative z-[1] bg-[var(--bg-elevated)] px-2 py-[var(--task-py)] will-change-transform [transition-timing-function:var(--ease-ios)] md:px-3.5 ${
           gestureActive || dragDelta !== 0 ? '' : 'transition-transform duration-200'
         } ${task.completed ? 'opacity-60' : ''} ${justCompleted ? 'animate-taskCompleteSoft' : ''}`}
         style={{ transform: `translate3d(${displayTranslate}px,0,0)`, touchAction: 'pan-y' }}
@@ -441,7 +441,7 @@ export function TaskItem({
               <div>
                 <div className="flex items-center gap-1.5">
                   {priorityDot(task.priority)}
-                  <p className="text-sm font-medium leading-snug text-[var(--text-primary)]">
+                  <p className="text-sm font-medium leading-snug text-[var(--text-primary)] md:text-base">
                     {task.title}
                     {showTaskIds ? (
                       <span className="ml-1 align-middle font-mono text-[10px] font-normal text-[var(--text-tertiary)]">
@@ -451,7 +451,7 @@ export function TaskItem({
                   </p>
                 </div>
                 {task.description ? (
-                  <p className="mt-0.5 text-xs leading-snug text-[var(--text-secondary)]">{task.description}</p>
+                  <p className="mt-0.5 text-xs leading-snug text-[var(--text-secondary)] md:text-sm">{task.description}</p>
                 ) : null}
                 <div className="mt-0.5 flex flex-wrap items-center gap-1">
                   {task.pinned ? <Icon name="pin" size={12} className="text-[var(--pin-color)]" /> : null}
