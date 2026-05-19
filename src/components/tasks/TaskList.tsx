@@ -57,6 +57,13 @@ function taskMatchesSearch(t: Task, q: string): boolean {
   return blob.includes(needle)
 }
 
+/** When SM rhythm is off, bucket Scrum Master tasks under General so they share one list with a ◆ marker. */
+function todayBucketCategory(t: Task, smRhythmActive: boolean): string {
+  const c = t.category || 'General'
+  if (smRhythmActive || c !== SCRUM_MASTER_CATEGORY) return c
+  return 'General'
+}
+
 export type TaskListScrum = {
   enabled: boolean
   masterName: string
@@ -70,6 +77,8 @@ export type TaskListScrum = {
   onReconcileFlat: () => void
   standUpLive: boolean
   standDownLive: boolean
+  /** When true, show the dedicated “Name · Scrum Master” category; otherwise SM tasks merge into General with a ◆ marker. */
+  smRhythmActive: boolean
 }
 
 export function TaskList({
@@ -140,6 +149,10 @@ export function TaskList({
           today.push(t)
           continue
         }
+        if (t.scheduledFor === 'today' && t.category === SCRUM_MASTER_CATEGORY) {
+          today.push(t)
+          continue
+        }
         completed.push(t)
         continue
       }
@@ -153,10 +166,11 @@ export function TaskList({
 
   const todayByCategory = useMemo(() => {
     const nowMs = wallNowMs
+    const rhythm = scrum?.smRhythmActive ?? false
     const sorted = sortTodayTasks(today)
     const groups = new Map<string, Task[]>()
     for (const t of sorted) {
-      const k = t.category || 'General'
+      const k = todayBucketCategory(t, rhythm)
       if (!groups.has(k)) groups.set(k, [])
       groups.get(k)!.push(t)
     }
@@ -168,7 +182,7 @@ export function TaskList({
       items:
         cat === SCRUM_MASTER_CATEGORY ? sortTodayTasksWithSmLingerAtTop(groups.get(cat)!, nowMs) : sortTodayTasks(groups.get(cat)!),
     }))
-  }, [today, wallNowMs])
+  }, [today, wallNowMs, scrum?.smRhythmActive])
 
   const smTodayTasks = useMemo(() => today.filter((t) => t.category === SCRUM_MASTER_CATEGORY), [today])
 
@@ -283,7 +297,7 @@ export function TaskList({
         <section className="mb-[var(--section-gap)]">
           {sectionTitle('Today')}
           {standDownReview}
-          {scrum?.enabled && scrum.flatToday && smTodayTasks.length > 0 ? (
+          {scrum?.enabled && scrum.flatToday && smTodayTasks.length > 0 && scrum.smRhythmActive ? (
             <button
               type="button"
               onClick={gatherScrum}
@@ -295,13 +309,18 @@ export function TaskList({
 
           {scrum?.enabled && scrum.flatToday ? (
             <div className={`flex flex-col gap-[var(--list-row-gap)] ${reconciling ? 'opacity-30 transition-opacity duration-300' : ''}`}>
-              {sortedFlatToday.map((t) => renderTask(t, t.category === SCRUM_MASTER_CATEGORY))}
+              {sortedFlatToday.map((t) =>
+                renderTask(
+                  t,
+                  Boolean(scrum?.enabled && t.category === SCRUM_MASTER_CATEGORY),
+                ),
+              )}
             </div>
           ) : todayByCategory.length > 0 ? (
             <div className="flex flex-col gap-4">
               {todayByCategory.map(({ cat, items }) => {
                 const expanded = map[cat] !== false
-                const isSm = cat === SCRUM_MASTER_CATEGORY && scrum?.enabled
+                const isSm = cat === SCRUM_MASTER_CATEGORY && scrum?.enabled && scrum.smRhythmActive
                 const { title, subtitle } = scrumCategoryTitle(cat, items.length)
                 const inner = (
                   <>
@@ -323,7 +342,16 @@ export function TaskList({
                     </button>
                     {expanded ? (
                       <div className="flex flex-col gap-[var(--list-row-gap)] border-l border-[var(--border-subtle)] pl-2 md:pl-3">
-                        {items.map((t) => renderTask(t, false))}
+                        {items.map((t) =>
+                          renderTask(
+                            t,
+                            Boolean(
+                              scrum?.enabled &&
+                                t.category === SCRUM_MASTER_CATEGORY &&
+                                !(cat === SCRUM_MASTER_CATEGORY && scrum.smRhythmActive),
+                            ),
+                          ),
+                        )}
                       </div>
                     ) : null}
                   </>

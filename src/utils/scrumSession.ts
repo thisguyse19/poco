@@ -15,6 +15,8 @@ export type ScrumSessionState = {
   farewell?: { kind: ScrumFarewellKind; untilMs: number }
   /** Task ids captured when stand up ended — used for stand-down completion review */
   standUpPlan?: StandUpPlanSnapshot
+  /** When stand down was ended for this calendar day — suppress repeat tap-to-review banner */
+  standDownCompletedDate?: string
 }
 
 export const SCRUM_SESSION_STORAGE_KEY = 'poco:scrum-session'
@@ -95,6 +97,7 @@ export function endStandDownSession() {
     standUpLive: false,
     standDownLive: false,
     farewell: { kind: 'standDown', untilMs: Date.now() + 60_000 },
+    standDownCompletedDate: today(),
   })
 }
 

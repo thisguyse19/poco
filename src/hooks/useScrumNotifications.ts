@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import type { ScrumMasterSettings } from '../types'
+import type { ScrumMasterPersonality, ScrumMasterSettings } from '../types'
 import { toLocalISODate } from '../services/storage'
 import { getScrumSession } from '../utils/scrumSession'
 import { deliverLocalNotification } from '../utils/notifyDelivery'
@@ -72,6 +72,15 @@ export function useScrumNotifications(sm: ScrumMasterSettings) {
       document.removeEventListener('visibilitychange', onVis)
     }
   }, [sm])
+}
+
+export function previewScrumNotification(
+  key: ScrumNotifyBodyKey,
+  name: string,
+  personality: ScrumMasterPersonality,
+) {
+  const { title, body } = scrumNotifyPayload(key, name, personality)
+  void deliverLocalNotification(title, { body, tag: `poco-sm-dev-${key}-${Date.now()}`, silent: false })
 }
 
 export async function requestScrumNotificationPermission(): Promise<boolean> {

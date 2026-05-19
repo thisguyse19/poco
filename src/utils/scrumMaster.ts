@@ -1,4 +1,7 @@
 import type { ScrumMasterGender, ScrumMasterPersonality, ScrumMasterSettings, Task } from '../types'
+import { toLocalISODate } from '../services/storage'
+import type { ScrumSessionState } from './scrumSession'
+import { getActiveFarewell } from './scrumSession'
 
 export const SCRUM_MASTER_CATEGORY = 'Scrum Master'
 
@@ -113,6 +116,32 @@ export function getScrumBanner(sm: ScrumMasterSettings, d = new Date()): ScrumBa
 
 function bannerFor(kind: ScrumBannerScheduleKind, n: number, t: number): ScrumBannerView {
   return { visible: true, kind, deltaMinutes: n - t }
+}
+
+/** Hide schedule banners after the user has already finished that ritual today. */
+export function applyScrumScheduleBannerCompletionGuards(
+  view: ScrumBannerView,
+  session: ScrumSessionState,
+  day: string = toLocalISODate(),
+): ScrumBannerView {
+  if (!view.visible) return view
+  if (view.kind === 'farewellUp' || view.kind === 'farewellDown') return view
+  if (view.kind === 'standUp' && session.standUpPlan?.date === day) return { visible: false }
+  if (view.kind === 'standDown' && session.standDownCompletedDate === day) return { visible: false }
+  return view
+}
+
+/** Stand-up / stand-down windows, live session, or farewell — when the SM category header is shown. */
+export function isScrumMasterRhythmActive(
+  sm: ScrumMasterSettings,
+  session: ScrumSessionState,
+  d = new Date(),
+): boolean {
+  if (!sm.enabled) return false
+  if (session.standUpLive || session.standDownLive) return true
+  if (getActiveFarewell(session)) return true
+  if (isStandUpCollectionWindow(sm, d) || isStandDownCollectionWindow(sm, d)) return true
+  return applyScrumScheduleBannerCompletionGuards(getScrumBanner(sm, d), session, toLocalISODate(d)).visible === true
 }
 
 export function isStandUpCollectionWindow(sm: ScrumMasterSettings, d = new Date()): boolean {
