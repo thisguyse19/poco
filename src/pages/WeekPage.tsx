@@ -645,12 +645,23 @@ export function WeekPage() {
   return (
     <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
       <header className="shrink-0 border-b border-[var(--border-subtle)] px-4 pb-3 pt-[max(1rem,env(safe-area-inset-top,0px))] md:px-6">
-        <h1 className="font-serif text-2xl text-[var(--text-primary)] md:text-3xl">Ahead</h1>
+        <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
+          <h1 className="shrink-0 font-serif text-2xl text-[var(--text-primary)] md:text-3xl">Ahead</h1>
+          {activeTask && zoneHighlight ? (
+            <span
+              className="inline-flex max-w-[min(100%,11rem)] shrink-0 truncate rounded-full border border-green-700/35 bg-green-600/12 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-green-900 dark:border-green-400/40 dark:bg-green-400/12 dark:text-green-100 md:hidden"
+              role="status"
+              title="Keep holding to flip pages"
+            >
+              Hold to flip
+            </span>
+          ) : null}
+        </div>
         <p className="mt-1 text-sm text-[var(--text-secondary)] md:text-base">{rangeLabel}</p>
         <p className="mt-0.5 text-[11px] text-[var(--text-tertiary)] md:text-xs">{aheadDragHint}</p>
         {activeTask && zoneHighlight ? (
           <p
-            className="mt-2 rounded-none border border-[var(--accent)]/35 bg-[var(--accent-soft)] px-2.5 py-1.5 text-center text-xs font-semibold text-[var(--accent)] md:text-sm"
+            className="mt-2 hidden rounded-none border border-[var(--accent)]/35 bg-[var(--accent-soft)] px-2.5 py-1.5 text-center text-sm font-semibold text-[var(--accent)] md:block"
             role="status"
           >
             Keep holding to flip pages
