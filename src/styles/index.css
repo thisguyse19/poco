@@ -43,6 +43,13 @@
   --list-row-gap: 0.25rem;
 }
 
+/* OOBE guided tour: scroll target outline */
+.poco-oobe-anchor-active {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  transition: outline-color 0.2s var(--ease-ios);
+}
+
 [data-theme='dark'] {
   --bg-base: #1e1c1a;
   --bg-elevated: #252320;

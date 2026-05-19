@@ -6,6 +6,8 @@ import { patchTaskForPlanDate } from '../utils/weekPlanner'
 
 type TaskState = {
   tasks: Task[]
+  /** Replace the entire task list (used for OOBE demo / restore). */
+  replaceTasks: (tasks: Task[]) => void
   addTask: (partial: Partial<Task> & Pick<Task, 'title'>) => Task
   updateTask: (id: string, patch: Partial<Task>) => void
   deleteTask: (id: string) => void
@@ -36,6 +38,11 @@ export function sortTodayTasks(tasks: Task[]): Task[] {
 
 export const useTaskStore = create<TaskState>((set, get) => ({
   tasks: storage.getTasks(),
+
+  replaceTasks(tasks) {
+    set({ tasks })
+    storage.saveTasks(tasks)
+  },
 
   addTask(partial) {
     const ts = nowIso()

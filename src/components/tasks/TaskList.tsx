@@ -278,7 +278,7 @@ export function TaskList({
   )
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pb-[calc(var(--poco-mobile-nav-height)+1rem)] pt-2 md:px-6 md:pb-6">
+    <div data-oobe="tasklist" className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pb-[calc(var(--poco-mobile-nav-height)+1rem)] pt-2 md:px-6 md:pb-6">
       {scrum?.enabled ? (
         <ScrumMasterBanner
           name={scrum.masterName}

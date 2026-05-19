@@ -141,6 +141,7 @@ export const storage = {
 /** Defaults used when merging partial import */
 const DEFAULT_EXPORT_SETTINGS: Settings = {
   onboardingComplete: true,
+  oobeGuidedDemoPending: false,
   scrumMasterGateComplete: true,
   scrumMasterGatePromptVersion: 3,
   theme: 'light',

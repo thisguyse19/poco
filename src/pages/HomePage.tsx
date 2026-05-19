@@ -176,17 +176,16 @@ export function HomePage() {
   }, [settings.profileName, standUpLive, standDownLive, sm.personality])
 
   const subtitle = useMemo(() => {
-    if (standUpLive) return scrumLiveSubtitle(sm.personality, true)
-    if (standDownLive) return scrumLiveSubtitle(sm.personality, false)
+    if (standUpLive) return { kind: 'single' as const, text: scrumLiveSubtitle(sm.personality, true) }
+    if (standDownLive) return { kind: 'single' as const, text: scrumLiveSubtitle(sm.personality, false) }
     const line = new Intl.DateTimeFormat('en-GB', {
       weekday: 'long',
       month: 'long',
       day: 'numeric',
       year: 'numeric',
     }).format(new Date())
-    const n = tasks.filter((t) => !t.completed && t.scheduledFor === 'today').length
-    return `${line} · ${n} ${n === 1 ? 'task' : 'tasks'} today`
-  }, [tasks, standUpLive, standDownLive, sm.personality])
+    return { kind: 'home' as const, dateLine: line }
+  }, [standUpLive, standDownLive, sm.personality])
 
   const headerDimmed = searchOpen || searchQuery.trim().length > 0
 
@@ -274,7 +273,14 @@ export function HomePage() {
           }`}
         >
           <h1 className="pr-12 font-serif text-2xl md:text-3xl">{greeting}</h1>
-          <p className="mt-1 text-sm text-[var(--text-secondary)]">{subtitle}</p>
+          {subtitle.kind === 'single' ? (
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">{subtitle.text}</p>
+          ) : (
+            <>
+              <p className="mt-1 text-sm text-[var(--text-secondary)]">{subtitle.dateLine}</p>
+              <p className="mt-0.5 text-sm text-[var(--text-secondary)]">Drag and rearrange your tasks for the next few days</p>
+            </>
+          )}
           {sm.enabled && notifyDefault ? (
             <button
               type="button"

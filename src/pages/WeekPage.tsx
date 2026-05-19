@@ -562,6 +562,7 @@ export function WeekPage() {
             {pageIndex > 0 ? <UnscheduledBin flash={binFlash} /> : null}
 
             <div
+              data-oobe="week"
               className={`grid min-h-0 flex-1 grid-cols-2 grid-rows-2 gap-2 overflow-hidden pt-1 ${
                 pageAnim === 'next' ? 'poco-week-page-snap-next' : pageAnim === 'prev' ? 'poco-week-page-snap-prev' : ''
               }`}

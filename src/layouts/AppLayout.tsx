@@ -1,10 +1,14 @@
+import { useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Icon } from '../components/ui/Icon'
+import { OobeGuidedTour } from '../components/oobe/OobeGuidedTour'
 import { useLongPress } from '../hooks/useLongPress'
 import { useSettingsStore } from '../stores/settingsStore'
+import { useTaskStore } from '../stores/taskStore'
 import { useTimerStore } from '../stores/timerStore'
+import { useOobeTourStore } from '../stores/oobeTourStore'
 import { pocoDevLab } from '../utils/pocoDevLab'
 import { triggerHaptic } from '../utils/haptics'
 import { ScrumMasterIntroGate } from '../components/scrum/ScrumMasterIntroGate'
@@ -41,6 +45,7 @@ export function AppLayout() {
   const navigate = useNavigate()
   const profileName = useSettingsStore((s) => s.settings.profileName)
   const scrumGateComplete = useSettingsStore((s) => s.settings.scrumMasterGateComplete)
+  const oobeGuidedDemoPending = useSettingsStore((s) => s.settings.oobeGuidedDemoPending)
   const timerRunning = useTimerStore((s) => s.isRunning)
   const hideNav = location.pathname === '/focus' && timerRunning
 
@@ -54,6 +59,15 @@ export function AppLayout() {
   )
 
   const initial = profileName.trim().charAt(0).toUpperCase() || ''
+
+  useEffect(() => {
+    if (!oobeGuidedDemoPending || !scrumGateComplete || useOobeTourStore.getState().active) return
+    const saved = structuredClone(useTaskStore.getState().tasks)
+    useOobeTourStore.getState().start(saved, true)
+    if (location.pathname !== '/') {
+      navigate('/', { replace: true })
+    }
+  }, [oobeGuidedDemoPending, scrumGateComplete, navigate, location.pathname])
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden bg-[var(--bg-base)]">
@@ -166,6 +180,7 @@ export function AppLayout() {
         : null}
 
       {!scrumGateComplete ? <ScrumMasterIntroGate /> : null}
+      <OobeGuidedTour />
     </div>
   )
 }
