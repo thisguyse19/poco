@@ -39,7 +39,7 @@ const ZONE_PREV_ID = 'poco-week-zone-prev'
 const ZONE_NEXT_ID = 'poco-week-zone-next'
 
 const DRAG_HOLD_MS = 220
-const PAGE_FLIP_MS = 750
+const PAGE_FLIP_MS = 1000
 
 function dayDroppableId(iso: string) {
   return `day:${iso}`
@@ -198,11 +198,14 @@ function DayCell({
   todayIso,
   children,
   peekDrop,
+  scrollLock,
 }: {
   iso: string
   todayIso: string
   children: React.ReactNode
   peekDrop?: boolean
+  /** While dragging a task, freeze column scroll so siblings do not jitter on touch. */
+  scrollLock?: boolean
 }) {
   const past = iso < todayIso
   const { setNodeRef, isOver } = useDroppable({
@@ -232,7 +235,13 @@ function DayCell({
           <span className="shrink-0 text-[10px] text-[var(--text-tertiary)] md:text-xs">Past</span>
         ) : null}
       </div>
-      <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto [-webkit-overflow-scrolling:touch] md:gap-2">{children}</div>
+      <div
+        className={`flex min-h-0 flex-1 flex-col gap-1.5 md:gap-2 ${
+          scrollLock ? 'touch-none overflow-hidden' : 'overflow-y-auto [-webkit-overflow-scrolling:touch]'
+        }`}
+      >
+        {children}
+      </div>
     </div>
   )
 }
@@ -241,10 +250,12 @@ function UnscheduledBlock({
   children,
   flash,
   peekDrop,
+  scrollLock,
 }: {
   children: React.ReactNode
   flash?: boolean
   peekDrop?: boolean
+  scrollLock?: boolean
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: UNSCHEDULED_DROPPABLE_ID })
   const dropGlow = flash || isOver || peekDrop
@@ -263,7 +274,13 @@ function UnscheduledBlock({
         <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)] md:text-xs">Unscheduled</p>
         <p className="text-[10px] leading-snug text-[var(--text-tertiary)] md:text-[11px]">Inbox and Someday · drop to clear date</p>
       </div>
-      <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto [-webkit-overflow-scrolling:touch] md:gap-2">{children}</div>
+      <div
+        className={`flex min-h-0 flex-1 flex-col gap-1.5 md:gap-2 ${
+          scrollLock ? 'touch-none overflow-hidden' : 'overflow-y-auto [-webkit-overflow-scrolling:touch]'
+        }`}
+      >
+        {children}
+      </div>
     </div>
   )
 }
@@ -633,7 +650,7 @@ export function WeekPage() {
         <p className="mt-0.5 text-[11px] text-[var(--text-tertiary)] md:text-xs">{aheadDragHint}</p>
         {activeTask && zoneHighlight ? (
           <p
-            className="mt-2 hidden rounded-none border border-[var(--accent)]/35 bg-[var(--accent-soft)] px-2.5 py-1.5 text-center text-sm font-semibold text-[var(--accent)] md:block"
+            className="mt-2 rounded-none border border-[var(--accent)]/35 bg-[var(--accent-soft)] px-2.5 py-1.5 text-center text-xs font-semibold text-[var(--accent)] md:text-sm"
             role="status"
           >
             Keep holding to flip pages
@@ -662,13 +679,11 @@ export function WeekPage() {
       </header>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-[calc(var(--poco-mobile-nav-height)+1rem)] pt-2 md:px-6 md:pb-6">
-        {activeTask && zoneHighlight ? (
-          <p className="mb-1 text-center text-[11px] font-medium text-[var(--accent)] md:hidden">Keep holding to flip pages</p>
-        ) : null}
         <DndContext
           sensors={sensors}
           collisionDetection={pointerWithin}
           modifiers={[snapCenterToCursor]}
+          autoScroll={false}
           onDragStart={onDragStart}
           onDragOver={onDragOver}
           onDragCancel={onDragCancel}
@@ -705,6 +720,7 @@ export function WeekPage() {
                     key="unscheduled"
                     flash={unschedFlash}
                     peekDrop={dragOverId === UNSCHEDULED_DROPPABLE_ID}
+                    scrollLock={Boolean(activeTask)}
                   >
                     {unscheduled.map((t) => (
                       <PlannerTaskCard
@@ -722,6 +738,7 @@ export function WeekPage() {
                     iso={slot.iso}
                     todayIso={todayIso}
                     peekDrop={dragOverId === dayDroppableId(slot.iso)}
+                    scrollLock={Boolean(activeTask)}
                   >
                     {(byDay.get(slot.iso) ?? []).map((t) => (
                       <PlannerTaskCard
