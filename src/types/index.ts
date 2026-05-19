@@ -119,10 +119,6 @@ export interface Settings {
   profileName: string
   /** When true, forces shrouded palette; disabling maps shrouded → dark */
   oledOptimisation: boolean
-  /** ISO timestamp of last review dismissal */
-  reviewDismissedAt: string | null
-  /** Hour (0–23) after which end-of-day review may appear */
-  endOfDayReviewHour: number
   confirmDelete: boolean
   autoStartBreaks: boolean
   autoStartNext: boolean

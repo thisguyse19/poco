@@ -156,8 +156,6 @@ const DEFAULT_EXPORT_SETTINGS: Settings = {
   landingView: 'tasks',
   profileName: 'You',
   oledOptimisation: false,
-  reviewDismissedAt: null,
-  endOfDayReviewHour: 20,
   confirmDelete: true,
   autoStartBreaks: false,
   autoStartNext: false,

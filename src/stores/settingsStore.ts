@@ -17,8 +17,6 @@ export const DEFAULT_SETTINGS: Settings = {
   landingView: 'tasks',
   profileName: '',
   oledOptimisation: false,
-  reviewDismissedAt: null,
-  endOfDayReviewHour: 20,
   confirmDelete: true,
   autoStartBreaks: false,
   autoStartNext: false,
@@ -41,6 +39,12 @@ export const DEFAULT_SETTINGS: Settings = {
 export const SM_GATE_PROMPT_VERSION = 3
 
 const saved = storage.getSettings()
+const savedHadLegacyReview =
+  'reviewDismissedAt' in (saved as Record<string, unknown>) ||
+  'endOfDayReviewHour' in (saved as Record<string, unknown>)
+const savedStripped = { ...saved } as Record<string, unknown>
+delete savedStripped.reviewDismissedAt
+delete savedStripped.endOfDayReviewHour
 const savedPromptVer =
   typeof saved.scrumMasterGatePromptVersion === 'number' ? saved.scrumMasterGatePromptVersion : 1
 const migratedGateIncomplete =
@@ -48,7 +52,7 @@ const migratedGateIncomplete =
 
 const initial: Settings = {
   ...DEFAULT_SETTINGS,
-  ...saved,
+  ...(savedStripped as Partial<Settings>),
   scrumMaster: (() => {
     const merged = { ...DEFAULT_SETTINGS.scrumMaster, ...saved.scrumMaster } as Record<string, unknown>
     delete merged.sprintEndDate
@@ -69,6 +73,10 @@ if (migratedGateIncomplete) {
 }
 
 if ((saved.scrumMaster as { personality?: string } | undefined)?.personality === 'stern') {
+  storage.saveSettings(initial)
+}
+
+if (savedHadLegacyReview) {
   storage.saveSettings(initial)
 }
 
