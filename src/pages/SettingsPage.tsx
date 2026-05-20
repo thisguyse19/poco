@@ -3,6 +3,7 @@ import { PageHeader } from '../components/tasks/PageHeader'
 import { PocoConfirmDialog } from '../components/ui/PocoConfirmDialog'
 import { PocoMessageDialog } from '../components/ui/PocoMessageDialog'
 import { PocoFocusMinutesCarousel } from '../components/ui/PocoFocusMinutesCarousel'
+import { PocoWhatsNewDialog } from '../components/pwa/PocoWhatsNewDialog'
 import { SettingsDevLab } from '../components/settings/SettingsDevLab'
 import { AppearanceControlGroup } from '../components/settings/AppearanceControlGroup'
 import { ScrumMasterEditModal } from '../components/settings/ScrumMasterEditModal'
@@ -13,6 +14,7 @@ import { pocoDevLab } from '../utils/pocoDevLab'
 import { triggerHaptic } from '../utils/haptics'
 import { requestScrumNotificationPermission } from '../hooks/useScrumNotifications'
 import { notificationSettingsHint } from '../utils/notifyDelivery'
+import { getReleaseNotesAfter, POCO_VERSION_CODE, POCO_VERSION_LABEL } from '../version'
 
 export function SettingsPage() {
   const { settings, updateSettings, resetSettings } = useSettingsStore()
@@ -21,6 +23,7 @@ export function SettingsPage() {
   const [msgOpen, setMsgOpen] = useState(false)
   const [msg, setMsg] = useState('')
   const [scrumModalOpen, setScrumModalOpen] = useState(false)
+  const [versionHistoryOpen, setVersionHistoryOpen] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const devLastRef = useRef(0)
   const devTapRef = useRef(0)
@@ -224,6 +227,28 @@ export function SettingsPage() {
         </section>
 
         <section className="mb-8 space-y-3">
+          <h3 className="font-serif text-lg">About</h3>
+          <div className="rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-3 text-sm">
+            <p className="text-[var(--text-primary)]">
+              <span className="font-medium">poco</span>{' '}
+              <span className="font-mono text-[var(--text-secondary)]">v{POCO_VERSION_LABEL}</span>{' '}
+              <span className="text-xs text-[var(--text-tertiary)]">(build {POCO_VERSION_CODE})</span>
+            </p>
+            <p className="mt-1 text-xs text-[var(--text-tertiary)]">
+              Each release bumps the internal build in <code className="font-mono text-[10px]">src/version.ts</code> so the
+              service worker and “Check for app update” can detect new deploys.
+            </p>
+            <button
+              type="button"
+              className="poco-press mt-3 rounded-none border border-[var(--border-default)] px-3 py-2 text-xs font-semibold text-[var(--accent)]"
+              onClick={() => setVersionHistoryOpen(true)}
+            >
+              Version history
+            </button>
+          </div>
+        </section>
+
+        <section className="mb-8 space-y-3">
           <h3 className="font-serif text-lg">Data</h3>
           <div className="flex flex-wrap gap-2">
             <button
@@ -268,6 +293,13 @@ export function SettingsPage() {
           </button>
         </section>
       </div>
+
+      <PocoWhatsNewDialog
+        open={versionHistoryOpen}
+        onClose={() => setVersionHistoryOpen(false)}
+        entries={getReleaseNotesAfter(0)}
+        heading="Version history"
+      />
 
       <PocoConfirmDialog
         open={clearOpen}
