@@ -16,6 +16,9 @@ function useReduceMotion() {
  * Renders the portal whenever `open || mounted` so exit transitions can finish before unmounting.
  * **Visibility uses `open` only** (`show = open`): tying opacity to `mounted` as well could leave `open && !mounted`
  * stuck at opacity 0 (tap looks like “modal never opened”) if `mounted` lags behind `open`.
+ *
+ * **Do not add `relative` alongside `fixed` on this root:** Tailwind emits `.relative` after `.fixed` in the stylesheet,
+ * so `position: relative` wins and the overlay stays in normal flow below `#root` — modals render off-screen.
  */
 export function PocoAnimatedCenterModal({
   open,
@@ -63,7 +66,7 @@ export function PocoAnimatedCenterModal({
 
   return createPortal(
     <div
-      className="relative fixed inset-0 z-[var(--poco-z-dialog-backdrop)] flex min-h-dvh items-center justify-center px-4 pt-[max(0.75rem,env(safe-area-inset-top,0px))] pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pointer-events-auto"
+      className="fixed inset-0 z-[var(--poco-z-dialog-backdrop)] flex min-h-dvh items-center justify-center px-4 pt-[max(0.75rem,env(safe-area-inset-top,0px))] pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pointer-events-auto"
       role="presentation"
     >
       <button
