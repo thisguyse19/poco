@@ -5,10 +5,10 @@
  * The Vite build rewrites `dist/sw.js` so the service worker cache name includes this code; that
  * forces browsers to treat each deploy as an update when using “Check for app update”.
  */
-export const POCO_VERSION_CODE = 12
+export const POCO_VERSION_CODE = 13
 
 /** User-visible semver-style label (keep roughly in sync with `package.json` version). */
-export const POCO_VERSION_LABEL = '1.1.1'
+export const POCO_VERSION_LABEL = '1.1.2'
 
 export type ReleaseNote = {
   code: number
@@ -20,6 +20,16 @@ export type ReleaseNote = {
 
 /** Newest release first. Each entry’s `code` must match a shipped `POCO_VERSION_CODE`. */
 export const POCO_RELEASE_HISTORY: ReleaseNote[] = [
+  {
+    code: 13,
+    label: '1.1.2',
+    date: '2026-05-19',
+    title: 'PWA modal centre + version history order',
+    bullets: [
+      'Centre modals reliably on installed PWA (width no longer stretches to full viewport; safe-area padding).',
+      'Version history and What is new list newest builds first.',
+    ],
+  },
   {
     code: 12,
     label: '1.1.1',
@@ -44,7 +54,7 @@ export const POCO_RELEASE_HISTORY: ReleaseNote[] = [
   },
 ]
 
-/** Entries newer than `afterCode` (for What’s new since last dismissed). */
+/** Entries with `code` greater than `afterCode`, newest first (for version history and What is new). */
 export function getReleaseNotesAfter(afterCode: number): ReleaseNote[] {
-  return [...POCO_RELEASE_HISTORY].filter((e) => e.code > afterCode).sort((a, b) => a.code - b.code)
+  return [...POCO_RELEASE_HISTORY].filter((e) => e.code > afterCode).sort((a, b) => b.code - a.code)
 }

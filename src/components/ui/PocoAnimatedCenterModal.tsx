@@ -10,6 +10,8 @@ function useReduceMotion() {
 
 /**
  * Centered alert / confirm shell with iOS-style scale + fade (enter and exit).
+ * Panel width uses `calc(100vw-2rem)` with `panelMaxWidthClass` so PWAs do not stretch edge-to-edge
+ * (which prevented horizontal centre). Overlay uses `min-h-dvh` and safe-area padding instead of tab-bar padding.
  */
 export function PocoAnimatedCenterModal({
   open,
@@ -61,7 +63,7 @@ export function PocoAnimatedCenterModal({
 
   return createPortal(
     <div
-      className={`fixed inset-0 z-[var(--poco-z-dialog-backdrop)] flex items-center justify-center p-4 max-md:pb-[var(--poco-mobile-nav-height)] md:p-6 ${
+      className={`relative fixed inset-0 z-[var(--poco-z-dialog-backdrop)] flex min-h-dvh items-center justify-center px-4 pt-[max(0.75rem,env(safe-area-inset-top,0px))] pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] ${
         show ? 'pointer-events-auto' : 'pointer-events-none'
       }`}
       role="presentation"
@@ -69,7 +71,7 @@ export function PocoAnimatedCenterModal({
       <button
         type="button"
         aria-label="Dismiss"
-        className="absolute inset-0 bg-black/40 backdrop-blur-[1px] transition-opacity"
+        className="absolute inset-0 z-0 bg-black/40 backdrop-blur-[1px] transition-opacity"
         style={{
           opacity: show ? 1 : 0,
           transition,
@@ -80,7 +82,7 @@ export function PocoAnimatedCenterModal({
       />
       <div
         ref={panelRef}
-        className={`relative z-[var(--poco-z-dialog-panel)] mx-auto w-full shrink-0 ${panelMaxWidthClass} ${show ? 'pointer-events-auto' : 'pointer-events-none'}`}
+        className={`relative z-[var(--poco-z-dialog-panel)] mx-auto w-[calc(100vw-2rem)] ${panelMaxWidthClass} shrink-0 self-center ${show ? 'pointer-events-auto' : 'pointer-events-none'}`}
         style={{
           opacity: show ? 1 : 0,
           transform: show ? 'translate3d(0, 0, 0) scale(1)' : 'translate3d(0, 14px, 0) scale(0.96)',
