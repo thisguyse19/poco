@@ -13,8 +13,9 @@ function useReduceMotion() {
  * Panel width uses `calc(100vw-2rem)` with `panelMaxWidthClass` so PWAs do not stretch edge-to-edge
  * (which prevented horizontal centre). Overlay uses `min-h-dvh` and safe-area padding instead of tab-bar padding.
  *
- * Renders the portal whenever `open || mounted` so the first frame after `open` is not skipped (which used to pair with
- * `entered` + rAF and could leave the layer invisible). Visibility for painting uses `show = open && mounted`.
+ * Renders the portal whenever `open || mounted` so exit transitions can finish before unmounting.
+ * **Visibility uses `open` only** (`show = open`): tying opacity to `mounted` as well could leave `open && !mounted`
+ * stuck at opacity 0 (tap looks like “modal never opened”) if `mounted` lags behind `open`.
  */
 export function PocoAnimatedCenterModal({
   open,
@@ -57,14 +58,12 @@ export function PocoAnimatedCenterModal({
   const shouldRender = open || mounted
   if (!shouldRender) return null
 
-  const show = open && mounted
+  const show = open
   const transition = `opacity ${ms}ms ${EASE}, transform ${ms}ms ${EASE}`
 
   return createPortal(
     <div
-      className={`relative fixed inset-0 z-[var(--poco-z-dialog-backdrop)] flex min-h-dvh items-center justify-center px-4 pt-[max(0.75rem,env(safe-area-inset-top,0px))] pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] ${
-        show ? 'pointer-events-auto' : 'pointer-events-none'
-      }`}
+      className="relative fixed inset-0 z-[var(--poco-z-dialog-backdrop)] flex min-h-dvh items-center justify-center px-4 pt-[max(0.75rem,env(safe-area-inset-top,0px))] pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pointer-events-auto"
       role="presentation"
     >
       <button
@@ -75,13 +74,13 @@ export function PocoAnimatedCenterModal({
           opacity: show ? 1 : 0,
           transition,
           transitionTimingFunction: EASE,
-          pointerEvents: show ? 'auto' : 'none',
+          pointerEvents: 'auto',
         }}
         onClick={onBackdropClick}
       />
       <div
         ref={panelRef}
-        className={`relative z-[var(--poco-z-dialog-panel)] mx-auto w-[calc(100vw-2rem)] ${panelMaxWidthClass} shrink-0 self-center ${show ? 'pointer-events-auto' : 'pointer-events-none'}`}
+        className={`relative z-[var(--poco-z-dialog-panel)] mx-auto w-[calc(100vw-2rem)] ${panelMaxWidthClass} shrink-0 self-center ${open ? 'pointer-events-auto' : 'pointer-events-none'}`}
         style={{
           opacity: show ? 1 : 0,
           transform: show ? 'translate3d(0, 0, 0) scale(1)' : 'translate3d(0, 14px, 0) scale(0.96)',

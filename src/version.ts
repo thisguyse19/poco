@@ -5,10 +5,10 @@
  * The Vite build rewrites `dist/sw.js` so the service worker cache name includes this code; that
  * forces browsers to treat each deploy as an update when using “Check for app update”.
  */
-export const POCO_VERSION_CODE = 15
+export const POCO_VERSION_CODE = 16
 
 /** User-visible semver-style label (keep roughly in sync with `package.json` version). */
-export const POCO_VERSION_LABEL = '1.1.4'
+export const POCO_VERSION_LABEL = '1.1.5'
 
 export type ReleaseNote = {
   code: number
@@ -20,6 +20,16 @@ export type ReleaseNote = {
 
 /** Newest release first. Each entry’s `code` must match a shipped `POCO_VERSION_CODE`. */
 export const POCO_RELEASE_HISTORY: ReleaseNote[] = [
+  {
+    code: 16,
+    label: '1.1.5',
+    date: '2026-05-19',
+    title: 'Centre modal visibility fix',
+    bullets: [
+      'Dialogs (Scrum edit, personality info, confirms) show as soon as they are open: opacity no longer waits on a separate mounted flag that could lag behind `open`.',
+      'Backdrop stays interactive during the exit fade so taps do not leak to the page underneath.',
+    ],
+  },
   {
     code: 15,
     label: '1.1.4',
