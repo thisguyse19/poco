@@ -73,7 +73,8 @@ export type TaskListScrum = {
   standUpCollection: boolean
   standDownCollection: boolean
   standUpPlan: StandUpPlanSnapshot | null
-  flatToday: boolean
+  /** True during the “inline” day phase: optional gather-into-SM-section prompt. */
+  gatherSectionCue: boolean
   onReconcileFlat: () => void
   standUpLive: boolean
   standDownLive: boolean
@@ -101,7 +102,6 @@ export function TaskList({
   const [detailTask, setDetailTask] = useState<Task | null>(null)
   const [swipeOpenId, setSwipeOpenId] = useState<string | null>(null)
   const [undoTask, setUndoTask] = useState<Task | null>(null)
-  const [reconciling, setReconciling] = useState(false)
   const { map, toggle } = useCategoryExpanded()
 
   useEffect(() => {
@@ -252,17 +252,8 @@ export function TaskList({
     )
   }, [scrum, tasks])
 
-  const sortedFlatToday = useMemo(
-    () => sortTodayTasksWithSmLingerAtTop(today, wallNowMs),
-    [today, wallNowMs],
-  )
-
   const gatherScrum = () => {
-    setReconciling(true)
-    window.setTimeout(() => {
-      scrum?.onReconcileFlat()
-      setReconciling(false)
-    }, 380)
+    scrum?.onReconcileFlat()
   }
 
   const renderTask = (t: Task, scrumMark: boolean) => (
@@ -312,7 +303,7 @@ export function TaskList({
         <section className="mb-[var(--section-gap)]">
           {sectionTitle('Today')}
           {standDownReview}
-          {scrum?.enabled && scrum.flatToday && smTodayTasks.length > 0 && scrum.smRhythmActive ? (
+          {scrum?.enabled && scrum.gatherSectionCue && smTodayTasks.length > 0 && scrum.smRhythmActive ? (
             <button
               type="button"
               onClick={gatherScrum}
@@ -322,18 +313,7 @@ export function TaskList({
             </button>
           ) : null}
 
-          {scrum?.enabled && scrum.flatToday ? (
-            <div
-              className={`flex flex-col gap-[var(--list-row-gap)] md:grid md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 md:gap-[var(--list-row-gap)] ${reconciling ? 'opacity-30 transition-opacity duration-300' : ''}`}
-            >
-              {sortedFlatToday.map((t) =>
-                renderTask(
-                  t,
-                  Boolean(scrum?.enabled && t.category === SCRUM_MASTER_CATEGORY),
-                ),
-              )}
-            </div>
-          ) : todayByCategory.length > 0 ? (
+          {todayByCategory.length > 0 ? (
             <div className="flex flex-col gap-4 md:grid md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 md:items-start md:gap-4">
               {todayByCategory.map(({ cat, items }) => {
                 const expanded = map[cat] !== false

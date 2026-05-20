@@ -8,6 +8,7 @@ import { useTaskStore } from '../stores/taskStore'
 import { storage, toLocalISODate } from '../services/storage'
 import {
   getScrumBanner,
+  isScrumInlinePhase,
   isStandDownCollectionWindow,
   isStandUpCollectionWindow,
   applyScrumScheduleBannerCompletionGuards,
@@ -21,7 +22,7 @@ import {
   scrumSessionHeaderParts,
   SCRUM_MASTER_CATEGORY,
 } from '../utils/scrumMaster'
-import { effectiveScrumFlatToday, writeScrumFlatPreference } from '../utils/scrumFlatStorage'
+import { writeScrumFlatPreference } from '../utils/scrumFlatStorage'
 import {
   endStandDownSession,
   endStandUpSession,
@@ -116,9 +117,9 @@ export function HomePage() {
     void clock
     return isStandDownCollectionWindow(sm)
   }, [sm, clock])
-  const flatToday = useMemo(() => {
+  const gatherSectionCue = useMemo(() => {
     void clock
-    return effectiveScrumFlatToday(sm)
+    return isScrumInlinePhase(sm)
   }, [sm, clock])
 
   const standUpLive = Boolean(session.standUpLive)
@@ -217,7 +218,7 @@ export function HomePage() {
         standUpCollection: standUpColl,
         standDownCollection: standDownColl,
         standUpPlan,
-        flatToday,
+        gatherSectionCue,
         onReconcileFlat: () => {
           writeScrumFlatPreference(toLocalISODate(), false)
           const m = storage.getCategoryExpanded()
