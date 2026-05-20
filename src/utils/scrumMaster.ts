@@ -122,7 +122,16 @@ export type ScrumBannerView =
 /** @deprecated use ScrumBannerScheduleKind */
 export type ScrumBannerKind = ScrumBannerScheduleKind
 
-/** Stand up: 5 min before through 10 min after. Stand down: 30 min before through 10 min after. */
+/**
+ * Schedule banner (tap to start live stand-up / stand-down):
+ * - Stand-up: 5 minutes before through 10 minutes after `standUpTime`.
+ * - Stand-down: 30 minutes before through 10 minutes after `standDownTime`.
+ * If both windows overlap, the closer scheduled time wins.
+ *
+ * Task collection windows (SM category / quick-add behaviour on Home) use separate ranges:
+ * - Stand-up collection: from the scheduled stand-up minute through 59 minutes after (`[tu, tu+60)` in minutes).
+ * - Stand-down collection: from 30 minutes before stand-down through 59 minutes after (`[td-30, td+60)`).
+ */
 export function getScrumBanner(sm: ScrumMasterSettings, d = new Date()): ScrumBannerView {
   if (!sm.enabled) return { visible: false }
   const n = nowMinutes(d)
