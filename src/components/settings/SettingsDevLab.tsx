@@ -18,6 +18,7 @@ import { useOobeTourStore } from '../../stores/oobeTourStore'
 import { useTimerStore } from '../../stores/timerStore'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { scrumNotifyPayload } from '../../utils/scrumMaster'
+import { POCO_VERSION_CODE, POCO_VERSION_LABEL } from '../../version'
 
 const KONAMI = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'] as const
 
@@ -138,18 +139,22 @@ export function SettingsDevLab() {
     }
     const reg = outcome.registration
     const has = await probeServiceWorkerUpdate(reg)
+    const buildLine = ` This device is running build ${POCO_VERSION_CODE} (${POCO_VERSION_LABEL}).`
     if (has) {
       window.dispatchEvent(new CustomEvent('poco-pwa-update-pending'))
       setPwaCheckModal({
         title: 'Update available',
         message:
-          'The check completed successfully. A newer version of poco is ready to install. Use the update bar at the bottom of the screen, or tap “Reload if update waiting” here after you close this dialog.',
+          'The check completed successfully. A newer version of poco is ready to install. Use the update bar at the bottom of the screen, or tap “Reload if update waiting” here after you close this dialog.' +
+          buildLine,
       })
     } else {
       setPwaCheckModal({
         title: 'Up to date',
         message:
-          'The check completed successfully. No newer version is waiting on the server—you already have the latest build for this device.',
+          'The check completed successfully. No newer version is waiting on the server—the installed service worker matches what is deployed (or the network could not fetch a changed script yet).' +
+          buildLine +
+          ' Each release must bump `POCO_VERSION_CODE` in `src/version.ts` so deploys are detectable.',
       })
     }
   }
@@ -162,7 +167,10 @@ export function SettingsDevLab() {
       }
       const reg = outcome.registration
       if (reg.waiting) activateWaitingServiceWorkerAndReload(reg)
-      else setMsg('No waiting worker. Deploy a new build (or bump public/sw.js cache name), then “Check for app update”.')
+      else
+        setMsg(
+          `No waiting worker. Bump POCO_VERSION_CODE in src/version.ts on each merge so dist/sw.js changes; then deploy and use “Check for app update” again. (This device: build ${POCO_VERSION_CODE}.)`,
+        )
     })
   }
 
