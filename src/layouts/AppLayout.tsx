@@ -79,7 +79,14 @@ export function AppLayout() {
           aria-hidden={hideNav}
         >
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 shrink-0 rounded-none bg-[var(--accent)]" aria-hidden />
+            <img
+              src={`${import.meta.env.BASE_URL}icons/icon-192.png`}
+              alt=""
+              width={36}
+              height={36}
+              className="h-9 w-9 shrink-0 rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)] object-cover"
+              decoding="async"
+            />
             <span className="font-serif text-xl tracking-wide text-[var(--text-primary)]">poco</span>
           </div>
           <nav className="flex flex-col gap-1">

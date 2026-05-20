@@ -36,8 +36,9 @@
   --poco-z-mobile-nav: 50;
   --poco-z-sheet-backdrop-md: 100;
   --poco-z-sheet-panel-md: 101;
-  --poco-z-dialog-backdrop: 120;
-  --poco-z-dialog-panel: 121;
+  /* Above mobile nav (50), sheets (≤101), undo toast (130), PWA update bar (200), OOBE (≤281) */
+  --poco-z-dialog-backdrop: 400;
+  --poco-z-dialog-panel: 401;
   --task-py: 0.5rem;
   --section-gap: 1.5rem;
   --list-row-gap: 0.25rem;

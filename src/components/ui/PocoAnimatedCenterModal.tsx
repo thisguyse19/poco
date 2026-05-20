@@ -12,6 +12,9 @@ function useReduceMotion() {
  * Centered alert / confirm shell with iOS-style scale + fade (enter and exit).
  * Panel width uses `calc(100vw-2rem)` with `panelMaxWidthClass` so PWAs do not stretch edge-to-edge
  * (which prevented horizontal centre). Overlay uses `min-h-dvh` and safe-area padding instead of tab-bar padding.
+ *
+ * Renders the portal whenever `open || mounted` so the first frame after `open` is not skipped (which used to pair with
+ * `entered` + rAF and could leave the layer invisible). Visibility for painting uses `show = open && mounted`.
  */
 export function PocoAnimatedCenterModal({
   open,
@@ -26,25 +29,14 @@ export function PocoAnimatedCenterModal({
 }) {
   const reduceMotion = useReduceMotion()
   const [mounted, setMounted] = useState(open)
-  const [entered, setEntered] = useState(false)
   const panelRef = useRef<HTMLDivElement>(null)
   const ms = reduceMotion ? 1 : DURATION
 
-  /**
-   * One rAF so cleanup cancels the same id that schedules `setEntered` (double-rAF + cancel first id could strand `entered`).
-   * Staged `mounted` / `entered` updates are intentional for enter animation; not external subscription sync.
-   */
-  /* eslint-disable react-hooks/set-state-in-effect -- modal mount choreography */
+  /* eslint-disable react-hooks/set-state-in-effect -- staged mount for exit transitions */
   useLayoutEffect(() => {
-    if (!open) {
-      setEntered(false)
-      return
+    if (open) {
+      setMounted(true)
     }
-    setMounted(true)
-    const id = requestAnimationFrame(() => {
-      setEntered(true)
-    })
-    return () => cancelAnimationFrame(id)
   }, [open])
   /* eslint-enable react-hooks/set-state-in-effect */
 
@@ -62,9 +54,10 @@ export function PocoAnimatedCenterModal({
     if (!open) setMounted(false)
   }
 
-  if (!mounted) return null
+  const shouldRender = open || mounted
+  if (!shouldRender) return null
 
-  const show = entered && open
+  const show = open && mounted
   const transition = `opacity ${ms}ms ${EASE}, transform ${ms}ms ${EASE}`
 
   return createPortal(
