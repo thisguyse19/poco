@@ -5,10 +5,10 @@
  * The Vite build rewrites `dist/sw.js` so the service worker cache name includes this code; that
  * forces browsers to treat each deploy as an update when using “Check for app update”.
  */
-export const POCO_VERSION_CODE = 16
+export const POCO_VERSION_CODE = 17
 
 /** User-visible semver-style label (keep roughly in sync with `package.json` version). */
-export const POCO_VERSION_LABEL = '1.1.5'
+export const POCO_VERSION_LABEL = '1.1.6'
 
 export type ReleaseNote = {
   code: number
@@ -20,6 +20,15 @@ export type ReleaseNote = {
 
 /** Newest release first. Each entry’s `code` must match a shipped `POCO_VERSION_CODE`. */
 export const POCO_RELEASE_HISTORY: ReleaseNote[] = [
+  {
+    code: 17,
+    label: '1.1.6',
+    date: '2026-05-19',
+    title: 'Centre modals actually fixed to the viewport',
+    bullets: [
+      'Remove conflicting `relative` + `fixed` on the dialog shell: Tailwind’s CSS order made `relative` win, so portaled modals sat in document flow under `#root` and never appeared on screen.',
+    ],
+  },
   {
     code: 16,
     label: '1.1.5',
