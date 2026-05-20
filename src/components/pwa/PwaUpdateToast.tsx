@@ -51,28 +51,42 @@ export function PwaUpdateToast() {
   }, [wireRegistration])
 
   useEffect(() => {
-    const onVis = () => {
-      if (document.visibilityState !== 'visible') return
+    let hourly: ReturnType<typeof setInterval> | undefined
+    const stopHourly = () => {
+      if (hourly != null) {
+        clearInterval(hourly)
+        hourly = undefined
+      }
+    }
+    const probe = () => {
       const reg = regRef.current
       if (!reg) return
       void probeServiceWorkerUpdate(reg).then((w) => {
         if (w) setWaiting(true)
       })
     }
-    document.addEventListener('visibilitychange', onVis)
-    return () => document.removeEventListener('visibilitychange', onVis)
-  }, [])
+    const startHourly = () => {
+      if (typeof document === 'undefined' || document.visibilityState !== 'visible') return
+      if (hourly != null) return
+      hourly = window.setInterval(probe, 60 * 60 * 1000)
+    }
 
-  /** Hourly update check while the tab stays open (e.g. long-lived PWA). */
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      const reg = regRef.current
-      if (!reg) return
-      void probeServiceWorkerUpdate(reg).then((w) => {
-        if (w) setWaiting(true)
-      })
-    }, 60 * 60 * 1000)
-    return () => window.clearInterval(id)
+    const onVis = () => {
+      if (document.visibilityState !== 'visible') {
+        stopHourly()
+        return
+      }
+      probe()
+      stopHourly()
+      startHourly()
+    }
+
+    startHourly()
+    document.addEventListener('visibilitychange', onVis)
+    return () => {
+      stopHourly()
+      document.removeEventListener('visibilitychange', onVis)
+    }
   }, [])
 
   const onUpdate = useCallback(() => {

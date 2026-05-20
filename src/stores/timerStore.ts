@@ -175,7 +175,7 @@ export const useTimerStore = create<TimerStore>((set, get) => {
       const left = Math.max(0, s.phaseEndsAt - Date.now())
       if (left > 0) {
         set({ remainingMs: left })
-        persistSlice(get())
+        /** Avoid persisting every tick (was paired with ~60fps rAF) — `useTimer` persists on an interval. */
         return
       }
       completeCurrentPhase()

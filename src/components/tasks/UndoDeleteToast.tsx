@@ -27,7 +27,7 @@ export function UndoDeleteToast({ task, onUndo, onDismiss }: Props) {
       }
     }
     tick()
-    const id = window.setInterval(tick, 80)
+    const id = window.setInterval(tick, 250)
     return () => window.clearInterval(id)
   }, [task, onDismiss])
 

@@ -57,18 +57,43 @@ function runScrumNotificationTick(sm: ScrumMasterSettings) {
   if (dd >= 1 && dd <= 6 && sess.standDownLive) fire('sd-after1')
 }
 
+/** Minute-granularity reminders: one tick per minute while the tab is visible is enough. */
+const SCRUM_TICK_MS = 60_000
+
 /** Local reminders for stand up / stand down (deduped per calendar day). */
 export function useScrumNotifications(sm: ScrumMasterSettings) {
   useEffect(() => {
     if (!sm.enabled) return
-    runScrumNotificationTick(sm)
-    const id = window.setInterval(() => runScrumNotificationTick(sm), 5_000)
-    const onVis = () => {
-      if (document.visibilityState === 'visible') runScrumNotificationTick(sm)
+
+    let id: ReturnType<typeof setInterval> | null = null
+
+    const stop = () => {
+      if (id != null) {
+        clearInterval(id)
+        id = null
+      }
     }
+
+    const start = () => {
+      if (typeof document === 'undefined' || document.visibilityState !== 'visible') return
+      if (id != null) return
+      id = window.setInterval(() => runScrumNotificationTick(sm), SCRUM_TICK_MS)
+    }
+
+    const onVis = () => {
+      if (document.visibilityState === 'hidden') {
+        stop()
+        return
+      }
+      runScrumNotificationTick(sm)
+      start()
+    }
+
+    runScrumNotificationTick(sm)
+    start()
     document.addEventListener('visibilitychange', onVis)
     return () => {
-      window.clearInterval(id)
+      stop()
       document.removeEventListener('visibilitychange', onVis)
     }
   }, [sm])
