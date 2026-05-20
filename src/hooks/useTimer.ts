@@ -13,9 +13,10 @@ export function formatMs(ms: number) {
   return `${pad2(m)}:${pad2(s)}`
 }
 
-/** MM:SS display only changes once per second; avoid ~60Hz RAF + disk writes when the timer is running. */
-const WALL_TICK_MS = 1000
-const PERSIST_TICK_MS = 2000
+/** MM:SS display changes each second; 2s wall sync is enough for UX while cutting wakeups vs 1s. */
+const WALL_TICK_MS = 2000
+/** Persist less often while running — phase end is still exact via `phaseEndsAt`. */
+const PERSIST_TICK_MS = 5000
 
 export function useTimer() {
   const mode = useTimerStore((s) => s.mode)

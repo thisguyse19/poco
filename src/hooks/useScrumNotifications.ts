@@ -4,6 +4,7 @@ import { toLocalISODate } from '../services/storage'
 import { getScrumSession } from '../utils/scrumSession'
 import { deliverLocalNotification } from '../utils/notifyDelivery'
 import { nowMinutes, scrumNotifyPayload, timeToMinutes, type ScrumNotifyBodyKey } from '../utils/scrumMaster'
+import { subscribeVisibleMinuteAligned } from '../utils/minuteWallSubscribe'
 
 function canNotify(): boolean {
   return typeof Notification !== 'undefined' && Notification.permission === 'granted'
@@ -57,45 +58,11 @@ function runScrumNotificationTick(sm: ScrumMasterSettings) {
   if (dd >= 1 && dd <= 6 && sess.standDownLive) fire('sd-after1')
 }
 
-/** Minute-granularity reminders: one tick per minute while the tab is visible is enough. */
-const SCRUM_TICK_MS = 60_000
-
-/** Local reminders for stand up / stand down (deduped per calendar day). */
+/** Local reminders for stand up / stand down (deduped per calendar day). Aligned to wall minutes while visible. */
 export function useScrumNotifications(sm: ScrumMasterSettings) {
   useEffect(() => {
     if (!sm.enabled) return
-
-    let id: ReturnType<typeof setInterval> | null = null
-
-    const stop = () => {
-      if (id != null) {
-        clearInterval(id)
-        id = null
-      }
-    }
-
-    const start = () => {
-      if (typeof document === 'undefined' || document.visibilityState !== 'visible') return
-      if (id != null) return
-      id = window.setInterval(() => runScrumNotificationTick(sm), SCRUM_TICK_MS)
-    }
-
-    const onVis = () => {
-      if (document.visibilityState === 'hidden') {
-        stop()
-        return
-      }
-      runScrumNotificationTick(sm)
-      start()
-    }
-
-    runScrumNotificationTick(sm)
-    start()
-    document.addEventListener('visibilitychange', onVis)
-    return () => {
-      stop()
-      document.removeEventListener('visibilitychange', onVis)
-    }
+    return subscribeVisibleMinuteAligned(() => runScrumNotificationTick(sm))
   }, [sm])
 }
 
