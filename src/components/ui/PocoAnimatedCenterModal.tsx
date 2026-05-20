@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 
 const DURATION = 320
 const EASE = 'cubic-bezier(0.32, 0.72, 0, 1)'
@@ -30,17 +30,23 @@ export function PocoAnimatedCenterModal({
   const panelRef = useRef<HTMLDivElement>(null)
   const ms = reduceMotion ? 1 : DURATION
 
-  useEffect(() => {
-    if (open) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- staged mount for modal animation
-      setMounted(true)
-      const id = requestAnimationFrame(() => {
-        requestAnimationFrame(() => setEntered(true))
-      })
-      return () => cancelAnimationFrame(id)
+  /**
+   * One rAF so cleanup cancels the same id that schedules `setEntered` (double-rAF + cancel first id could strand `entered`).
+   * Staged `mounted` / `entered` updates are intentional for enter animation; not external subscription sync.
+   */
+  /* eslint-disable react-hooks/set-state-in-effect -- modal mount choreography */
+  useLayoutEffect(() => {
+    if (!open) {
+      setEntered(false)
+      return
     }
-    setEntered(false)
+    setMounted(true)
+    const id = requestAnimationFrame(() => {
+      setEntered(true)
+    })
+    return () => cancelAnimationFrame(id)
   }, [open])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   /** If transitionend never fires (e.g. reduced-motion / iOS), avoid a full-screen invisible layer blocking the app. */
   useEffect(() => {
