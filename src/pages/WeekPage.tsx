@@ -383,7 +383,7 @@ export function WeekPage() {
 
   const zonePrevRef = useRef<HTMLButtonElement | null>(null)
   const zoneNextRef = useRef<HTMLButtonElement | null>(null)
-  const flipTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const flipRafRef = useRef<number | null>(null)
   const flipStartTimeRef = useRef(0)
   const activeZoneRef = useRef<'prev' | 'next' | null>(null)
   const startFlipIfNeededRef = useRef<(clientX: number, clientY: number) => void>(() => {})
@@ -398,8 +398,31 @@ export function WeekPage() {
   }, [pageIndex])
 
   useEffect(() => {
-    const id = window.setInterval(() => setClock((c) => c + 1), 60_000)
-    return () => window.clearInterval(id)
+    let id: ReturnType<typeof setInterval> | undefined
+    const stop = () => {
+      if (id != null) {
+        clearInterval(id)
+        id = undefined
+      }
+    }
+    const start = () => {
+      if (typeof document === 'undefined' || document.visibilityState !== 'visible') return
+      if (id != null) return
+      id = window.setInterval(() => setClock((c) => c + 1), 60_000)
+    }
+    const onVis = () => {
+      if (document.visibilityState === 'hidden') stop()
+      else {
+        setClock((c) => c + 1)
+        start()
+      }
+    }
+    start()
+    document.addEventListener('visibilitychange', onVis)
+    return () => {
+      stop()
+      document.removeEventListener('visibilitychange', onVis)
+    }
   }, [])
 
   const todayIso = useMemo(() => {
@@ -472,9 +495,9 @@ export function WeekPage() {
   )
 
   const stopFlipInterval = useCallback(() => {
-    if (flipTimerRef.current != null) {
-      clearInterval(flipTimerRef.current)
-      flipTimerRef.current = null
+    if (flipRafRef.current != null) {
+      cancelAnimationFrame(flipRafRef.current)
+      flipRafRef.current = null
     }
   }, [])
 
@@ -503,7 +526,7 @@ export function WeekPage() {
         setFlipProgress(0)
         if (z) {
           flipStartTimeRef.current = performance.now()
-          flipTimerRef.current = window.setInterval(() => {
+          const loop = () => {
             const now = performance.now()
             const elapsed = now - flipStartTimeRef.current
             setFlipProgress(Math.min(1, elapsed / PAGE_FLIP_MS))
@@ -514,7 +537,11 @@ export function WeekPage() {
               if (!zone) return
               setPageIndex((cur) => (zone === 'next' ? cur + 1 : Math.max(0, cur - 1)))
             }
-          }, 32)
+            if (activeZoneRef.current) {
+              flipRafRef.current = requestAnimationFrame(loop)
+            }
+          }
+          flipRafRef.current = requestAnimationFrame(loop)
         }
       }
     }

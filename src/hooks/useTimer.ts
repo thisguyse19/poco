@@ -1,5 +1,4 @@
 import { useEffect } from 'react'
-import { useSettingsStore } from '../stores/settingsStore'
 import { storage } from '../services/storage'
 import { getWallRemaining, phaseDuration, useTimerStore } from '../stores/timerStore'
 
@@ -14,8 +13,11 @@ export function formatMs(ms: number) {
   return `${pad2(m)}:${pad2(s)}`
 }
 
+/** MM:SS display only changes once per second; avoid ~60Hz RAF + disk writes when the timer is running. */
+const WALL_TICK_MS = 1000
+const PERSIST_TICK_MS = 2000
+
 export function useTimer() {
-  const reduceMotion = useSettingsStore((s) => s.settings.reduceMotion)
   const mode = useTimerStore((s) => s.mode)
   const isRunning = useTimerStore((s) => s.isRunning)
   const phaseEndsAt = useTimerStore((s) => s.phaseEndsAt)
@@ -32,27 +34,42 @@ export function useTimer() {
   useEffect(() => {
     if (!isRunning) return
 
-    if (reduceMotion) {
-      const id = window.setInterval(() => {
-        useTimerStore.getState().syncWallClock()
-        persistRunning()
-      }, 1000)
-      return () => clearInterval(id)
+    let tickId: ReturnType<typeof setInterval> | undefined
+    let persistId: ReturnType<typeof setInterval> | undefined
+
+    const stop = () => {
+      if (tickId != null) {
+        clearInterval(tickId)
+        tickId = undefined
+      }
+      if (persistId != null) {
+        clearInterval(persistId)
+        persistId = undefined
+      }
     }
 
-    let raf = 0
-    const loop = () => {
+    const start = () => {
+      if (typeof document === 'undefined' || document.visibilityState !== 'visible') return
       useTimerStore.getState().syncWallClock()
-      raf = requestAnimationFrame(loop)
+      tickId = window.setInterval(() => useTimerStore.getState().syncWallClock(), WALL_TICK_MS)
+      persistId = window.setInterval(() => persistRunning(), PERSIST_TICK_MS)
     }
-    raf = requestAnimationFrame(loop)
-    return () => cancelAnimationFrame(raf)
-  }, [isRunning, reduceMotion])
 
-  useEffect(() => {
-    if (!isRunning) return
-    const id = window.setInterval(() => persistRunning(), 2000)
-    return () => clearInterval(id)
+    const onVis = () => {
+      if (document.visibilityState === 'hidden') {
+        stop()
+        return
+      }
+      stop()
+      start()
+    }
+
+    start()
+    document.addEventListener('visibilitychange', onVis)
+    return () => {
+      stop()
+      document.removeEventListener('visibilitychange', onVis)
+    }
   }, [isRunning])
 
   const wall = getWallRemaining({

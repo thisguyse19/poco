@@ -63,11 +63,36 @@ export function HomePage() {
   }, [])
 
   useEffect(() => {
-    const id = window.setInterval(() => {
-      setClock((c) => c + 1)
+    let id: ReturnType<typeof setInterval> | undefined
+    const stop = () => {
+      if (id != null) {
+        clearInterval(id)
+        id = undefined
+      }
+    }
+    const start = () => {
+      if (typeof document === 'undefined' || document.visibilityState !== 'visible') return
+      if (id != null) return
+      id = window.setInterval(() => {
+        setClock((c) => c + 1)
+        setWallMs(Date.now())
+      }, 15_000)
+    }
+    const onVis = () => {
+      if (document.visibilityState === 'hidden') {
+        stop()
+        return
+      }
       setWallMs(Date.now())
-    }, 15_000)
-    return () => window.clearInterval(id)
+      stop()
+      start()
+    }
+    start()
+    document.addEventListener('visibilitychange', onVis)
+    return () => {
+      stop()
+      document.removeEventListener('visibilitychange', onVis)
+    }
   }, [])
 
   const session = useMemo(() => {
