@@ -147,6 +147,8 @@ export async function probeServiceWorkerUpdate(reg: ServiceWorkerRegistration | 
   return whenInstalled()
 }
 
+export const POCO_SESSION_AFTER_SW_UPDATE = 'poco-after-sw-update'
+
 /** Activate the waiting worker and reload once it controls the page. */
 export function activateWaitingServiceWorkerAndReload(reg: ServiceWorkerRegistration): void {
   const w = reg.waiting
@@ -156,6 +158,11 @@ export function activateWaitingServiceWorkerAndReload(reg: ServiceWorkerRegistra
   }
   const reload = () => {
     window.location.reload()
+  }
+  try {
+    sessionStorage.setItem(POCO_SESSION_AFTER_SW_UPDATE, '1')
+  } catch {
+    /* ignore private mode */
   }
   navigator.serviceWorker.addEventListener('controllerchange', reload, { once: true })
   w.postMessage({ type: 'SKIP_WAITING' })
