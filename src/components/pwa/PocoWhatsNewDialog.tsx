@@ -1,7 +1,4 @@
-import { useId } from 'react'
-import { PocoAnimatedCenterModal } from '../ui/PocoAnimatedCenterModal'
-import { PocoDialogPanel } from '../ui/PocoDialogPanel'
-import { pocoDialogTheme } from '../ui/pocoDialogTheme'
+import { PocoMessageDialog } from '../ui/PocoMessageDialog'
 import type { ReleaseNote } from '../../version'
 
 export function PocoWhatsNewDialog({
@@ -17,15 +14,15 @@ export function PocoWhatsNewDialog({
   /** e.g. “Version history” when browsing from Settings */
   heading?: string
 }) {
-  const id = useId()
-  const titleId = `${id}-title`
-
   return (
-    <PocoAnimatedCenterModal open={open} onBackdropClick={onClose} panelMaxWidthClass="max-w-md">
-      <PocoDialogPanel role="dialog" labelledBy={titleId} className="max-h-[min(88dvh,520px)] overflow-hidden">
-        <h2 id={titleId} className={pocoDialogTheme.title}>
-          {heading}
-        </h2>
+    <PocoMessageDialog
+      open={open}
+      title={heading}
+      onClose={onClose}
+      panelMaxWidthClass="max-w-md"
+      panelClassName="max-h-[min(88dvh,520px)] overflow-hidden"
+      panelRole="dialog"
+      body={
         <div className="mt-3 max-h-[min(52dvh,380px)] overflow-y-auto pr-1 text-sm leading-snug text-[var(--text-secondary)] [-webkit-overflow-scrolling:touch]">
           {entries.length === 0 ? (
             <p className="text-[var(--text-tertiary)]">No release notes for this range.</p>
@@ -48,12 +45,7 @@ export function PocoWhatsNewDialog({
             </ul>
           )}
         </div>
-        <div className={pocoDialogTheme.actions}>
-          <button type="button" className={pocoDialogTheme.btnAccent} onClick={onClose}>
-            OK
-          </button>
-        </div>
-      </PocoDialogPanel>
-    </PocoAnimatedCenterModal>
+      }
+    />
   )
 }
