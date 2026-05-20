@@ -80,7 +80,7 @@ export function AppLayout() {
         >
           <div className="flex items-center gap-3">
             <img
-              src={`${import.meta.env.BASE_URL}icons/icon-192.png`}
+              src={`${import.meta.env.BASE_URL}poco/icons/icon-192.png`}
               alt=""
               width={36}
               height={36}

@@ -5,10 +5,10 @@
  * The Vite build rewrites `dist/sw.js` so the service worker cache name includes this code; that
  * forces browsers to treat each deploy as an update when using “Check for app update”.
  */
-export const POCO_VERSION_CODE = 20
+export const POCO_VERSION_CODE = 21
 
 /** User-visible semver-style label (keep roughly in sync with `package.json` version). */
-export const POCO_VERSION_LABEL = '1.1.9'
+export const POCO_VERSION_LABEL = '1.1.10'
 
 export type ReleaseNote = {
   code: number
@@ -20,6 +20,18 @@ export type ReleaseNote = {
 
 /** Newest release first. Each entry’s `code` must match a shipped `POCO_VERSION_CODE`. */
 export const POCO_RELEASE_HISTORY: ReleaseNote[] = [
+  {
+    code: 21,
+    label: '1.1.10',
+    date: '2026-05-19',
+    title: 'Simpler app icon + reliable icon URLs',
+    bullets: [
+      'PWA manifest and apple-touch links in index.html use the Vite base URL placeholder so they resolve after build.',
+      'Sidebar and notification icons point at poco/icons under the same base, matching public/poco/icons in dist.',
+      'Manifest icon paths stay relative to the manifest file.',
+      'Removed the separate tab favicon link; the mark is a calmer rounded note frame.',
+    ],
+  },
   {
     code: 20,
     label: '1.1.9',
