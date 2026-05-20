@@ -14,8 +14,10 @@ function useReduceMotion() {
  * (which prevented horizontal centre). Overlay uses `min-h-dvh` and safe-area padding instead of tab-bar padding.
  *
  * Renders the portal whenever `open || mounted` so exit transitions can finish before unmounting.
- * **Visibility uses `open` only** (`show = open`): tying opacity to `mounted` as well could leave `open && !mounted`
- * stuck at opacity 0 (tap looks like “modal never opened”) if `mounted` lags behind `open`.
+ *
+ * **Enter animation:** after `open` becomes true, one `requestAnimationFrame` flips `entered` so the first
+ * paint can use opacity 0 / offset scale, then transition into place. `reduceMotion` skips the rAF hop.
+ * **Do not use a double-rAF** here: Strict Mode cleanup only cancels the outer id and can strand `entered`.
  *
  * **Do not add `relative` alongside `fixed` on this root:** Tailwind emits `.relative` after `.fixed` in the stylesheet,
  * so `position: relative` wins and the overlay stays in normal flow below `#root` — modals render off-screen.
@@ -33,15 +35,40 @@ export function PocoAnimatedCenterModal({
 }) {
   const reduceMotion = useReduceMotion()
   const [mounted, setMounted] = useState(open)
+  const [entered, setEntered] = useState(open)
   const panelRef = useRef<HTMLDivElement>(null)
+  const prevOpenRef = useRef(open)
   const ms = reduceMotion ? 1 : DURATION
 
-  /* eslint-disable react-hooks/set-state-in-effect -- staged mount for exit transitions */
+  /* eslint-disable react-hooks/set-state-in-effect -- open/close choreography + rAF enter tick */
   useLayoutEffect(() => {
-    if (open) {
-      setMounted(true)
+    if (!open) {
+      setEntered(false)
+      prevOpenRef.current = false
+      return
     }
-  }, [open])
+
+    setMounted(true)
+
+    const wasAlreadyOpen = prevOpenRef.current === true
+    prevOpenRef.current = true
+
+    if (wasAlreadyOpen) {
+      setEntered(true)
+      return
+    }
+
+    if (reduceMotion) {
+      setEntered(true)
+      return
+    }
+
+    setEntered(false)
+    const id = requestAnimationFrame(() => {
+      setEntered(true)
+    })
+    return () => cancelAnimationFrame(id)
+  }, [open, reduceMotion])
   /* eslint-enable react-hooks/set-state-in-effect */
 
   /** If transitionend never fires (e.g. reduced-motion / iOS), avoid a full-screen invisible layer blocking the app. */
@@ -61,7 +88,7 @@ export function PocoAnimatedCenterModal({
   const shouldRender = open || mounted
   if (!shouldRender) return null
 
-  const show = open
+  const visualsOpen = reduceMotion ? open : open && entered
   const transition = `opacity ${ms}ms ${EASE}, transform ${ms}ms ${EASE}`
 
   return createPortal(
@@ -74,10 +101,10 @@ export function PocoAnimatedCenterModal({
         aria-label="Dismiss"
         className="absolute inset-0 z-0 bg-black/40 backdrop-blur-[1px] transition-opacity"
         style={{
-          opacity: show ? 1 : 0,
+          opacity: visualsOpen ? 1 : 0,
           transition,
           transitionTimingFunction: EASE,
-          pointerEvents: 'auto',
+          pointerEvents: open ? 'auto' : 'none',
         }}
         onClick={onBackdropClick}
       />
@@ -85,8 +112,8 @@ export function PocoAnimatedCenterModal({
         ref={panelRef}
         className={`relative z-[var(--poco-z-dialog-panel)] mx-auto w-[calc(100vw-2rem)] ${panelMaxWidthClass} shrink-0 self-center ${open ? 'pointer-events-auto' : 'pointer-events-none'}`}
         style={{
-          opacity: show ? 1 : 0,
-          transform: show ? 'translate3d(0, 0, 0) scale(1)' : 'translate3d(0, 14px, 0) scale(0.96)',
+          opacity: visualsOpen ? 1 : 0,
+          transform: visualsOpen ? 'translate3d(0, 0, 0) scale(1)' : 'translate3d(0, 14px, 0) scale(0.96)',
           transition,
           willChange: 'opacity, transform',
         }}
