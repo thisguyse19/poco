@@ -31,6 +31,7 @@ import {
   tomorrowIsoFrom,
 } from '../utils/weekPlanner'
 import { SCRUM_MASTER_CATEGORY } from '../utils/scrumMaster'
+import { subscribeVisibleMinuteAligned } from '../utils/minuteWallSubscribe'
 import { usePointerFine } from '../hooks/usePointerFine'
 
 const UNSCHEDULED_DROPPABLE_ID = 'poco-week-unscheduled'
@@ -398,31 +399,7 @@ export function WeekPage() {
   }, [pageIndex])
 
   useEffect(() => {
-    let id: ReturnType<typeof setInterval> | undefined
-    const stop = () => {
-      if (id != null) {
-        clearInterval(id)
-        id = undefined
-      }
-    }
-    const start = () => {
-      if (typeof document === 'undefined' || document.visibilityState !== 'visible') return
-      if (id != null) return
-      id = window.setInterval(() => setClock((c) => c + 1), 60_000)
-    }
-    const onVis = () => {
-      if (document.visibilityState === 'hidden') stop()
-      else {
-        setClock((c) => c + 1)
-        start()
-      }
-    }
-    start()
-    document.addEventListener('visibilitychange', onVis)
-    return () => {
-      stop()
-      document.removeEventListener('visibilitychange', onVis)
-    }
+    return subscribeVisibleMinuteAligned(() => setClock((c) => c + 1))
   }, [])
 
   const todayIso = useMemo(() => {

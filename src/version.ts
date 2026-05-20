@@ -5,10 +5,10 @@
  * The Vite build rewrites `dist/sw.js` so the service worker cache name includes this code; that
  * forces browsers to treat each deploy as an update when using “Check for app update”.
  */
-export const POCO_VERSION_CODE = 19
+export const POCO_VERSION_CODE = 20
 
 /** User-visible semver-style label (keep roughly in sync with `package.json` version). */
-export const POCO_VERSION_LABEL = '1.1.8'
+export const POCO_VERSION_LABEL = '1.1.9'
 
 export type ReleaseNote = {
   code: number
@@ -20,6 +20,17 @@ export type ReleaseNote = {
 
 /** Newest release first. Each entry’s `code` must match a shipped `POCO_VERSION_CODE`. */
 export const POCO_RELEASE_HISTORY: ReleaseNote[] = [
+  {
+    code: 20,
+    label: '1.1.9',
+    date: '2026-05-19',
+    title: 'Scrum timing accuracy + cooler focus ticks',
+    bullets: [
+      'Tasks / Ahead wall clocks tick on each real minute (and pause when hidden) so Scrum banners and collection windows align with minute-based thresholds.',
+      'Scrum local notifications use the same minute-aligned schedule while visible.',
+      'Focus timer wall sync 2s and persist 5s for fewer wakeups while the phase clock stays exact via phaseEndsAt.',
+    ],
+  },
   {
     code: 19,
     label: '1.1.8',
