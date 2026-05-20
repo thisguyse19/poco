@@ -5,10 +5,10 @@
  * The Vite build rewrites `dist/sw.js` so the service worker cache name includes this code; that
  * forces browsers to treat each deploy as an update when using “Check for app update”.
  */
-export const POCO_VERSION_CODE = 14
+export const POCO_VERSION_CODE = 15
 
 /** User-visible semver-style label (keep roughly in sync with `package.json` version). */
-export const POCO_VERSION_LABEL = '1.1.3'
+export const POCO_VERSION_LABEL = '1.1.4'
 
 export type ReleaseNote = {
   code: number
@@ -20,6 +20,18 @@ export type ReleaseNote = {
 
 /** Newest release first. Each entry’s `code` must match a shipped `POCO_VERSION_CODE`. */
 export const POCO_RELEASE_HISTORY: ReleaseNote[] = [
+  {
+    code: 15,
+    label: '1.1.4',
+    date: '2026-05-19',
+    title: 'Dialogs above chrome, new app icon',
+    bullets: [
+      'Version history and What is new reliably paint above the tab bar, update toast, and undo bar (higher z-index).',
+      'Centre modal keeps the portal mounted whenever the dialog is open so it cannot render “invisible”.',
+      'What is new gate opens synchronously after onboarding (no requestAnimationFrame that Strict Mode could cancel).',
+      'Warmer paper-style PWA icon with sage motif; sidebar uses the same mark. Regenerate PNGs from public/poco/icons/icon-source.svg via npm run icons.',
+    ],
+  },
   {
     code: 14,
     label: '1.1.3',

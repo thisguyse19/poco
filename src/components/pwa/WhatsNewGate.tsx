@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useLayoutEffect, useState } from 'react'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { getReleaseNotesAfter, POCO_VERSION_CODE } from '../../version'
 import { POCO_SESSION_AFTER_SW_UPDATE } from '../../utils/pwaUpdate'
@@ -15,49 +15,43 @@ export function WhatsNewGate() {
   const [open, setOpen] = useState(false)
   const [sinceCode, setSinceCode] = useState(0)
 
-  useEffect(() => {
+  /** Read session/localStorage and open once; layout effect avoids rAF cancellation under Strict Mode. */
+  /* eslint-disable react-hooks/set-state-in-effect -- derive dialog open from storage on mount / onboarding flip */
+  useLayoutEffect(() => {
     if (!onboardingComplete || typeof window === 'undefined') return
-    let cancelled = false
-    const id = window.requestAnimationFrame(() => {
-      if (cancelled) return
 
-      let afterSw = false
-      try {
-        afterSw = sessionStorage.getItem(POCO_SESSION_AFTER_SW_UPDATE) === '1'
-        if (afterSw) sessionStorage.removeItem(POCO_SESSION_AFTER_SW_UPDATE)
-      } catch {
-        /* ignore */
-      }
+    let afterSw = false
+    try {
+      afterSw = sessionStorage.getItem(POCO_SESSION_AFTER_SW_UPDATE) === '1'
+      if (afterSw) sessionStorage.removeItem(POCO_SESSION_AFTER_SW_UPDATE)
+    } catch {
+      /* ignore */
+    }
 
-      if (afterSw) {
-        const raw = window.localStorage.getItem(DISMISS_KEY)
-        const dismissed =
-          raw === null || raw === '' ? 0 : Number(raw)
-        setSinceCode(Number.isFinite(dismissed) ? dismissed : 0)
-        setOpen(true)
-        return
-      }
-
+    if (afterSw) {
       const raw = window.localStorage.getItem(DISMISS_KEY)
-      if (raw === null) {
-        window.localStorage.setItem(DISMISS_KEY, String(POCO_VERSION_CODE))
-        return
-      }
-      const dismissed = Number(raw)
-      if (!Number.isFinite(dismissed)) {
-        window.localStorage.setItem(DISMISS_KEY, String(POCO_VERSION_CODE))
-        return
-      }
-      if (POCO_VERSION_CODE > dismissed) {
-        setSinceCode(dismissed)
-        setOpen(true)
-      }
-    })
-    return () => {
-      cancelled = true
-      cancelAnimationFrame(id)
+      const dismissed = raw === null || raw === '' ? 0 : Number(raw)
+      setSinceCode(Number.isFinite(dismissed) ? dismissed : 0)
+      setOpen(true)
+      return
+    }
+
+    const raw = window.localStorage.getItem(DISMISS_KEY)
+    if (raw === null) {
+      window.localStorage.setItem(DISMISS_KEY, String(POCO_VERSION_CODE))
+      return
+    }
+    const dismissed = Number(raw)
+    if (!Number.isFinite(dismissed)) {
+      window.localStorage.setItem(DISMISS_KEY, String(POCO_VERSION_CODE))
+      return
+    }
+    if (POCO_VERSION_CODE > dismissed) {
+      setSinceCode(dismissed)
+      setOpen(true)
     }
   }, [onboardingComplete])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleClose = () => {
     if (typeof window !== 'undefined') {
