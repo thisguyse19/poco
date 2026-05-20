@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { ScrumMasterSettings, Settings, ThemeName } from '../types'
 import { storage } from '../services/storage'
+import { clearScrumScheduleGuardsAfterTimeEdit } from '../utils/scrumSession'
 
 export const DEFAULT_SETTINGS: Settings = {
   onboardingComplete: false,
@@ -91,6 +92,15 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
   updateSettings(patch) {
     const prev = get().settings
+    if (patch.scrumMaster) {
+      const mergedSm = { ...prev.scrumMaster, ...patch.scrumMaster }
+      if (
+        mergedSm.standUpTime !== prev.scrumMaster.standUpTime ||
+        mergedSm.standDownTime !== prev.scrumMaster.standDownTime
+      ) {
+        clearScrumScheduleGuardsAfterTimeEdit()
+      }
+    }
     let next: Settings = { ...prev, ...patch }
     if (patch.scrumMaster) {
       next = { ...next, scrumMaster: { ...prev.scrumMaster, ...patch.scrumMaster } }

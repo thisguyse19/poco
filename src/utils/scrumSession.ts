@@ -105,3 +105,16 @@ export function getActiveFarewell(session: ScrumSessionState): { kind: ScrumFare
   if (!session.farewell || session.farewell.untilMs <= Date.now()) return null
   return session.farewell
 }
+
+/**
+ * Clears one-shot “already did this today” guards so schedule banners and SM rhythm match new
+ * stand-up / stand-down times. Call when the user edits those times (not when toggling enable only).
+ */
+export function clearScrumScheduleGuardsAfterTimeEdit() {
+  const s = getScrumSession()
+  write({
+    ...s,
+    standUpPlan: undefined,
+    standDownCompletedDate: undefined,
+  })
+}
