@@ -22,7 +22,9 @@ export function notificationSettingsHint(): string {
 
 function notificationIconUrl(): string | undefined {
   if (typeof window === 'undefined') return undefined
-  return `${window.location.origin}/poco/icons/icon-192.png`
+  const base = import.meta.env.BASE_URL
+  const path = `${base.replace(/\/?$/, '/')}poco/icons/icon-192.png`
+  return new URL(path, window.location.origin).href
 }
 
 async function showViaServiceWorker(title: string, options: { body: string; tag: string; silent?: boolean }): Promise<boolean> {
