@@ -31,11 +31,20 @@ export function ScrumPersonalityPicker({
   const [slayR21Info, setSlayR21Info] = useState(false)
   const slayIntroShownRef = useRef(false)
 
-  const slayUnlocked = useSyncExternalStore(
+  const slayReveal = useSyncExternalStore(
     (cb) => pocoDevLab.subscribe(() => cb()),
-    () => pocoDevLab.get().scrumSlayVoiceUnlocked,
+    () => {
+      const s = pocoDevLab.get()
+      return s.scrumSlayVoiceUnlocked && !s.scrumSlayEggDisabled
+    },
     () => false,
   )
+
+  useEffect(() => {
+    if (value === 'slayR21' && !slayReveal) {
+      onChange('warm')
+    }
+  }, [value, slayReveal, onChange])
 
   const clearBoldHide = useCallback(() => {
     if (boldHideRef.current != null) {
@@ -121,7 +130,7 @@ export function ScrumPersonalityPicker({
 
   return (
     <>
-      <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex gap-2 overflow-x-auto overflow-y-visible pb-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {SCRUM_MASTER_PERSONALITIES.map((p) => {
           const isBold = p.id === 'bold'
           const isSnarky = p.id === 'snarky'
@@ -191,7 +200,7 @@ export function ScrumPersonalityPicker({
             </button>
           )
         })}
-        {slayUnlocked ? (
+        {slayReveal ? (
           <button
             type="button"
             onClick={() => {
@@ -207,7 +216,9 @@ export function ScrumPersonalityPicker({
               }
             }}
             className={`poco-press relative ${minW} shrink-0 rounded-none border ${pad} text-left transition-[box-shadow,background-color,border-color] duration-200 [transition-timing-function:var(--ease-ios)] ${
-              value === 'slayR21' ? 'border-[var(--accent)] bg-[var(--accent-soft)]' : 'border-[var(--border-subtle)] bg-[var(--bg-base)]'
+              value === 'slayR21'
+                ? 'poco-pride-slay-glow border-[var(--accent)] bg-[var(--accent-soft)]'
+                : 'border-[var(--border-subtle)] bg-[var(--bg-base)]'
             } ${compact ? 'rounded-[var(--radius-sm)]' : ''}`}
           >
             <span className={`block font-semibold text-[var(--text-primary)] ${titleCls}`}>

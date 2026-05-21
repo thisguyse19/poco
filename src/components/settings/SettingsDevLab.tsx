@@ -348,6 +348,30 @@ export function SettingsDevLab() {
       </div>
 
       <label className="flex items-center justify-between gap-3 rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm">
+        <span className="min-w-0 pr-2">Disable Slayer R21 easter egg (hides card, Male combo, pride chrome)</span>
+        <input
+          type="checkbox"
+          checked={state.scrumSlayEggDisabled}
+          onChange={(e) => {
+            const off = e.target.checked
+            pocoDevLab.set({ scrumSlayEggDisabled: off, ...(off ? { scrumSlayVoiceUnlocked: false } : {}) })
+            setState(pocoDevLab.get())
+          }}
+        />
+      </label>
+
+      <button
+        type="button"
+        className="poco-press w-full rounded-none border border-[var(--border-default)] py-2 text-xs font-semibold text-[var(--text-secondary)]"
+        onClick={() => {
+          pocoDevLab.set({ scrumSlayVoiceUnlocked: false })
+          setState(pocoDevLab.get())
+        }}
+      >
+        Hide Slayer voice (reset Male unlock)
+      </button>
+
+      <label className="flex items-center justify-between gap-3 rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm">
         <span>Show task IDs in list</span>
         <input
           type="checkbox"
@@ -363,7 +387,13 @@ export function SettingsDevLab() {
         type="button"
         className="poco-press w-full rounded-none border border-[var(--priority-high)]/40 py-2 text-xs font-semibold text-[var(--priority-high)]"
         onClick={() => {
-          pocoDevLab.set({ unlocked: false, showTaskIds: false, stressSeedActive: false, scrumSlayVoiceUnlocked: false })
+          pocoDevLab.set({
+            unlocked: false,
+            showTaskIds: false,
+            stressSeedActive: false,
+            scrumSlayVoiceUnlocked: false,
+            scrumSlayEggDisabled: false,
+          })
           setState(pocoDevLab.get())
         }}
       >

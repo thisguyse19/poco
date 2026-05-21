@@ -8,6 +8,8 @@ export type PocoDevLabState = {
   prismBestStreak: number
   /** Scrum “Slay R21” voice unlocked (Male gender toggle easter egg). */
   scrumSlayVoiceUnlocked: boolean
+  /** When true, Slayer egg is off: no Male combo, no Slayer card, no pride chrome. */
+  scrumSlayEggDisabled: boolean
 }
 
 const defaultState: PocoDevLabState = {
@@ -16,6 +18,7 @@ const defaultState: PocoDevLabState = {
   stressSeedActive: false,
   prismBestStreak: 0,
   scrumSlayVoiceUnlocked: false,
+  scrumSlayEggDisabled: false,
 }
 
 function read(): PocoDevLabState {
@@ -29,6 +32,7 @@ function read(): PocoDevLabState {
       stressSeedActive: Boolean(o.stressSeedActive),
       prismBestStreak: typeof o.prismBestStreak === 'number' && Number.isFinite(o.prismBestStreak) ? Math.max(0, Math.floor(o.prismBestStreak)) : 0,
       scrumSlayVoiceUnlocked: Boolean(o.scrumSlayVoiceUnlocked),
+      scrumSlayEggDisabled: Boolean(o.scrumSlayEggDisabled),
     }
   } catch {
     return { ...defaultState }
