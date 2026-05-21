@@ -1,4 +1,4 @@
-import { useMemo, useState, useSyncExternalStore } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSettingsStore, SM_GATE_PROMPT_VERSION } from '../stores/settingsStore'
 import type { ScrumMasterGender, ScrumMasterPersonality } from '../types'
@@ -9,8 +9,7 @@ import { normalizeTimeHHMM, scrumNamesForGender } from '../utils/scrumMaster'
 import { ScrumPersonalityPicker } from '../components/settings/ScrumPersonalityPicker'
 import { requestScrumNotificationPermission } from '../hooks/useScrumNotifications'
 import { notificationSettingsHint } from '../utils/notifyDelivery'
-import { pocoDevLab } from '../utils/pocoDevLab'
-import { triggerHaptic } from '../utils/haptics'
+import { useSlayMaleVoiceSecret } from '../hooks/useSlayMaleVoiceSecret'
 
 export function ScrumMasterSetupPage() {
   const navigate = useNavigate()
@@ -25,11 +24,7 @@ export function ScrumMasterSetupPage() {
   const [sprintTitle, setSprintTitle] = useState(cur.sprintTitle ?? '')
   const [sprintGoal, setSprintGoal] = useState(cur.sprintGoal ?? '')
 
-  const slayUnlocked = useSyncExternalStore(
-    (cb) => pocoDevLab.subscribe(() => cb()),
-    () => pocoDevLab.get().scrumSlayVoiceUnlocked,
-    () => false,
-  )
+  const { unlocked: slayUnlocked, seg: maleSlaySeg, glow: maleSlayGlow, onMaleTap, resetProgress } = useSlayMaleVoiceSecret()
 
   const names = useMemo(() => [...scrumNamesForGender(smGender)], [smGender])
 
@@ -94,29 +89,37 @@ export function ScrumMasterSetupPage() {
             <ScrumPersonalityPicker compact value={personality} onChange={setPersonality} />
           </div>
 
-          <div
-            className={`grid grid-cols-2 gap-0 overflow-hidden rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)] ${
-              slayUnlocked ? 'poco-pride-voice-frame' : ''
-            }`}
-          >
+          <div className="grid grid-cols-2 gap-0 overflow-hidden rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)]">
             {(['female', 'male'] as ScrumMasterGender[]).map((g) => (
               <button
                 key={g}
                 type="button"
-                className={`poco-press flex h-11 min-h-[2.75rem] flex-1 items-center justify-center border-r border-[var(--border-subtle)] text-xs font-semibold capitalize last:border-r-0 ${
+                className={`poco-press flex h-11 min-h-[2.75rem] flex-1 flex-col items-center justify-center gap-0.5 border-r border-[var(--border-subtle)] px-2 py-1.5 text-xs font-semibold capitalize last:border-r-0 ${
                   smGender === g ? 'bg-[var(--accent-soft)] text-[var(--accent)]' : 'text-[var(--text-secondary)]'
+                } ${g === 'male' && maleSlayGlow ? 'poco-pride-male-tap-pulse' : ''} ${
+                  g === 'male' && slayUnlocked ? 'poco-pride-male-voice-active' : ''
                 }`}
                 onClick={() => {
-                  if (g === 'male') {
-                    pocoDevLab.set({ scrumSlayVoiceUnlocked: true })
-                    triggerHaptic([14, 28, 14])
-                  }
+                  if (g === 'male') onMaleTap()
+                  else resetProgress()
                   setSmGender(g)
                   const opts = scrumNamesForGender(g)
                   setSmName(opts.includes(smName) ? smName : opts[0])
                 }}
               >
-                {g}
+                <span className="capitalize">{g}</span>
+                {g === 'male' && maleSlaySeg > 0 && !slayUnlocked ? (
+                  <span className="flex w-full max-w-[4.5rem] gap-1 px-0.5" aria-hidden>
+                    {[0, 1, 2, 3].map((i) => (
+                      <span
+                        key={i}
+                        className={`h-1 flex-1 rounded-none ${
+                          i < maleSlaySeg ? 'bg-[var(--accent)]' : 'bg-[var(--border-default)]'
+                        } opacity-90 transition-colors duration-200`}
+                      />
+                    ))}
+                  </span>
+                ) : null}
               </button>
             ))}
           </div>

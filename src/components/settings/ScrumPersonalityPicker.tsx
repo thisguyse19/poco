@@ -207,9 +207,7 @@ export function ScrumPersonalityPicker({
               }
             }}
             className={`poco-press relative ${minW} shrink-0 rounded-none border ${pad} text-left transition-[box-shadow,background-color,border-color] duration-200 [transition-timing-function:var(--ease-ios)] ${
-              value === 'slayR21'
-                ? 'poco-pride-voice-frame border-[var(--accent)] bg-[var(--accent-soft)]'
-                : 'border-[var(--border-subtle)] bg-[var(--bg-base)]'
+              value === 'slayR21' ? 'border-[var(--accent)] bg-[var(--accent-soft)]' : 'border-[var(--border-subtle)] bg-[var(--bg-base)]'
             } ${compact ? 'rounded-[var(--radius-sm)]' : ''}`}
           >
             <span className={`block font-semibold text-[var(--text-primary)] ${titleCls}`}>

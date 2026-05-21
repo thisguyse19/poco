@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { HomeSearchControl } from '../components/tasks/HomeSearchControl'
 import { QuickAdd } from '../components/tasks/QuickAdd'
-import { TaskList, type TaskListScrum } from '../components/tasks/TaskList'
+import { TaskList, taskListCategoryExpandKey, type TaskListScrum } from '../components/tasks/TaskList'
 import { ScrumSprintStrip } from '../components/scrum/ScrumSprintStrip'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useTaskStore } from '../stores/taskStore'
@@ -222,7 +222,7 @@ export function HomePage() {
         onReconcileFlat: () => {
           writeScrumFlatPreference(toLocalISODate(), false)
           const m = storage.getCategoryExpanded()
-          storage.saveCategoryExpanded({ ...m, [SCRUM_MASTER_CATEGORY]: true })
+          storage.saveCategoryExpanded({ ...m, [taskListCategoryExpandKey('today', SCRUM_MASTER_CATEGORY)]: true })
           setTaskListKey((k) => k + 1)
           setClock((c) => c + 1)
         },

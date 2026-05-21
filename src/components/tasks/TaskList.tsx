@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { Task } from '../../types'
 import { storage, toLocalISODate } from '../../services/storage'
 import { sortTodayTasks, useTaskStore } from '../../stores/taskStore'
@@ -20,9 +20,108 @@ import {
 import type { ScrumMasterPersonality } from '../../types'
 import type { StandUpPlanSnapshot } from '../../utils/scrumSession'
 
-/** Shared desktop task grid so horizon sections use the same column counts and track widths. */
-const TASK_CARD_GRID_CLASS =
-  'flex flex-col gap-[var(--list-row-gap)] md:grid md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 md:gap-[var(--list-row-gap)]'
+export type TaskListScrum = {
+  enabled: boolean
+  masterName: string
+  personality: ScrumMasterPersonality
+  banner: ScrumBannerView
+  onBannerTap: () => void
+  standUpCollection: boolean
+  standDownCollection: boolean
+  standUpPlan: StandUpPlanSnapshot | null
+  /** True during the “inline” day phase: optional gather-into-SM-section prompt. */
+  gatherSectionCue: boolean
+  onReconcileFlat: () => void
+  standUpLive: boolean
+  standDownLive: boolean
+  /** When true, show the dedicated “Name · Scrum Master” category; otherwise SM tasks merge into General with a ◆ marker. */
+  smRhythmActive: boolean
+  /** Live stand up / stand down: end ritual control (shown under the SM banner). */
+  endScrum: { label: string; onClick: () => void } | null
+}
+
+/** Vertical task stack (desktop day columns use horizontal buckets, not a card grid). */
+const TASK_CARD_STACK_CLASS = 'flex flex-col gap-[var(--list-row-gap)]'
+
+export type TaskListCategoryBucket = 'inbox' | 'today' | 'tomorrow' | 'someday'
+
+export function taskListCategoryExpandKey(bucket: TaskListCategoryBucket, cat: string): string {
+  return `${bucket}::${cat}`
+}
+
+function groupHorizonByCategory(tasks: Task[]): { cat: string; items: Task[] }[] {
+  const sorted = sortTodayTasks(tasks)
+  const groups = new Map<string, Task[]>()
+  for (const t of sorted) {
+    const k = t.category?.trim() || 'General'
+    if (!groups.has(k)) groups.set(k, [])
+    groups.get(k)!.push(t)
+  }
+  const keys = [...groups.keys()].sort((a, b) => a.localeCompare(b))
+  const sm = keys.filter((k) => k === SCRUM_MASTER_CATEGORY)
+  const rest = keys.filter((k) => k !== SCRUM_MASTER_CATEGORY)
+  return [...sm, ...rest].map((cat) => ({ cat, items: groups.get(cat)! }))
+}
+
+function CategoryAccordionList({
+  bucket,
+  categories,
+  expandedMap,
+  onToggleKey,
+  scrum,
+  scrumCategoryTitle,
+  renderTask,
+}: {
+  bucket: TaskListCategoryBucket
+  categories: { cat: string; items: Task[] }[]
+  expandedMap: Record<string, boolean>
+  onToggleKey: (storageKey: string) => void
+  scrum: TaskListScrum | null | undefined
+  scrumCategoryTitle: (cat: string, count: number) => { title: string; subtitle: string }
+  renderTask: (t: Task, scrumMark: boolean) => ReactNode
+}) {
+  return (
+    <div className="flex flex-col gap-4">
+      {categories.map(({ cat, items }) => {
+        const storageKey = taskListCategoryExpandKey(bucket, cat)
+        const expanded = expandedMap[storageKey] !== false
+        const isSm = cat === SCRUM_MASTER_CATEGORY && scrum?.enabled && scrum.smRhythmActive
+        const { title, subtitle } = scrumCategoryTitle(cat, items.length)
+        const scrumMark = (t: Task) =>
+          Boolean(
+            scrum?.enabled &&
+              t.category === SCRUM_MASTER_CATEGORY &&
+              !(cat === SCRUM_MASTER_CATEGORY && scrum.smRhythmActive),
+          )
+        return (
+          <div key={storageKey} className={`min-w-0 w-full ${isSm ? 'poco-scrum-panel' : ''}`}>
+            <button
+              type="button"
+              className="poco-press mb-1.5 flex w-full items-center gap-2.5 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-base)] px-2.5 py-1.5 text-left md:px-3 md:py-2.5"
+              onClick={() => onToggleKey(storageKey)}
+            >
+              <span
+                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-none border border-[var(--border-default)] bg-[var(--bg-elevated)] text-xs font-bold text-[var(--accent)] md:h-7 md:w-7 md:text-sm"
+                aria-hidden
+              >
+                {expanded ? '−' : '+'}
+              </span>
+              <span className="min-w-0 flex-1 truncate text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)] md:text-sm">
+                {title}
+              </span>
+              <span className="shrink-0 text-[10px] font-medium tabular-nums text-[var(--text-tertiary)] md:text-xs">{subtitle}</span>
+            </button>
+            {expanded ? (
+              <div className={`${TASK_CARD_STACK_CLASS} border-l border-[var(--border-subtle)] pl-2 md:pl-3`}>
+                {items.map((t) => renderTask(t, scrumMark(t)))}
+              </div>
+            ) : null}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
 
 function sortTodayTasksWithSmLingerAtTop(tasks: Task[], nowMs: number): Task[] {
   const linger = tasks.filter((t) => isScrumMasterCompletedLingering(t, nowMs))
@@ -66,26 +165,6 @@ function todayBucketCategory(t: Task, smRhythmActive: boolean): string {
   const c = t.category || 'General'
   if (smRhythmActive || c !== SCRUM_MASTER_CATEGORY) return c
   return 'General'
-}
-
-export type TaskListScrum = {
-  enabled: boolean
-  masterName: string
-  personality: ScrumMasterPersonality
-  banner: ScrumBannerView
-  onBannerTap: () => void
-  standUpCollection: boolean
-  standDownCollection: boolean
-  standUpPlan: StandUpPlanSnapshot | null
-  /** True during the “inline” day phase: optional gather-into-SM-section prompt. */
-  gatherSectionCue: boolean
-  onReconcileFlat: () => void
-  standUpLive: boolean
-  standDownLive: boolean
-  /** When true, show the dedicated “Name · Scrum Master” category; otherwise SM tasks merge into General with a ◆ marker. */
-  smRhythmActive: boolean
-  /** Live stand up / stand down: end ritual control (shown under the SM banner). */
-  endScrum: { label: string; onClick: () => void } | null
 }
 
 export function TaskList({
@@ -190,6 +269,10 @@ export function TaskList({
     }))
   }, [today, wallNowMs, scrum?.smRhythmActive])
 
+  const inboxByCategory = useMemo(() => groupHorizonByCategory(inbox), [inbox])
+  const tomorrowByCategory = useMemo(() => groupHorizonByCategory(tomorrow), [tomorrow])
+  const somedayByCategory = useMemo(() => groupHorizonByCategory(someday), [someday])
+
   const smTodayTasks = useMemo(() => today.filter((t) => t.category === SCRUM_MASTER_CATEGORY), [today])
 
   const scrumCategoryTitle = useCallback(
@@ -292,102 +375,81 @@ export function TaskList({
         </button>
       ) : null}
 
-      {inbox.length > 0 ? (
-        <section className="mb-[var(--section-gap)]">
-          {sectionTitle('Inbox')}
-          <div className={TASK_CARD_GRID_CLASS}>
-            {inbox.map((t) =>
-              renderTask(t, Boolean(scrum?.enabled && t.category === SCRUM_MASTER_CATEGORY)),
-            )}
-          </div>
-        </section>
-      ) : null}
-
-      {today.length > 0 ? (
-        <section className="mb-[var(--section-gap)]">
-          {sectionTitle('Today')}
-          {standDownReview}
-          {scrum?.enabled && scrum.gatherSectionCue && smTodayTasks.length > 0 && scrum.smRhythmActive ? (
-            <button
-              type="button"
-              onClick={gatherScrum}
-              className="poco-scrum-glow-border poco-press mb-3 w-full rounded-[var(--radius-sm)] bg-[var(--bg-base)] px-3 py-2 text-left text-xs font-semibold text-[var(--text-secondary)]"
-            >
-              <span className="poco-scrum-text-gradient">{scrum.masterName}</span> · {scrumGatherIntoSectionTail(scrum.personality)}
-            </button>
-          ) : null}
-
-          {todayByCategory.length > 0 ? (
-            <div className="flex flex-col gap-4">
-              {todayByCategory.map(({ cat, items }) => {
-                const expanded = map[cat] !== false
-                const isSm = cat === SCRUM_MASTER_CATEGORY && scrum?.enabled && scrum.smRhythmActive
-                const { title, subtitle } = scrumCategoryTitle(cat, items.length)
-                const inner = (
-                  <>
-                    <button
-                      type="button"
-                      className="poco-press mb-1.5 flex w-full items-center gap-2.5 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-base)] px-2.5 py-1.5 text-left md:px-3 md:py-2.5"
-                      onClick={() => toggle(cat)}
-                    >
-                      <span
-                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-none border border-[var(--border-default)] bg-[var(--bg-elevated)] text-xs font-bold text-[var(--accent)] md:h-7 md:w-7 md:text-sm"
-                        aria-hidden
-                      >
-                        {expanded ? '−' : '+'}
-                      </span>
-                      <span className="min-w-0 flex-1 truncate text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)] md:text-sm">
-                        {title}
-                      </span>
-                      <span className="shrink-0 text-[10px] font-medium tabular-nums text-[var(--text-tertiary)] md:text-xs">{subtitle}</span>
-                    </button>
-                    {expanded ? (
-                      <div className={`${TASK_CARD_GRID_CLASS} border-l border-[var(--border-subtle)] pl-2 md:pl-3`}>
-                        {items.map((t) =>
-                          renderTask(
-                            t,
-                            Boolean(
-                              scrum?.enabled &&
-                                t.category === SCRUM_MASTER_CATEGORY &&
-                                !(cat === SCRUM_MASTER_CATEGORY && scrum.smRhythmActive),
-                            ),
-                          ),
-                        )}
-                      </div>
-                    ) : null}
-                  </>
-                )
-                return (
-                  <div key={cat} className={`min-w-0 w-full ${isSm ? 'poco-scrum-panel' : ''}`}>
-                    {inner}
-                  </div>
-                )
-              })}
-            </div>
-          ) : null}
-        </section>
-      ) : null}
-
-      {tomorrow.length > 0 || someday.length > 0 ? (
-        <div className="mb-[var(--section-gap)] flex flex-col gap-[var(--section-gap)]">
-          {tomorrow.length > 0 ? (
-            <section>
-              {sectionTitle('Tomorrow')}
-              <div className={TASK_CARD_GRID_CLASS}>
-                {tomorrow.map((t) =>
-                  renderTask(t, Boolean(scrum?.enabled && t.category === SCRUM_MASTER_CATEGORY)),
-                )}
-              </div>
+      {inbox.length > 0 ||
+      today.length > 0 ||
+      tomorrow.length > 0 ||
+      someday.length > 0 ? (
+        <div className="mb-[var(--section-gap)] flex flex-col gap-[var(--section-gap)] md:flex-row md:items-stretch md:gap-4">
+          {inbox.length > 0 ? (
+            <section className="min-w-0 md:flex-1">
+              {sectionTitle('Inbox')}
+              <CategoryAccordionList
+                bucket="inbox"
+                categories={inboxByCategory}
+                expandedMap={map}
+                onToggleKey={toggle}
+                scrum={scrum}
+                scrumCategoryTitle={scrumCategoryTitle}
+                renderTask={renderTask}
+              />
             </section>
           ) : null}
+
+          {today.length > 0 ? (
+            <section className="min-w-0 md:flex-1">
+              {sectionTitle('Today')}
+              {standDownReview}
+              {scrum?.enabled && scrum.gatherSectionCue && smTodayTasks.length > 0 && scrum.smRhythmActive ? (
+                <button
+                  type="button"
+                  onClick={gatherScrum}
+                  className="poco-scrum-glow-border poco-press mb-3 w-full rounded-[var(--radius-sm)] bg-[var(--bg-base)] px-3 py-2 text-left text-xs font-semibold text-[var(--text-secondary)]"
+                >
+                  <span className="poco-scrum-text-gradient">{scrum.masterName}</span> · {scrumGatherIntoSectionTail(scrum.personality)}
+                </button>
+              ) : null}
+
+              {todayByCategory.length > 0 ? (
+                <CategoryAccordionList
+                  bucket="today"
+                  categories={todayByCategory}
+                  expandedMap={map}
+                  onToggleKey={toggle}
+                  scrum={scrum}
+                  scrumCategoryTitle={scrumCategoryTitle}
+                  renderTask={renderTask}
+                />
+              ) : null}
+            </section>
+          ) : null}
+
+          {tomorrow.length > 0 ? (
+            <section className="min-w-0 md:flex-1">
+              {sectionTitle('Tomorrow')}
+              <CategoryAccordionList
+                bucket="tomorrow"
+                categories={tomorrowByCategory}
+                expandedMap={map}
+                onToggleKey={toggle}
+                scrum={scrum}
+                scrumCategoryTitle={scrumCategoryTitle}
+                renderTask={renderTask}
+              />
+            </section>
+          ) : null}
+
           {someday.length > 0 ? (
-            <section>
+            <section className="min-w-0 md:flex-1">
               {sectionTitle('Someday')}
-              <div className={TASK_CARD_GRID_CLASS}>
-                {someday.map((t) =>
-                  renderTask(t, Boolean(scrum?.enabled && t.category === SCRUM_MASTER_CATEGORY)),
-                )}
-              </div>
+              <CategoryAccordionList
+                bucket="someday"
+                categories={somedayByCategory}
+                expandedMap={map}
+                onToggleKey={toggle}
+                scrum={scrum}
+                scrumCategoryTitle={scrumCategoryTitle}
+                renderTask={renderTask}
+              />
             </section>
           ) : null}
         </div>
@@ -396,7 +458,7 @@ export function TaskList({
       {completed.length > 0 ? (
         <section className="mb-[var(--section-gap)]">
           {sectionTitle('Done')}
-          <div className={`${TASK_CARD_GRID_CLASS} opacity-90`}>
+          <div className={`${TASK_CARD_STACK_CLASS} opacity-90`}>
             {completed.map((t) =>
               renderTask(
                 t,
