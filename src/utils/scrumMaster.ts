@@ -30,7 +30,7 @@ export function scrumPersonalityMeta(id: ScrumMasterPersonality): { title: strin
   if (id === 'slayR21') {
     return {
       title: 'Slay R21',
-      hint: 'Queer-coded hype: yassss energy, read the room, still safe for work. Text-only spice; be kind to humans.',
+      hint: '18+ in-app only: gay-bar Scrum—Eagle energy, disco drama, last-call truth about what shipped. Horny stays on-screen; be kind to real humans.',
     }
   }
   if (id === 'boldR21') {
@@ -211,16 +211,11 @@ export function isScrumInlinePhase(sm: ScrumMasterSettings, d = new Date()): boo
   return true
 }
 
-/** Every personality gets a full line; `slayR21` reuses playful lines with extra read layered in personaLine. */
-type PersonalityLinesAll = { [K in Exclude<ScrumMasterPersonality, 'slayR21'>]: string }
-
-const SLAY_READ = ' Yassss serve the sprint, shade the fluff, never shade coworkers.'
+/** Every personality, including `slayR21`, supplies its own full line (no playful + suffix). */
+type PersonalityLinesAll = { [K in ScrumMasterPersonality]: string }
 
 function personaLine(personality: ScrumMasterPersonality, lines: PersonalityLinesAll): string {
-  if (personality === 'slayR21') {
-    return `${lines.playful}${SLAY_READ}`
-  }
-  return lines[personality as keyof PersonalityLinesAll]
+  return lines[personality]
 }
 
 /** Stand-down: end-of-day review vs stand-up plan + extra completions (Agile). */
@@ -242,6 +237,8 @@ function buildStandDownScheduleLine(dm: number, personality: ScrumMasterPersonal
           'One minute until stand down, strip the polite version, stack what you actually shipped, and say it like you mean it in the dark. 18+ copy only; consent still matters with real people.',
         snarkyR21:
           'Stand down in sixty fucking seconds, prep your “done vs planned” recap like an adult, not a LinkedIn poet. Nothing sexual here, just ugly truth and a shorter fuse.',
+        slayR21:
+          'One minute till stand down, sis—stack receipts like you’re tucking your shirt after a back-booth lap at the Eagle: what shipped, what you only cruised, what you’ll own when the lights come up.',
       })
     }
     if (m <= 5) {
@@ -254,6 +251,7 @@ function buildStandDownScheduleLine(dm: number, personality: ScrumMasterPersonal
         bold: `${m} minutes until stand down.${tap} Short runway, make shipped work easy to defend.`,
         boldR21: `${m} minutes until stand down.${tap} Clock’s ticking, get your story straight while it’s still hot enough to blush at. Keep the horny in the wording, not in how you treat coworkers.`,
         snarkyR21: `${m} minutes until stand down.${tap} Quit sandbagging: line up what shipped vs what you promised before I start swearing louder. Crude, not porn, just facts with teeth.`,
+        slayR21: `${m} minutes until stand down.${tap} Short walk from the bar—line up shipped vs promised before last call rewrites your morals, trade.`,
       })
     }
     if (m <= 15) {
@@ -266,6 +264,7 @@ function buildStandDownScheduleLine(dm: number, personality: ScrumMasterPersonal
         bold: `${m} minutes until stand down. End-of-day review. Buffer time, tomorrow-you reads your receipts.`,
         boldR21: `${m} minutes until stand down, end-of-day review with the gloves off: what moved, what shipped, what you only winked at. Say it blunt, not creepy-weird.`,
         snarkyR21: `${m} minutes until stand down, review time. Planned vs done, plus the shit you “forgot” to mention. Loud, not sexual. Quit faking the busy badge.`,
+        slayR21: `${m} minutes until stand down. End-of-day review—planned vs done, plus the filthy little extras you “forgot” to mention at bear brunch.`,
       })
     }
     if (m <= 29) {
@@ -278,6 +277,7 @@ function buildStandDownScheduleLine(dm: number, personality: ScrumMasterPersonal
         bold: `${m} minutes until stand down. Plenty of runway, separate motion from proof you would show someone.`,
         boldR21: `${m} minutes until stand down, long runway to admit what you actually moved today. Truth beats the pretty story you told the calendar.`,
         snarkyR21: `${m} minutes until stand down, plenty of time to stop lying to yourself on the record. Vulgar mouth, clean math: what shipped vs what you promised.`,
+        slayR21: `${m} minutes until stand down—long cruise toward the truth: what you actually moved today beats the pretty lie you told the calendar in your disco voice.`,
       })
     }
     return personaLine(personality, {
@@ -289,6 +289,7 @@ function buildStandDownScheduleLine(dm: number, personality: ScrumMasterPersonal
       bold: `${m} minutes until stand down. Your daily sprint review. Heads-up, stack wins and misses before the clock gets judgy.`,
       boldR21: `${m} minutes until stand down, your daily sprint slice: wins, misses, near misses. Say it flat, say it loud. App copy goes 18+; you stay decent to real humans.`,
       snarkyR21: `${m} minutes until stand down, daily review, no deodorant on the language. Stack wins, flag the bullshit, and don’t you dare confuse “crass” with “sexual.”`,
+      slayR21: `${m} minutes until stand down. Daily sprint review—wins, misses, near misses; leave the polite version on the dance floor with your ex.`,
     })
   }
   if (dm === 0) {
@@ -305,6 +306,8 @@ function buildStandDownScheduleLine(dm: number, personality: ScrumMasterPersonal
         'Time for stand down, drag today’s truth across the finish line: what you finished, what you dodged, what you’d whisper if nobody was grading you. 18+ tone; behave in real life.',
       snarkyR21:
         'Time for stand down, open the app and reconcile the fucking day: planned vs shipped, no poetry. Not porn, just rude clarity and receipts.',
+      slayR21:
+        'Time for stand down—drag today’s truth across the finish line: planned vs shipped, bonus tasks, carry-over. Say it like you’re done faking soft eyes across the leather bar.',
     })
   }
   const after = dm
@@ -321,6 +324,8 @@ function buildStandDownScheduleLine(dm: number, personality: ScrumMasterPersonal
         'Stand down is open, walk the board like you mean it: what you promised with your eyes open, what you actually touched. Hot, blunt, zero “synergy” pillow talk.',
       snarkyR21:
         'Stand down is open, walk the board and stop acting like you know what you are doing when the numbers say otherwise. Planned shit vs shipped shit, plus the extras. Crass words, not sexual ones.',
+      slayR21:
+        'Stand down is open—walk the board like last call: morning promises, then the sneaky off-menu completions. Main character, rated cut, chosen-family honest.',
     })
   }
   if (after <= 5) {
@@ -333,6 +338,7 @@ function buildStandDownScheduleLine(dm: number, personality: ScrumMasterPersonal
       bold: `${after} minute${after === 1 ? '' : 's'} into stand down. Check off what landed today. Still time, tighten the record while memory is sharp.`,
       boldR21: `${after} minute${after === 1 ? '' : 's'} into stand down, tick what actually shipped while you still remember doing it. Blunt words, zero creep.`,
       snarkyR21: `${after} minute${after === 1 ? '' : 's'} into stand down, check the boxes before your brain starts rewriting history like a PR department. Foul language, zero sex creep.`,
+      slayR21: `${after} minute(s) into stand down. Tick what landed while memory’s still wet—blunt mouth, clean math, no coy “we’ll see” from the back row.`,
     })
   }
   return personaLine(personality, {
@@ -344,6 +350,7 @@ function buildStandDownScheduleLine(dm: number, personality: ScrumMasterPersonal
     bold: `${after} minutes into stand down. Close the loop on today’s sprint slice. Close the loop, half-truths sour overnight.`,
     boldR21: `${after} minutes into stand down, close the loop while the day’s still willing to kiss you back. Say what shipped, what didn’t, and what you’re hiding behind charm.`,
     snarkyR21: `${after} minutes into stand down, close the fucking loop. Half-truths rot; write the ugly version before you sleep. Not sexual, just mean and accurate.`,
+    slayR21: `${after} minutes into stand down—close the loop on today’s slice. Half-truths don’t get a morning-after text from me or your backlog.`,
   })
 }
 
@@ -374,6 +381,8 @@ export function buildScrumBannerLine(
           'Stand up in sixty seconds. Name what you will actually finish today, not the version you paste into Slack. 18+ wording only in here; do not be a creep IRL.',
         snarkyR21:
           'Stand up in one fucking minute, show up sober enough to tell the truth about what ships today. Not sex noise, just zero tolerance for your own bullshit.',
+        slayR21:
+          'Stand up starts in one minute—fix your hair, fix your list, come correct like you’re stepping into the Eagle spotlight: what ships tonight, what’s just thirsty decor.',
       })
     }
     if (m <= 5) {
@@ -386,6 +395,7 @@ export function buildScrumBannerLine(
         bold: `${m} minute${m === 1 ? '' : 's'} until your ${event}.${tap} Keep only what survives daylight.`,
         boldR21: `${m} minute${m === 1 ? '' : 's'} until stand up.${tap} Strip the fantasy list, keep what you’d still chase after midnight.`,
         snarkyR21: `${m} minute${m === 1 ? '' : 's'} until stand up.${tap} Cut the crap scope: what actually ships today, not what looks cute on a slide.`,
+        slayR21: `${m} minute(s) until stand up.${tap} Cut the coy act—name what finishes tonight, not what you’re only grinding on for attention under the disco ball.`,
       })
     }
     if (m <= 15) {
@@ -398,6 +408,7 @@ export function buildScrumBannerLine(
         bold: `${m} minutes until your ${event}.${tap} ${m} min, name a few crisp wins.`,
         boldR21: `${m} minutes until stand up.${tap} Slow burn the plan: what you’ll finish, what you’ll sweat for, what you’re only flirting with.`,
         snarkyR21: `${m} minutes until stand up.${tap} ${m} minutes to stop lying on the list. Pick outcomes, not theatre.`,
+        slayR21: `${m} minutes until stand up.${tap} Slow-burn the plan—what you’ll finish, what you’ll sweat through, what you’re done edging on the backlog at leather night.`,
       })
     }
     if (m <= 29) {
@@ -410,6 +421,7 @@ export function buildScrumBannerLine(
         bold: `${m} minutes until your ${event}. ${m} min out, scope vs ambition: pick a lane.`,
         boldR21: `${m} minutes until stand up, long runway to decide what you’re taking to bed tonight: real commitments, not “we’ll see.”`,
         snarkyR21: `${m} minutes until stand up, ${m} minutes to quit rehearsing excuses. Loud words, clean targets, still not porn.`,
+        slayR21: `${m} minutes until stand up. Pick work you’d still chase after 2 a.m. at the afters, not busywork that only looks good under strobing lies.`,
       })
     }
     return personaLine(personality, {
@@ -420,8 +432,9 @@ export function buildScrumBannerLine(
       snarky: `${m} minutes until your ${event}. ${Event} in ${m} minutes.`,
       bold: `${m} minutes until your ${event}. Soon, put your best work up front.`,
       boldR21: `${m} minutes until stand up, enough runway to pick the work you’ll actually touch, not the work you’ll only flirt with in a status meeting.`,
-      snarkyR21: `${m} minutes until stand up, enough time to delete the fantasy tasks and write the ugly honest list. Swearing allowed; sexual harassment isn’t.`,
-    })
+        snarkyR21: `${m} minutes until stand up, enough time to delete the fantasy tasks and write the ugly honest list. Swearing allowed; sexual harassment isn’t.`,
+        slayR21: `${m} minutes until stand up. Plenty of runway—decide what you’re leaving with tonight: real commitments, not a situationship with Jira in the Uber home.`,
+      })
   }
 
   if (dm === 0) {
@@ -436,6 +449,8 @@ export function buildScrumBannerLine(
         'Time for stand up, open the app and say what you’re finishing today like you mean it: hungry, blunt, no “circle back” foreplay. Adults-only tone in text; behave in person.',
       snarkyR21:
         'Time for stand up, open the fucking app and write the real list before your brain starts ad-libbing the task list. Crude, not sexual, just honest.',
+      slayR21:
+        'Time for stand up—tap in and write what finishes today like you’re done whispering “maybe” into your own ear at last call with your sisters watching.',
     })
   }
 
@@ -452,6 +467,8 @@ export function buildScrumBannerLine(
         'Stand up just started, lock the plan while adrenaline’s hot: what you’ll ship, what you’ll sweat, what you’re done pretending about.',
       snarkyR21:
         'Stand up just started, stop fucking around and write commitments you can defend when tonight calls you out.',
+      slayR21:
+        'Stand up just started—lock the plan while the room’s loud: what ships, what sweats, what you’re done pretending is foreplay with your backlog.',
     })
   }
   if (after <= 5) {
@@ -464,6 +481,7 @@ export function buildScrumBannerLine(
       bold: `${after} minute${after === 1 ? '' : 's'} into your stand up. Tap to open the flow. Swap swagger for specifics while it is easy.`,
       boldR21: `${after} minute${after === 1 ? '' : 's'} into stand up, tap in and tighten the list while honesty still feels sexy, not scary.`,
       snarkyR21: `${after} minute${after === 1 ? '' : 's'} into stand up, tap the flow and fix the plan before it rots. Mean words, zero sex creep.`,
+      slayR21: `${after} minute(s) into stand up. Tap the flow and tighten the list while honesty still feels like a hand on your thigh in the good way.`,
     })
   }
   return personaLine(personality, {
@@ -475,6 +493,7 @@ export function buildScrumBannerLine(
     bold: `${after} minutes into your stand up. Tap to open the flow. Finish strong, vague promises do not ship.`,
     boldR21: `${after} minutes into stand up, still time to make the list feel like a dare you’ll actually follow through on.`,
     snarkyR21: `${after} minutes into stand up, close the loop before you sand it down for LinkedIn. Crass, not sexual.`,
+    slayR21: `${after} minutes into stand up—still time to polish. Close the loop before nostalgia tries to kiss you without consent, bestie.`,
   })
 }
 
@@ -491,6 +510,8 @@ export function buildFarewellBannerLine(kind: 'farewellUp' | 'farewellDown', per
         'Go do good work, then bring the receipts to stand down so tonight can cut through the story you told this morning. Spicy text stays in the app; be normal to humans.',
       snarkyR21:
         'Go ship real shit today, stand down will call you out on the fairy tale later. Loud mouth, clean targets, nothing sexual in the insults.',
+      slayR21:
+        'Go ship like you’re hunting the floor at Pride afters—I’ll meet you at stand down with receipts, not cologne cover stories. Horny stays in the app; be civil to humans.',
     })
   }
   return personaLine(personality, {
@@ -504,6 +525,8 @@ export function buildFarewellBannerLine(kind: 'farewellUp' | 'farewellDown', per
       'Shut it down like you mean it, leave the day stripped, satisfied, and too honest for a status email. Tomorrow we flirt with the next list.',
     snarkyR21:
       'Close the damn day, tomorrow’s stand up will roast you if you leave loose ends. Crude talk, not sexual harassment.',
+    slayR21:
+      'Curtain, babe—hand me the bloopers and the filthy wins before you ghost. Tomorrow we cruise a fresh set at the same sticky bar called “sprint day.”',
   })
 }
 
@@ -520,6 +543,8 @@ export function scrumLiveSubtitle(personality: ScrumMasterPersonality, standUp: 
         'Write what you will actually finish today. Specific, hungry, no corporate soft focus.',
       snarkyR21:
         'List what the fuck ships today, drop the vanity tasks before they embarrass you at stand down. Vulgar, not sexual.',
+      slayR21:
+        'Write what you’ll actually finish—specific, greedy, the kind of list you’d defend if someone slid into your DMs with receipts and a leather jacket.',
     })
   }
   return personaLine(personality, {
@@ -533,6 +558,8 @@ export function scrumLiveSubtitle(personality: ScrumMasterPersonality, standUp: 
       'Stand-down review: planned vs done, with the lights low and the excuses naked. Say what shipped, what didn’t, what you’re still teasing.',
     snarkyR21:
       'Stand-down math: planned vs done, carry-over, and the shit you “forgot” to log. Swear if it helps, don’t confuse crass with creepy.',
+    slayR21:
+      'Stand-down: planned vs shipped—lingerie-off honesty, extras and carry-over included, no “we’ll see” pillow talk with your backlog.',
   })
 }
 
@@ -556,6 +583,7 @@ export function scrumVoiceLeadIn(personality: ScrumMasterPersonality): string {
     bold: 'whispers…',
     boldR21: 'breathes in your ear…',
     snarkyR21: 'spits it out…',
+    slayR21: 'leans in from the dark corner of the bar…',
   })
 }
 
@@ -575,6 +603,7 @@ export function scrumSessionHeaderParts(
         bold: ' is live, commitments you can stand by later.',
         boldR21: ' is live, lock the kind of intentions you’d defend with your shirt half unbuttoned.',
         snarkyR21: ' is live, stop fucking around and write the real list.',
+        slayR21: ' is live—lock intentions you’d still own if the house lights came all the way up at the Eagle.',
       }),
     }
   }
@@ -589,6 +618,7 @@ export function scrumSessionHeaderParts(
       bold: ' is live, facts first, polish second.',
       boldR21: ' is live, strip the story to what you actually did with your hands today.',
       snarkyR21: ' is live, reconcile the fucking day before your backlog files a restraining order.',
+      slayR21: ' is live—strip the story to what your hands did while nobody was buying your innocent twink eyes.',
     }),
   }
 }
@@ -603,6 +633,7 @@ export function scrumNotifyOptInCta(personality: ScrumMasterPersonality): string
     bold: 'Enable alerts for stand up and stand down.',
     boldR21: 'Turn on alerts, I’ll nag you like someone who actually wants you to show up.',
     snarkyR21: 'Enable notifications or miss the ritual and cry about it later.',
+    slayR21: 'Enable notifications—I’ll buzz you for open and close like a thirsty text thread you actually answer, queen.',
   })
 }
 
@@ -616,6 +647,7 @@ export function scrumQuickAddStandUpPlaceholder(personality: ScrumMasterPersonal
     bold: 'What finishes today, be specific.',
     boldR21: 'What are you finishing today, say it like you’d dare someone to hold you to it.',
     snarkyR21: 'What the fuck ships today, one line each, no fairy tales.',
+    slayR21: 'What finishes today—say it like you’re daring the whole room at karaoke to watch you follow through.',
   })
 }
 
@@ -629,6 +661,7 @@ export function scrumQuickAddStandDownPlaceholder(personality: ScrumMasterPerson
     bold: 'Carry-over and extras, spell them out.',
     boldR21: 'Spill carry-over and bonus wins, honest, messy, nothing you’d hide under the sheets.',
     snarkyR21: 'Log carry-over and off-plan shit, ugly truth beats a clean lie.',
+    slayR21: 'Carry-over, blockers, bonus wins—spill it like last-call confessions at the lesbian dive, log it like a tab you’re not disputing.',
   })
 }
 
@@ -642,6 +675,7 @@ export function scrumEndStandUpLabel(personality: ScrumMasterPersonality): strin
     bold: 'Call it: stand up done',
     boldR21: 'Kill stand up, before the flirting with deadlines gets old.',
     snarkyR21: 'End stand up, before this meeting becomes a hostage situation.',
+    slayR21: 'Cut stand up—before you blue-ball your own sprint and the whole bar loses interest.',
   })
 }
 
@@ -655,6 +689,7 @@ export function scrumEndStandDownLabel(personality: ScrumMasterPersonality): str
     bold: 'Call it: stand down done',
     boldR21: 'Close stand down, leave the day breathless and accounted for.',
     snarkyR21: 'End stand down, put the day out of its misery.',
+    slayR21: 'Close stand down—walk out counted, messy, satisfied like you tipped the go-go and still respect yourself.',
   })
 }
 
@@ -668,6 +703,7 @@ export function scrumGatherIntoSectionTail(personality: ScrumMasterPersonality):
     bold: 'Sweep stand-up tasks somewhere they cannot ghost you later.',
     boldR21: 'Corral stand-up tasks somewhere they can’t ghost you after midnight.',
     snarkyR21: 'Stuff stand-up tasks under Scrum Master so they stop hiding like cowards.',
+    slayR21: 'Herd stand-up tasks into Scrum Master like you’re cutting them off at the Eagle bar until they tell the truth.',
   })
 }
 
@@ -687,6 +723,7 @@ export function scrumTaskListCategorySubtitle(
       bold: 'Planned vs shipped. Tight review.',
       boldR21: 'Planned vs shipped. Get intimate with the truth.',
       snarkyR21: 'Planned vs shipped. Stop lying on the scoreboard.',
+      slayR21: 'Planned vs shipped—spreadsheet afterglow, no shame if the math is honest under black lights.',
     })
   }
   if (mode === 'standUp') {
@@ -699,6 +736,7 @@ export function scrumTaskListCategorySubtitle(
       bold: 'Bold commitments that still fit reality.',
       boldR21: 'Today’s commitments: hot enough to mean it, tight enough to ship.',
       snarkyR21: 'Today’s commitments: write them like you’re tired of your own bullshit.',
+      slayR21: 'Today’s commitments—cruise targets you’d actually take home from the trade show, not decor for your grid.',
     })
   }
   return n
@@ -719,6 +757,7 @@ export function scrumStandDownReviewHeading(personality: ScrumMasterPersonality,
       bold: 'Today’s review: short, sharp, and usefully honest.',
       boldR21: 'Today’s review: short, blunt, allergic to polite fiction.',
       snarkyR21: 'Sprint review today. Steel yourself for the honest bit.',
+      slayR21: 'Sprint review tonight—lights up, clothes on, lies off, mascara still fierce.',
     })
   }
   return personaLine(personality, {
@@ -730,6 +769,7 @@ export function scrumStandDownReviewHeading(personality: ScrumMasterPersonality,
     bold: 'Morning promises, afternoon evidence: make the introductions uncomfortable in the best way.',
     boldR21: 'Morning promises meet afternoon evidence. Make that reunion ugly-honest.',
     snarkyR21: 'Morning plan vs what you actually did. Time to feel bad in a useful way.',
+    slayR21: 'Morning plan vs what you did—time for the messy reunion in the back booth, receipts out, bravado optional.',
   })
 }
 
@@ -746,6 +786,7 @@ function extraDoneFragment(personality: ScrumMasterPersonality, n: number): stri
     bold: ` ${n} off-plan ${unit}, impressive hustle; make sure the paper trail looks as good as you do.`,
     boldR21: ` ${n} off-plan ${unit}, dirty little wins still count if you log them plain honest.`,
     snarkyR21: ` ${n} off-plan ${unit}, stop pretending those didn’t happen, you clever bastard.`,
+    slayR21: ` ${n} off-plan ${unit}—side pieces that still count if you log them like an adult at brunch with the girls.`,
   })
 }
 
@@ -761,6 +802,7 @@ function extraDoneFragmentWithPlan(personality: ScrumMasterPersonality, n: numbe
     bold: ` · +${n} off-plan ${taskU}, tip your hat to the wins, side-eye the excuses.`,
     boldR21: ` · +${n} off-plan ${taskU}, confess the bonus heat; it counts if it shipped.`,
     snarkyR21: ` · +${n} off-plan ${taskU}, yeah, you did extra shit, own it without the humblebrag.`,
+    slayR21: ` · +${n} bonus ${taskU} not on the call sheet—confess the hookup if it shipped, sis.`,
   })
 }
 
@@ -777,6 +819,8 @@ export function scrumStandDownReviewBody(personality: ScrumMasterPersonality, pa
         'Log what actually shipped today, off-plan wins too, like you’re confessing after a good night: specific, breathless, no fake modesty.',
       snarkyR21:
         'Write down every fucking completion today, including the off-plan stuff you “forgot” to mention. Not porn, just receipts.',
+      slayR21:
+        'Log what actually shipped today, off-plan too—say it like a walk of shame you’re still proud of: specific, sweaty, no fake modesty in the Uber line.',
     })
     return base + extraDoneFragment(personality, params.extraOutsidePlan)
   }
@@ -811,6 +855,10 @@ export function scrumStandDownReviewBody(personality: ScrumMasterPersonality, pa
       plannedOpen > 0
         ? ` · ${plannedOpen} still open, write carry-over like you mean it, not like HR is reading over your shoulder`
         : ` · all closed, don’t get cute, get accurate`,
+    slayR21:
+      plannedOpen > 0
+        ? ` · ${plannedOpen} still open—admit what you’ll pound out tomorrow before “almost” gets you off the hook with your backlog`
+        : ` · plan cleared—rare as a sober kiss at closing time; don’t lie to yourself if the math’s lying to you`,
   })
   return (
     personaLine(personality, {
@@ -822,6 +870,7 @@ export function scrumStandDownReviewBody(personality: ScrumMasterPersonality, pa
       bold: `Stand-up score: ${plannedDone}/${plannedTotal}, no participation trophies, only the good kind of tension.`,
       boldR21: `Stand-up score ${plannedDone}/${plannedTotal}, kiss the wins, flag the misses, keep it consensual with reality.`,
       snarkyR21: `Stand-up score ${plannedDone}/${plannedTotal}, math doesn’t care about your feelings, so write it down anyway.`,
+      slayR21: `Stand-up score ${plannedDone}/${plannedTotal}—kiss the wins, flag the misses, don’t fake a romance with “almost” at the afterparty.`,
     }) +
     mid +
     extraDoneFragmentWithPlan(personality, extraOutsidePlan)
@@ -848,13 +897,9 @@ export function scrumNotifyPayload(
 ): { title: string; body: string } {
   const W = (title: string, body: string) => ({ title, body })
   type NotifyRow = { title: string; body: string }
-  const line = (rec: Record<Exclude<ScrumMasterPersonality, 'slayR21'>, NotifyRow>): { title: string; body: string } => {
-    const key = personality === 'slayR21' ? 'playful' : personality
-    const v = rec[key as keyof typeof rec] ?? rec.warm
-    let body = v.body.replace(/{name}/g, name)
-    if (personality === 'slayR21') {
-      body += ' Yassss slay the checklist, not humans.'
-    }
+  const line = (rec: Record<ScrumMasterPersonality, NotifyRow>): { title: string; body: string } => {
+    const v = rec[personality] ?? rec.warm
+    const body = v.body.replace(/{name}/g, name)
     return { title: v.title.replace(/{name}/g, name), body }
   }
   switch (key) {
@@ -874,6 +919,10 @@ export function scrumNotifyPayload(
           '{name} · Stand up soon',
           'Stand up in ten minutes, trim the fantasy list before it makes you look stupid. Crass, not creepy.',
         ),
+        slayR21: W(
+          '{name} · Stand up soon',
+          'Ten minutes. Cruise your list like the bar’s filling—only commit to what you’d actually take to the back booth at the Eagle.',
+        ),
       })
     case 'su-5':
       return line({
@@ -888,6 +937,10 @@ export function scrumNotifyPayload(
           'Five minutes, cut anything you wouldn’t still want pressed up against a deadline tonight.',
         ),
         snarkyR21: W('{name} · Stand up', 'Five minutes to stand up, delete the cosplay tasks. Meaner words, zero sex trash.'),
+        slayR21: W(
+          '{name} · Stand up',
+          'Five minutes. Kill the coy shit—name what finishes tonight, not what you’re only grinding on for attention under the disco ball.',
+        ),
       })
     case 'su-1':
       return line({
@@ -899,6 +952,10 @@ export function scrumNotifyPayload(
         bold: W('{name} · Stand up', 'One minute, open poco like you are meeting someone worth impressing.'),
         boldR21: W('{name} · Stand up', 'One minute, open poco and say what you’ll finish like you mean it, breath and all.'),
         snarkyR21: W('{name} · Stand up', 'One minute. Open poco or admit you’re scared of your own list.'),
+        slayR21: W(
+          '{name} · Stand up',
+          'One minute. Open poco like the spotlight’s hot—mic check what you’ll finish like the whole room of bears is watching.',
+        ),
       })
     case 'su-0':
       return line({
@@ -913,6 +970,10 @@ export function scrumNotifyPayload(
           'Stand up is open, write what you’ll actually finish today like you’re done being coy with yourself.',
         ),
         snarkyR21: W('{name} · Stand up', 'Stand up. Open poco now and stop lying on the record.'),
+        slayR21: W(
+          '{name} · Stand up',
+          'Stand up’s open—drop the innocent face: what you’re taking home from sprint-day, what’s just a thirsty tease on the board.',
+        ),
       })
     case 'sd-30':
       return line({
@@ -927,6 +988,10 @@ export function scrumNotifyPayload(
           'Stand down soon, start stacking proof of what you actually touched today, not the story you tell strangers.',
         ),
         snarkyR21: W('{name} · Stand down', 'Stand down soon, prep the review or get roasted later. Your call.'),
+        slayR21: W(
+          '{name} · Stand down',
+          'Stand down in thirty—start stacking receipts like you’re sobering up enough to admit who you went home with last night.',
+        ),
       })
     case 'sd-15':
       return line({
@@ -944,6 +1009,10 @@ export function scrumNotifyPayload(
           '{name} · Stand down',
           'Fifteen minutes to stand down, capture carry-over before your brain starts editing the highlight reel.',
         ),
+        slayR21: W(
+          '{name} · Stand down',
+          'Fifteen minutes—turn fuzzy memory into proof while it still feels a little too slutty to say out loud under office fluorescents.',
+        ),
       })
     case 'sd-5':
       return line({
@@ -958,6 +1027,10 @@ export function scrumNotifyPayload(
           'Five minutes, kiss the plan goodbye if it’s a lie, hug it tight if it’s real, then prove it with numbers.',
         ),
         snarkyR21: W('{name} · Stand down', 'Five minutes to stand down, line up done vs planned before I start swearing.'),
+        slayR21: W(
+          '{name} · Stand down',
+          'Five minutes—kiss the plan if it’s real, spit it out if it’s a lie, then make the numbers finish what your mouth started.',
+        ),
       })
     case 'sd-1':
       return line({
@@ -969,6 +1042,10 @@ export function scrumNotifyPayload(
         bold: W('{name} · Stand down', 'One minute, open poco and drop the act; the numbers want honesty.'),
         boldR21: W('{name} · Stand down', 'One minute, open poco and strip the story to what your hands actually did.'),
         snarkyR21: W('{name} · Stand down', 'One minute. Open poco, stand down doesn’t care about your excuses.'),
+        slayR21: W(
+          '{name} · Stand down',
+          'One minute. Open poco and strip the story naked—what your hands did today, no afterglow fiction in the leather booth.',
+        ),
       })
     case 'sd-0':
       return line({
@@ -983,6 +1060,10 @@ export function scrumNotifyPayload(
           'Stand down, drag the truth out of today while it’s still warm: planned vs shipped, no pillow talk.',
         ),
         snarkyR21: W('{name} · Stand down', 'Stand down. Review the day now, planned vs shipped, no fairy tales.'),
+        slayR21: W(
+          '{name} · Stand down',
+          'Stand down—roll credits on today: planned vs shipped, sneaky extras, carry-over. Get off on being embarrassingly specific, legend.',
+        ),
       })
     case 'su-after1':
       return line({
@@ -997,6 +1078,10 @@ export function scrumNotifyPayload(
           'Refine the list, make it tight enough to sting, honest enough to survive stand down.',
         ),
         snarkyR21: W('{name} · Stand up', 'Refine commitments now before you start faking depth on the list.'),
+        slayR21: W(
+          '{name} · Stand up',
+          'Still early—tighten commitments while you’re buzzed on intention; make the list tight enough to unzip later without regret.',
+        ),
       })
     case 'sd-after1':
       return line({
@@ -1013,6 +1098,10 @@ export function scrumNotifyPayload(
         snarkyR21: W(
           '{name} · Stand down',
           'Log carry-over and off-plan shit, your backlog isn’t your therapist, stop whispering lies to it.',
+        ),
+        slayR21: W(
+          '{name} · Stand down',
+          'Log carry-over and off-list wins—confess the messy hookups your backlog pretends were “networking” at the dive.',
         ),
       })
   }

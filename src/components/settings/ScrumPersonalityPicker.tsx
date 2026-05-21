@@ -223,7 +223,7 @@ export function ScrumPersonalityPicker({
       <PocoMessageDialog
         open={slayR21Info}
         title="Slay R21"
-        message="Unlocked from the Male voice toggle: playful queer hype and yassss energy in Scrum copy only. Keep it safe-for-work and kind to real humans—this is text sass, not an excuse to be cruel. Tap Slayer again anytime to re-read this note."
+        message="Unlocked from the Male voice combo. Slayer is filthy on purpose: gay-bar Scrum, cruising talk, and “prove it” energy in copy only—think Eagle last call, not HR. Keep it kind to real humans; here it’s just you and your backlog flirting with the truth. Tap Slayer again anytime to reread."
         onClose={() => setSlayR21Info(false)}
       />
 
