@@ -5,10 +5,10 @@
  * The Vite build rewrites `dist/sw.js` so the service worker cache name includes this code; that
  * forces browsers to treat each deploy as an update when using “Check for app update”.
  */
-export const POCO_VERSION_CODE = 24
+export const POCO_VERSION_CODE = 25
 
 /** User-visible semver-style label (keep roughly in sync with `package.json` version). */
-export const POCO_VERSION_LABEL = '1.1.13'
+export const POCO_VERSION_LABEL = '1.1.14'
 
 export type ReleaseNote = {
   code: number

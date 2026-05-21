@@ -62,6 +62,60 @@ function pointInRect(clientX: number, clientY: number, el: HTMLElement | null): 
   return clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom
 }
 
+function groupTasksByCategoryColumn(tasks: Task[]): { cat: string; items: Task[] }[] {
+  const groups = new Map<string, Task[]>()
+  for (const t of tasks) {
+    const c = t.category?.trim() || 'General'
+    if (!groups.has(c)) groups.set(c, [])
+    groups.get(c)!.push(t)
+  }
+  const keys = [...groups.keys()].sort((a, b) => {
+    if (a === SCRUM_MASTER_CATEGORY) return -1
+    if (b === SCRUM_MASTER_CATEGORY) return 1
+    return a.localeCompare(b)
+  })
+  return keys.map((cat) => ({ cat, items: groups.get(cat)! }))
+}
+
+function PlannerDayTaskList({
+  tasks,
+  scrumAccent,
+  onOpenDetail,
+  dragDisabled,
+  pointerFine,
+}: {
+  tasks: Task[]
+  scrumAccent: (t: Task) => boolean
+  onOpenDetail: (t: Task) => void
+  dragDisabled?: boolean
+  pointerFine: boolean
+}) {
+  const groups = useMemo(() => groupTasksByCategoryColumn(tasks), [tasks])
+  return (
+    <>
+      {groups.map(({ cat, items }) => (
+        <div key={cat} className="mb-3 min-w-0 last:mb-0">
+          <p className="mb-1.5 truncate px-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)] md:text-[11px]">
+            {cat}
+          </p>
+          <div className="flex flex-col gap-1.5 md:gap-2">
+            {items.map((t) => (
+              <PlannerTaskCard
+                key={t.id}
+                task={t}
+                scrumAccent={scrumAccent(t)}
+                onOpenDetail={onOpenDetail}
+                dragDisabled={dragDisabled}
+                pointerFine={pointerFine}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
+    </>
+  )
+}
+
 function PlannerTaskCard({
   task,
   scrumAccent,
@@ -723,7 +777,7 @@ export function WeekPage() {
 
             <div
               data-oobe="week"
-              className={`grid min-h-0 flex-1 grid-cols-2 grid-rows-2 gap-2 overflow-hidden pt-1 ${
+              className={`grid min-h-0 flex-1 grid-cols-1 gap-2 overflow-hidden pt-1 auto-rows-[minmax(0,1fr)] md:grid-cols-4 md:grid-rows-1 md:min-h-0 ${
                 pageAnim === 'next' ? 'poco-week-page-snap-next' : pageAnim === 'prev' ? 'poco-week-page-snap-prev' : ''
               }`}
               onAnimationEnd={(e) => {
@@ -738,15 +792,16 @@ export function WeekPage() {
                     peekDrop={dragOverId === UNSCHEDULED_DROPPABLE_ID}
                     scrollLock={Boolean(activeTask)}
                   >
-                    {unscheduled.map((t) => (
-                      <PlannerTaskCard
-                        key={t.id}
-                        task={t}
-                        scrumAccent={scrumAccent(t)}
+                    {unscheduled.length === 0 ? (
+                      <p className="py-4 text-center text-[11px] text-[var(--text-tertiary)]">Nothing unscheduled</p>
+                    ) : (
+                      <PlannerDayTaskList
+                        tasks={unscheduled}
+                        scrumAccent={scrumAccent}
                         onOpenDetail={setDetailTask}
                         pointerFine={pointerFine}
                       />
-                    ))}
+                    )}
                   </UnscheduledBlock>
                 ) : (
                   <DayCell
@@ -756,16 +811,17 @@ export function WeekPage() {
                     peekDrop={dragOverId === dayDroppableId(slot.iso)}
                     scrollLock={Boolean(activeTask)}
                   >
-                    {(byDay.get(slot.iso) ?? []).map((t) => (
-                      <PlannerTaskCard
-                        key={t.id}
-                        task={t}
-                        scrumAccent={scrumAccent(t)}
+                    {(byDay.get(slot.iso) ?? []).length === 0 ? (
+                      <p className="py-4 text-center text-[11px] text-[var(--text-tertiary)]">No tasks</p>
+                    ) : (
+                      <PlannerDayTaskList
+                        tasks={byDay.get(slot.iso) ?? []}
+                        scrumAccent={scrumAccent}
                         onOpenDetail={setDetailTask}
                         dragDisabled={slot.iso < todayIso}
                         pointerFine={pointerFine}
                       />
-                    ))}
+                    )}
                   </DayCell>
                 ),
               )}

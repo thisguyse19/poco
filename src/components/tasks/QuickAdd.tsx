@@ -58,11 +58,14 @@ export function QuickAdd({
   scrumGlow = false,
 }: QuickAddProps = {}) {
   const addTask = useTaskStore((s) => s.addTask)
+  const tasks = useTaskStore((s) => s.tasks)
   const [open, setOpen] = useState(false)
   const [text, setText] = useState('')
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
-  const parsed = useMemo(() => parseQuickAdd(text), [text])
+  const existingCategories = useMemo(() => [...new Set(tasks.map((t) => t.category?.trim() || 'General'))], [tasks])
+
+  const parsed = useMemo(() => parseQuickAdd(text, { existingCategories }), [text, existingCategories])
 
   useLayoutEffect(() => {
     const el = inputRef.current
@@ -79,7 +82,7 @@ export function QuickAdd({
   }, [open])
 
   const submit = () => {
-    const p = parseQuickAdd(text)
+    const p = parseQuickAdd(text, { existingCategories })
     if (!p.title.trim()) return
     let title = p.title.trim()
     if (pocoDevLab.get().stressSeedActive) {

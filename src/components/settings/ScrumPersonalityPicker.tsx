@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import type { ScrumMasterPersonality } from '../../types'
 import { SCRUM_MASTER_PERSONALITIES, scrumPersonalityMeta } from '../../utils/scrumMaster'
 import { PocoMessageDialog } from '../ui/PocoMessageDialog'
 import { triggerHaptic } from '../../utils/haptics'
+import { pocoDevLab } from '../../utils/pocoDevLab'
 
 const HIDE_STEPS_MS = 5000
 const GLOW_MS = 700
@@ -27,6 +28,14 @@ export function ScrumPersonalityPicker({
   const snarkyHideRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [boldR21Info, setBoldR21Info] = useState(false)
   const [snarkyR21Info, setSnarkyR21Info] = useState(false)
+  const [slayR21Info, setSlayR21Info] = useState(false)
+  const slayIntroShownRef = useRef(false)
+
+  const slayUnlocked = useSyncExternalStore(
+    (cb) => pocoDevLab.subscribe(() => cb()),
+    () => pocoDevLab.get().scrumSlayVoiceUnlocked,
+    () => false,
+  )
 
   const clearBoldHide = useCallback(() => {
     if (boldHideRef.current != null) {
@@ -182,7 +191,43 @@ export function ScrumPersonalityPicker({
             </button>
           )
         })}
+        {slayUnlocked ? (
+          <button
+            type="button"
+            onClick={() => {
+              triggerHaptic(10)
+              if (value === 'slayR21') {
+                setSlayR21Info(true)
+                return
+              }
+              onChange('slayR21')
+              if (!slayIntroShownRef.current) {
+                setSlayR21Info(true)
+                slayIntroShownRef.current = true
+              }
+            }}
+            className={`poco-press relative ${minW} shrink-0 rounded-none border ${pad} text-left transition-[box-shadow,background-color,border-color] duration-200 [transition-timing-function:var(--ease-ios)] ${
+              value === 'slayR21'
+                ? 'poco-pride-voice-frame border-[var(--accent)] bg-[var(--accent-soft)]'
+                : 'border-[var(--border-subtle)] bg-[var(--bg-base)]'
+            } ${compact ? 'rounded-[var(--radius-sm)]' : ''}`}
+          >
+            <span className={`block font-semibold text-[var(--text-primary)] ${titleCls}`}>
+              {scrumPersonalityMeta('slayR21').title}
+            </span>
+            <span className={`mt-0.5 block leading-snug text-[var(--text-secondary)] ${compact ? 'text-xs' : 'text-[10px]'}`}>
+              {scrumPersonalityMeta('slayR21').hint}
+            </span>
+          </button>
+        ) : null}
       </div>
+
+      <PocoMessageDialog
+        open={slayR21Info}
+        title="Slay R21"
+        message="Unlocked from the Male voice toggle: playful queer hype and yassss energy in Scrum copy only. Keep it safe-for-work and kind to real humans—this is text sass, not an excuse to be cruel. Tap Slayer again anytime to re-read this note."
+        onClose={() => setSlayR21Info(false)}
+      />
 
       <PocoMessageDialog
         open={boldR21Info}

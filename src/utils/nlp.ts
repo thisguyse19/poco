@@ -1,4 +1,5 @@
 import { toLocalISODate } from '../services/storage'
+import { canonicalCategoryFromList } from './categoryCanonical'
 import type { Priority, ScheduledFor } from '../types'
 
 export type NlpPreviewChip = {
@@ -75,29 +76,58 @@ function toHHmm(hour: number, minute: number, ap?: string): string | null {
   return `${pad2(h)}:${pad2(m)}`
 }
 
-/** Parses quick-add text; title must remain non-empty after stripping */
-export function parseQuickAdd(raw: string): NlpResult {
+type AtCatHit = { start: number; end: number; raw: string }
+
+function nextAtCategoryHit(s: string): AtCatHit | null {
+  const hits: AtCatHit[] = []
+  const add = (m: RegExpMatchArray | null, group: number) => {
+    if (!m || m.index === undefined) return
+    hits.push({ start: m.index, end: m.index + m[0].length, raw: m[group]!.trim() })
+  }
+  add(s.match(/\bfor\s+@([A-Za-z0-9_]+)\b/i), 1)
+  add(s.match(/@\[([^\]]+)\]/), 1)
+  add(s.match(/(?:^|\s)@([A-Za-z0-9_]+)(?=\s|$)/), 1)
+  add(s.match(/\s@([A-Za-z0-9_]+)\s*$/i), 1)
+  if (!hits.length) return null
+  hits.sort((a, b) => a.start - b.start)
+  return hits[0]!
+}
+
+/** Strips one @-category token per loop (leftmost first). Resolves casing against existing categories. */
+function stripAtCategoryTags(
+  raw: string,
+  existing: readonly string[],
+): { s: string; category?: string; chips: NlpPreviewChip[] } {
   let s = raw.trim()
   const chips: NlpPreviewChip[] = []
   let category: string | undefined
+  const canonPool = existing.length ? existing : ['General']
+  for (;;) {
+    const h = nextAtCategoryHit(s)
+    if (!h) break
+    const rawTag = h.raw.replace(/_/g, ' ').trim()
+    const resolved = canonicalCategoryFromList(rawTag, canonPool)
+    chips.push({
+      label: h.raw.includes('_') || !/\s/.test(rawTag) ? `@${rawTag.replace(/\s+/g, '_')}` : `@[${rawTag}]`,
+      kind: 'category',
+    })
+    if (!category) category = resolved
+    s = `${s.slice(0, h.start)} ${s.slice(h.end)}`.replace(/\s+/g, ' ').trim()
+  }
+  return { s, category, chips }
+}
+
+/** Parses quick-add text; title must remain non-empty after stripping */
+export function parseQuickAdd(raw: string, opts?: { existingCategories?: string[] }): NlpResult {
+  const existing = opts?.existingCategories ?? []
+  const stripped = stripAtCategoryTags(raw, existing)
+  let s = stripped.s
+  const chips: NlpPreviewChip[] = [...stripped.chips]
+  const category = stripped.category
   let dueDate: string | null | undefined
   let dueTime: string | null | undefined
   let scheduledFor: ScheduledFor | undefined
   let priority: Priority | undefined
-
-  // Category: only explicit "for @tag" or trailing "@tag" — never a lone @ in the middle (avoids "July @cat 9" → July 9)
-  const forCat = s.match(/\bfor\s+@([A-Za-z0-9_]+)\b/i)
-  if (forCat && forCat.index !== undefined) {
-    category = forCat[1].replace(/_/g, ' ')
-    chips.push({ label: `@${forCat[1]}`, kind: 'category' })
-    s = (s.slice(0, forCat.index) + s.slice(forCat.index + forCat[0].length)).replace(/\s+/g, ' ').trim()
-  }
-  const endCat = s.match(/\s@([A-Za-z0-9_]+)\s*$/i)
-  if (!category && endCat && endCat.index !== undefined) {
-    category = endCat[1].replace(/_/g, ' ')
-    chips.push({ label: `@${endCat[1]}`, kind: 'category' })
-    s = s.slice(0, endCat.index).trim()
-  }
 
   // "on 29 May at 9.30pm" / "on 29 May at 9:30 pm" — day month or month day
   const onDayMonthAt = s.match(

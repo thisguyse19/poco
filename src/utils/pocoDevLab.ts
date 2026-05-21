@@ -6,6 +6,8 @@ export type PocoDevLabState = {
   stressSeedActive: boolean
   /** Longest Prism pulse streak (full rounds cleared). */
   prismBestStreak: number
+  /** Scrum “Slay R21” voice unlocked (Male gender toggle easter egg). */
+  scrumSlayVoiceUnlocked: boolean
 }
 
 const defaultState: PocoDevLabState = {
@@ -13,6 +15,7 @@ const defaultState: PocoDevLabState = {
   showTaskIds: false,
   stressSeedActive: false,
   prismBestStreak: 0,
+  scrumSlayVoiceUnlocked: false,
 }
 
 function read(): PocoDevLabState {
@@ -25,6 +28,7 @@ function read(): PocoDevLabState {
       showTaskIds: Boolean(o.showTaskIds),
       stressSeedActive: Boolean(o.stressSeedActive),
       prismBestStreak: typeof o.prismBestStreak === 'number' && Number.isFinite(o.prismBestStreak) ? Math.max(0, Math.floor(o.prismBestStreak)) : 0,
+      scrumSlayVoiceUnlocked: Boolean(o.scrumSlayVoiceUnlocked),
     }
   } catch {
     return { ...defaultState }

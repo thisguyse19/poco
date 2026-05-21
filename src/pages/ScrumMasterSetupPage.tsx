@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useSyncExternalStore } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSettingsStore, SM_GATE_PROMPT_VERSION } from '../stores/settingsStore'
 import type { ScrumMasterGender, ScrumMasterPersonality } from '../types'
@@ -9,6 +9,8 @@ import { normalizeTimeHHMM, scrumNamesForGender } from '../utils/scrumMaster'
 import { ScrumPersonalityPicker } from '../components/settings/ScrumPersonalityPicker'
 import { requestScrumNotificationPermission } from '../hooks/useScrumNotifications'
 import { notificationSettingsHint } from '../utils/notifyDelivery'
+import { pocoDevLab } from '../utils/pocoDevLab'
+import { triggerHaptic } from '../utils/haptics'
 
 export function ScrumMasterSetupPage() {
   const navigate = useNavigate()
@@ -22,6 +24,12 @@ export function ScrumMasterSetupPage() {
   const [smDown, setSmDown] = useState(cur.standDownTime)
   const [sprintTitle, setSprintTitle] = useState(cur.sprintTitle ?? '')
   const [sprintGoal, setSprintGoal] = useState(cur.sprintGoal ?? '')
+
+  const slayUnlocked = useSyncExternalStore(
+    (cb) => pocoDevLab.subscribe(() => cb()),
+    () => pocoDevLab.get().scrumSlayVoiceUnlocked,
+    () => false,
+  )
 
   const names = useMemo(() => [...scrumNamesForGender(smGender)], [smGender])
 
@@ -86,7 +94,11 @@ export function ScrumMasterSetupPage() {
             <ScrumPersonalityPicker compact value={personality} onChange={setPersonality} />
           </div>
 
-          <div className="grid grid-cols-2 gap-0 overflow-hidden rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)]">
+          <div
+            className={`grid grid-cols-2 gap-0 overflow-hidden rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)] ${
+              slayUnlocked ? 'poco-pride-voice-frame' : ''
+            }`}
+          >
             {(['female', 'male'] as ScrumMasterGender[]).map((g) => (
               <button
                 key={g}
@@ -95,6 +107,10 @@ export function ScrumMasterSetupPage() {
                   smGender === g ? 'bg-[var(--accent-soft)] text-[var(--accent)]' : 'text-[var(--text-secondary)]'
                 }`}
                 onClick={() => {
+                  if (g === 'male') {
+                    pocoDevLab.set({ scrumSlayVoiceUnlocked: true })
+                    triggerHaptic([14, 28, 14])
+                  }
                   setSmGender(g)
                   const opts = scrumNamesForGender(g)
                   setSmName(opts.includes(smName) ? smName : opts[0])
