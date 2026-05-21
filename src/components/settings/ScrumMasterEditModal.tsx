@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import type { ScrumMasterGender, ScrumMasterSettings } from '../../types'
 import { PocoAnimatedCenterModal } from '../ui/PocoAnimatedCenterModal'
 import { PocoHourCarousel } from '../ui/PocoHourCarousel'
@@ -6,6 +6,8 @@ import { PocoMinuteCarousel } from '../ui/PocoMinuteCarousel'
 import { PocoScrollPicker } from '../ui/PocoScrollPicker'
 import { normalizeTimeHHMM, scrumNamesForGender } from '../../utils/scrumMaster'
 import { ScrumPersonalityPicker } from './ScrumPersonalityPicker'
+import { pocoDevLab } from '../../utils/pocoDevLab'
+import { triggerHaptic } from '../../utils/haptics'
 
 const triBase =
   'poco-press flex h-11 min-h-[2.75rem] flex-1 flex-row items-center justify-center gap-2 px-2 text-xs font-semibold capitalize transition-colors duration-200 [transition-timing-function:var(--ease-ios)]'
@@ -24,6 +26,11 @@ type Props = {
 
 export function ScrumMasterEditModal({ open, onClose, value, onSave }: Props) {
   const [draft, setDraft] = useState(value)
+  const slayUnlocked = useSyncExternalStore(
+    (cb) => pocoDevLab.subscribe(() => cb()),
+    () => pocoDevLab.get().scrumSlayVoiceUnlocked,
+    () => false,
+  )
 
   useEffect(() => {
     if (!open) return
@@ -74,7 +81,11 @@ export function ScrumMasterEditModal({ open, onClose, value, onSave }: Props) {
         <ScrumPersonalityPicker value={draft.personality} onChange={(personality) => setDraft((d) => ({ ...d, personality }))} />
 
         <p className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Voice</p>
-        <div className="grid grid-cols-2 gap-0 overflow-hidden rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)]">
+        <div
+          className={`grid grid-cols-2 gap-0 overflow-hidden rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)] ${
+            slayUnlocked ? 'poco-pride-voice-frame' : ''
+          }`}
+        >
           {(['female', 'male'] as ScrumMasterGender[]).map((g) => (
             <button
               key={g}
@@ -82,13 +93,17 @@ export function ScrumMasterEditModal({ open, onClose, value, onSave }: Props) {
               className={`${triBase} border-r border-[var(--border-subtle)] last:border-r-0 ${
                 draft.gender === g ? 'bg-[var(--accent-soft)] text-[var(--accent)]' : 'text-[var(--text-secondary)]'
               }`}
-              onClick={() =>
+              onClick={() => {
+                if (g === 'male') {
+                  pocoDevLab.set({ scrumSlayVoiceUnlocked: true })
+                  triggerHaptic([14, 28, 14])
+                }
                 setDraft((d) => {
                   const opts = scrumNamesForGender(g)
                   const nextName = opts.includes(d.name) ? d.name : opts[0]
                   return { ...d, gender: g, name: nextName }
                 })
-              }
+              }}
             >
               {g}
             </button>

@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { v4 as uuidv4 } from 'uuid'
 import type { Priority, ScheduledFor, Task } from '../types'
 import { storage, toLocalISODate } from '../services/storage'
+import { canonicalCategoryName } from '../utils/categoryCanonical'
 import { rolloverTomorrowToTodayIfNeeded } from '../utils/scheduleDayRollover'
 import { patchTaskForPlanDate } from '../utils/weekPlanner'
 
@@ -68,7 +69,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       title: partial.title.trim() || 'Untitled',
       description: partial.description,
       notes: partial.notes,
-      category: (partial.category ?? 'General').trim() || 'General',
+      category: canonicalCategoryName((partial.category ?? 'General').trim() || 'General', get().tasks),
       priority: partial.priority ?? 'medium',
       pinned: partial.pinned ?? false,
       completed: false,
@@ -97,7 +98,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
             title: patch.title !== undefined ? patch.title.trim() || 'Untitled' : t.title,
             category:
               patch.category !== undefined
-                ? patch.category.trim() || 'General'
+                ? canonicalCategoryName(patch.category.trim() || 'General', get().tasks)
                 : t.category,
             updatedAt: nowIso(),
           }

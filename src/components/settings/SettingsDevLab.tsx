@@ -363,7 +363,7 @@ export function SettingsDevLab() {
         type="button"
         className="poco-press w-full rounded-none border border-[var(--priority-high)]/40 py-2 text-xs font-semibold text-[var(--priority-high)]"
         onClick={() => {
-          pocoDevLab.set({ unlocked: false, showTaskIds: false, stressSeedActive: false })
+          pocoDevLab.set({ unlocked: false, showTaskIds: false, stressSeedActive: false, scrumSlayVoiceUnlocked: false })
           setState(pocoDevLab.get())
         }}
       >

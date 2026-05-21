@@ -81,6 +81,8 @@ export type ScrumMasterPersonality =
   | 'boldR21'
   /** Unlocked secret mode: sarcastic, profane, non-sexual */
   | 'snarkyR21'
+  /** Easter egg (Male voice toggle): playful queer hype, still workplace-safe */
+  | 'slayR21'
 
 export interface ScrumMasterSettings {
   enabled: boolean

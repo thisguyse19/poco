@@ -115,6 +115,24 @@
   box-shadow: none;
 }
 
+/* Pride frame for Slayer voice unlock (Male toggle) — gradient border, inner fill from element background-color */
+.poco-pride-voice-frame {
+  border: solid 2px transparent;
+  background-image:
+    linear-gradient(transparent, transparent),
+    linear-gradient(
+      135deg,
+      #e40303 0%,
+      #ff8c00 18%,
+      #ffed00 36%,
+      #008026 54%,
+      #004dff 72%,
+      #750787 100%
+    );
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+}
+
 [data-theme='dark'] {
   --bg-base: #1e1c1a;
   --bg-elevated: #252320;

@@ -6,7 +6,7 @@ import { getActiveFarewell } from './scrumSession'
 export const SCRUM_MASTER_CATEGORY = 'Scrum Master'
 
 export const SCRUM_MASTER_PERSONALITIES: {
-  id: Exclude<ScrumMasterPersonality, 'boldR21' | 'snarkyR21'>
+  id: Exclude<ScrumMasterPersonality, 'boldR21' | 'snarkyR21' | 'slayR21'>
   title: string
   hint: string
 }[] = [
@@ -27,6 +27,12 @@ export const SCRUM_MASTER_PERSONALITIES: {
 ]
 
 export function scrumPersonalityMeta(id: ScrumMasterPersonality): { title: string; hint: string } {
+  if (id === 'slayR21') {
+    return {
+      title: 'Slay R21',
+      hint: 'Queer-coded hype: yassss energy, read the room, still safe for work. Text-only spice; be kind to humans.',
+    }
+  }
   if (id === 'boldR21') {
     return {
       title: 'Bold R21',
@@ -205,11 +211,16 @@ export function isScrumInlinePhase(sm: ScrumMasterSettings, d = new Date()): boo
   return true
 }
 
-/** Every personality gets a full line; no “base + appended R21 tail”. */
-type PersonalityLinesAll = Record<ScrumMasterPersonality, string>
+/** Every personality gets a full line; `slayR21` reuses playful lines with extra read layered in personaLine. */
+type PersonalityLinesAll = { [K in Exclude<ScrumMasterPersonality, 'slayR21'>]: string }
+
+const SLAY_READ = ' Yassss serve the sprint, shade the fluff, never shade coworkers.'
 
 function personaLine(personality: ScrumMasterPersonality, lines: PersonalityLinesAll): string {
-  return lines[personality]
+  if (personality === 'slayR21') {
+    return `${lines.playful}${SLAY_READ}`
+  }
+  return lines[personality as keyof PersonalityLinesAll]
 }
 
 /** Stand-down: end-of-day review vs stand-up plan + extra completions (Agile). */
@@ -837,9 +848,14 @@ export function scrumNotifyPayload(
 ): { title: string; body: string } {
   const W = (title: string, body: string) => ({ title, body })
   type NotifyRow = { title: string; body: string }
-  const line = (rec: Record<ScrumMasterPersonality, NotifyRow>): { title: string; body: string } => {
-    const v = rec[personality] ?? rec.warm
-    return { title: v.title.replace('{name}', name), body: v.body }
+  const line = (rec: Record<Exclude<ScrumMasterPersonality, 'slayR21'>, NotifyRow>): { title: string; body: string } => {
+    const key = personality === 'slayR21' ? 'playful' : personality
+    const v = rec[key as keyof typeof rec] ?? rec.warm
+    let body = v.body.replace(/{name}/g, name)
+    if (personality === 'slayR21') {
+      body += ' Yassss slay the checklist, not humans.'
+    }
+    return { title: v.title.replace(/{name}/g, name), body }
   }
   switch (key) {
     case 'su-10':
