@@ -5,10 +5,10 @@
  * The Vite build rewrites `dist/sw.js` so the service worker cache name includes this code; that
  * forces browsers to treat each deploy as an update when using “Check for app update”.
  */
-export const POCO_VERSION_CODE = 23
+export const POCO_VERSION_CODE = 24
 
 /** User-visible semver-style label (keep roughly in sync with `package.json` version). */
-export const POCO_VERSION_LABEL = '1.1.12'
+export const POCO_VERSION_LABEL = '1.1.13'
 
 export type ReleaseNote = {
   code: number
@@ -20,6 +20,16 @@ export type ReleaseNote = {
 
 /** Newest release first. Each entry’s `code` must match a shipped `POCO_VERSION_CODE`. */
 export const POCO_RELEASE_HISTORY: ReleaseNote[] = [
+  {
+    code: 24,
+    label: '1.1.13',
+    date: '2026-05-20',
+    title: 'Tomorrow rolls to Today; aligned task grids',
+    bullets: [
+      'Tasks tagged Tomorrow move to Today when the local calendar advances (on load, each minute while open, and when returning to the tab).',
+      'Desktop Today categories stack full width so each section uses the same multi-column task grid as Inbox, Tomorrow, Someday, and Done.',
+    ],
+  },
   {
     code: 23,
     label: '1.1.12',

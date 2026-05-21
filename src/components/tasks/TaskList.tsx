@@ -20,6 +20,10 @@ import {
 import type { ScrumMasterPersonality } from '../../types'
 import type { StandUpPlanSnapshot } from '../../utils/scrumSession'
 
+/** Shared desktop task grid so horizon sections use the same column counts and track widths. */
+const TASK_CARD_GRID_CLASS =
+  'flex flex-col gap-[var(--list-row-gap)] md:grid md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 md:gap-[var(--list-row-gap)]'
+
 function sortTodayTasksWithSmLingerAtTop(tasks: Task[], nowMs: number): Task[] {
   const linger = tasks.filter((t) => isScrumMasterCompletedLingering(t, nowMs))
   const rest = tasks.filter((t) => !isScrumMasterCompletedLingering(t, nowMs))
@@ -291,7 +295,7 @@ export function TaskList({
       {inbox.length > 0 ? (
         <section className="mb-[var(--section-gap)]">
           {sectionTitle('Inbox')}
-          <div className="flex flex-col gap-[var(--list-row-gap)] md:grid md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 md:gap-[var(--list-row-gap)]">
+          <div className={TASK_CARD_GRID_CLASS}>
             {inbox.map((t) =>
               renderTask(t, Boolean(scrum?.enabled && t.category === SCRUM_MASTER_CATEGORY)),
             )}
@@ -314,7 +318,7 @@ export function TaskList({
           ) : null}
 
           {todayByCategory.length > 0 ? (
-            <div className="flex flex-col gap-4 md:grid md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 md:items-start md:gap-4">
+            <div className="flex flex-col gap-4">
               {todayByCategory.map(({ cat, items }) => {
                 const expanded = map[cat] !== false
                 const isSm = cat === SCRUM_MASTER_CATEGORY && scrum?.enabled && scrum.smRhythmActive
@@ -338,7 +342,7 @@ export function TaskList({
                       <span className="shrink-0 text-[10px] font-medium tabular-nums text-[var(--text-tertiary)] md:text-xs">{subtitle}</span>
                     </button>
                     {expanded ? (
-                      <div className="flex flex-col gap-[var(--list-row-gap)] border-l border-[var(--border-subtle)] pl-2 md:pl-3">
+                      <div className={`${TASK_CARD_GRID_CLASS} border-l border-[var(--border-subtle)] pl-2 md:pl-3`}>
                         {items.map((t) =>
                           renderTask(
                             t,
@@ -354,7 +358,7 @@ export function TaskList({
                   </>
                 )
                 return (
-                  <div key={cat} className={isSm ? 'poco-scrum-panel' : undefined}>
+                  <div key={cat} className={`min-w-0 w-full ${isSm ? 'poco-scrum-panel' : ''}`}>
                     {inner}
                   </div>
                 )
@@ -365,11 +369,11 @@ export function TaskList({
       ) : null}
 
       {tomorrow.length > 0 || someday.length > 0 ? (
-        <div className="mb-[var(--section-gap)] md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-2 xl:grid-cols-2 2xl:grid-cols-2">
+        <div className="mb-[var(--section-gap)] flex flex-col gap-[var(--section-gap)]">
           {tomorrow.length > 0 ? (
-            <section className={someday.length > 0 ? 'mb-[var(--section-gap)] md:mb-0' : ''}>
+            <section>
               {sectionTitle('Tomorrow')}
-              <div className="flex flex-col gap-[var(--list-row-gap)] md:gap-[var(--list-row-gap)]">
+              <div className={TASK_CARD_GRID_CLASS}>
                 {tomorrow.map((t) =>
                   renderTask(t, Boolean(scrum?.enabled && t.category === SCRUM_MASTER_CATEGORY)),
                 )}
@@ -379,7 +383,7 @@ export function TaskList({
           {someday.length > 0 ? (
             <section>
               {sectionTitle('Someday')}
-              <div className="flex flex-col gap-[var(--list-row-gap)]">
+              <div className={TASK_CARD_GRID_CLASS}>
                 {someday.map((t) =>
                   renderTask(t, Boolean(scrum?.enabled && t.category === SCRUM_MASTER_CATEGORY)),
                 )}
@@ -392,7 +396,7 @@ export function TaskList({
       {completed.length > 0 ? (
         <section className="mb-[var(--section-gap)]">
           {sectionTitle('Done')}
-          <div className="flex flex-col gap-[var(--list-row-gap)] opacity-90 md:grid md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 md:gap-[var(--list-row-gap)]">
+          <div className={`${TASK_CARD_GRID_CLASS} opacity-90`}>
             {completed.map((t) =>
               renderTask(
                 t,
