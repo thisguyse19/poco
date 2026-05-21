@@ -2,10 +2,13 @@ import { create } from 'zustand'
 import { v4 as uuidv4 } from 'uuid'
 import type { Priority, ScheduledFor, Task } from '../types'
 import { storage, toLocalISODate } from '../services/storage'
+import { rolloverTomorrowToTodayIfNeeded } from '../utils/scheduleDayRollover'
 import { patchTaskForPlanDate } from '../utils/weekPlanner'
 
 type TaskState = {
   tasks: Task[]
+  /** No-op unless the local calendar day advanced; then tomorrow → today. */
+  ensureScheduleDayRollover: () => void
   /** Replace the entire task list (used for OOBE demo / restore). */
   replaceTasks: (tasks: Task[]) => void
   addTask: (partial: Partial<Task> & Pick<Task, 'title'>) => Task
@@ -37,11 +40,25 @@ export function sortTodayTasks(tasks: Task[]): Task[] {
 }
 
 export const useTaskStore = create<TaskState>((set, get) => ({
-  tasks: storage.getTasks(),
+  tasks: (() => {
+    const initial = storage.getTasks()
+    const { tasks: rolled, changed } = rolloverTomorrowToTodayIfNeeded(initial)
+    if (changed) storage.saveTasks(rolled)
+    return rolled
+  })(),
+
+  ensureScheduleDayRollover() {
+    const { tasks: rolled, changed } = rolloverTomorrowToTodayIfNeeded(get().tasks)
+    if (changed) {
+      set({ tasks: rolled })
+      storage.saveTasks(rolled)
+    }
+  },
 
   replaceTasks(tasks) {
-    set({ tasks })
-    storage.saveTasks(tasks)
+    const { tasks: rolled } = rolloverTomorrowToTodayIfNeeded(tasks)
+    set({ tasks: rolled })
+    storage.saveTasks(rolled)
   },
 
   addTask(partial) {

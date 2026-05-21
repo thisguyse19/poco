@@ -304,7 +304,7 @@ export function TaskItem({
   return (
     <div
       data-task-swipe-row
-      className="group relative touch-manipulation overflow-hidden rounded-none border border-transparent transition-colors duration-200 [transition-timing-function:var(--ease-ios)] hover:border-[var(--border-subtle)] hover:bg-[var(--bg-subtle)] focus-within:border-[var(--border-default)] animate-fadeIn"
+      className="group relative w-full min-w-0 touch-manipulation overflow-hidden rounded-none border border-transparent transition-colors duration-200 [transition-timing-function:var(--ease-ios)] hover:border-[var(--border-subtle)] hover:bg-[var(--bg-subtle)] focus-within:border-[var(--border-default)] animate-fadeIn"
     >
       {!task.completed ? (
         <div
