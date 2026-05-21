@@ -5,10 +5,10 @@
  * The Vite build rewrites `dist/sw.js` so the service worker cache name includes this code; that
  * forces browsers to treat each deploy as an update when using “Check for app update”.
  */
-export const POCO_VERSION_CODE = 25
+export const POCO_VERSION_CODE = 26
 
 /** User-visible semver-style label (keep roughly in sync with `package.json` version). */
-export const POCO_VERSION_LABEL = '1.1.14'
+export const POCO_VERSION_LABEL = '1.1.15'
 
 export type ReleaseNote = {
   code: number
@@ -20,6 +20,28 @@ export type ReleaseNote = {
 
 /** Newest release first. Each entry’s `code` must match a shipped `POCO_VERSION_CODE`. */
 export const POCO_RELEASE_HISTORY: ReleaseNote[] = [
+  {
+    code: 26,
+    label: '1.1.15',
+    date: '2026-05-21',
+    title: 'Home desktop horizon + Slayer Male combo',
+    bullets: [
+      'Tasks home on desktop: Inbox, Today, Tomorrow, and Someday sit in one horizontal row; tasks stack vertically inside each bucket.',
+      'Tomorrow, Someday, and Inbox use the same collapsible category sections as Today; expand/collapse is remembered per bucket so names do not collide.',
+      'Slayer unlock: tap Male four times (like Bold R21 / Snarky R21); only the Male cell gets a thin animated pride glow after unlock. Slayer personality card uses the normal accent border.',
+    ],
+  },
+  {
+    code: 25,
+    label: '1.1.14',
+    date: '2026-05-20',
+    title: 'Ahead week layout, NLP @ categories, Slayer pride egg',
+    bullets: [
+      'Ahead / week view: days in one horizontal row on desktop with vertical task stacks and category groups per day.',
+      'Quick add parses inline @tags and bracket category tokens with case-insensitive matching to existing categories.',
+      'Slayer R21 personality, dev-lab unlock from the voice UI, and playful Scrum copy variants.',
+    ],
+  },
   {
     code: 24,
     label: '1.1.13',

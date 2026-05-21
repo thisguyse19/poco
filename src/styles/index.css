@@ -115,22 +115,66 @@
   box-shadow: none;
 }
 
-/* Pride frame for Slayer voice unlock (Male toggle) — gradient border, inner fill from element background-color */
-.poco-pride-voice-frame {
-  border: solid 2px transparent;
-  background-image:
-    linear-gradient(transparent, transparent),
-    linear-gradient(
-      135deg,
-      #e40303 0%,
-      #ff8c00 18%,
-      #ffed00 36%,
-      #008026 54%,
-      #004dff 72%,
-      #750787 100%
-    );
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
+/* Slayer unlock: thin animated pride border on Male voice cell only (after secret taps) */
+.poco-pride-male-voice-active {
+  position: relative;
+  z-index: 0;
+  border-color: transparent !important;
+  box-shadow:
+    0 0 0 1px rgba(228, 3, 3, 0.55),
+    0 0 10px 2px rgba(255, 140, 0, 0.22),
+    0 0 14px 4px rgba(0, 128, 38, 0.18),
+    0 0 18px 5px rgba(0, 77, 255, 0.16),
+    0 0 12px 3px rgba(117, 7, 135, 0.2);
+  animation: poco-pride-male-glow 2.8s ease-in-out infinite;
+}
+
+@keyframes poco-pride-male-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(228, 3, 3, 0.55),
+      0 0 10px 2px rgba(255, 140, 0, 0.22),
+      0 0 14px 4px rgba(0, 128, 38, 0.18),
+      0 0 18px 5px rgba(0, 77, 255, 0.16),
+      0 0 12px 3px rgba(117, 7, 135, 0.2);
+  }
+  33% {
+    box-shadow:
+      0 0 0 1px rgba(0, 128, 38, 0.55),
+      0 0 12px 3px rgba(0, 77, 255, 0.26),
+      0 0 16px 5px rgba(117, 7, 135, 0.22),
+      0 0 10px 2px rgba(228, 3, 3, 0.2),
+      0 0 14px 4px rgba(255, 237, 0, 0.18);
+  }
+  66% {
+    box-shadow:
+      0 0 0 1px rgba(117, 7, 135, 0.55),
+      0 0 12px 3px rgba(228, 3, 3, 0.24),
+      0 0 16px 5px rgba(255, 140, 0, 0.2),
+      0 0 10px 2px rgba(255, 237, 0, 0.2),
+      0 0 14px 4px rgba(0, 128, 38, 0.18);
+  }
+}
+
+[data-reduce-motion='true'] .poco-pride-male-voice-active {
+  animation: none;
+  box-shadow:
+    0 0 0 1px rgba(228, 3, 3, 0.45),
+    0 0 0 1px rgba(255, 140, 0, 0.35),
+    0 0 0 1px rgba(0, 128, 38, 0.35),
+    0 0 0 1px rgba(0, 77, 255, 0.35),
+    0 0 0 1px rgba(117, 7, 135, 0.45);
+}
+
+.poco-pride-male-tap-pulse:active {
+  box-shadow:
+    0 0 0 2px rgba(228, 3, 3, 0.45),
+    0 0 18px 6px rgba(117, 7, 135, 0.28);
+}
+
+[data-reduce-motion='true'] .poco-pride-male-tap-pulse:active {
+  box-shadow: none;
 }
 
 [data-theme='dark'] {
