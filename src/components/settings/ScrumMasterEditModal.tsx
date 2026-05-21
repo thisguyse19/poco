@@ -25,7 +25,7 @@ type Props = {
 
 export function ScrumMasterEditModal({ open, onClose, value, onSave }: Props) {
   const [draft, setDraft] = useState(value)
-  const { unlocked: slayUnlocked, seg: maleSlaySeg, glow: maleSlayGlow, onMaleTap, resetProgress } = useSlayMaleVoiceSecret()
+  const { slayReveal, eggDisabled, seg: maleSlaySeg, glow: maleSlayGlow, onMaleTap, resetProgress } = useSlayMaleVoiceSecret()
 
   useEffect(() => {
     if (!open) return
@@ -76,7 +76,7 @@ export function ScrumMasterEditModal({ open, onClose, value, onSave }: Props) {
         <ScrumPersonalityPicker value={draft.personality} onChange={(personality) => setDraft((d) => ({ ...d, personality }))} />
 
         <p className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Voice</p>
-        <div className="grid grid-cols-2 gap-0 overflow-hidden rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)]">
+        <div className="grid grid-cols-2 gap-0 overflow-visible rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)]">
           {(['female', 'male'] as ScrumMasterGender[]).map((g) => (
             <button
               key={g}
@@ -84,7 +84,7 @@ export function ScrumMasterEditModal({ open, onClose, value, onSave }: Props) {
               className={`${triBase} border-r border-[var(--border-subtle)] last:border-r-0 ${
                 draft.gender === g ? 'bg-[var(--accent-soft)] text-[var(--accent)]' : 'text-[var(--text-secondary)]'
               } ${g === 'male' && maleSlayGlow ? 'poco-pride-male-tap-pulse' : ''} ${
-                g === 'male' && slayUnlocked ? 'poco-pride-male-voice-active' : ''
+                g === 'male' && slayReveal ? 'poco-pride-slay-glow' : ''
               }`}
               onClick={() => {
                 if (g === 'male') onMaleTap()
@@ -97,7 +97,7 @@ export function ScrumMasterEditModal({ open, onClose, value, onSave }: Props) {
               }}
             >
               <span>{g}</span>
-              {g === 'male' && maleSlaySeg > 0 && !slayUnlocked ? (
+              {g === 'male' && maleSlaySeg > 0 && !slayReveal && !eggDisabled ? (
                 <span className="flex w-full max-w-[4.5rem] gap-1 px-0.5" aria-hidden>
                   {[0, 1, 2, 3].map((i) => (
                     <span

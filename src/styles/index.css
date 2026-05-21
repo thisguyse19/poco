@@ -115,62 +115,68 @@
   box-shadow: none;
 }
 
-/* Slayer unlock: thin animated pride border on Male voice cell only (after secret taps) */
-.poco-pride-male-voice-active {
+/* Slayer pride ring: symmetric layers (parent must not clip; use overflow-visible on voice grid). */
+.poco-pride-slay-glow {
   position: relative;
-  z-index: 0;
+  z-index: 2;
   border-color: transparent !important;
   box-shadow:
-    0 0 0 1px rgba(228, 3, 3, 0.55),
-    0 0 10px 2px rgba(255, 140, 0, 0.22),
-    0 0 14px 4px rgba(0, 128, 38, 0.18),
-    0 0 18px 5px rgba(0, 77, 255, 0.16),
-    0 0 12px 3px rgba(117, 7, 135, 0.2);
-  animation: poco-pride-male-glow 2.8s ease-in-out infinite;
+    0 0 0 2px #e40303,
+    0 0 0 4px #ff8c00,
+    0 0 0 6px #ffed00,
+    0 0 0 8px #008026,
+    0 0 0 10px #004dff,
+    0 0 0 12px #750787,
+    0 0 22px 8px rgba(228, 3, 3, 0.45),
+    0 0 28px 12px rgba(117, 7, 135, 0.35);
+  animation: poco-pride-slay-glow-wave 2.4s ease-in-out infinite;
 }
 
-@keyframes poco-pride-male-glow {
+@keyframes poco-pride-slay-glow-wave {
   0%,
   100% {
+    filter: saturate(1.05) brightness(1);
     box-shadow:
-      0 0 0 1px rgba(228, 3, 3, 0.55),
-      0 0 10px 2px rgba(255, 140, 0, 0.22),
-      0 0 14px 4px rgba(0, 128, 38, 0.18),
-      0 0 18px 5px rgba(0, 77, 255, 0.16),
-      0 0 12px 3px rgba(117, 7, 135, 0.2);
+      0 0 0 2px #e40303,
+      0 0 0 4px #ff8c00,
+      0 0 0 6px #ffed00,
+      0 0 0 8px #008026,
+      0 0 0 10px #004dff,
+      0 0 0 12px #750787,
+      0 0 20px 8px rgba(228, 3, 3, 0.4),
+      0 0 26px 12px rgba(117, 7, 135, 0.32);
   }
-  33% {
+  50% {
+    filter: saturate(1.2) brightness(1.04);
     box-shadow:
-      0 0 0 1px rgba(0, 128, 38, 0.55),
-      0 0 12px 3px rgba(0, 77, 255, 0.26),
-      0 0 16px 5px rgba(117, 7, 135, 0.22),
-      0 0 10px 2px rgba(228, 3, 3, 0.2),
-      0 0 14px 4px rgba(255, 237, 0, 0.18);
-  }
-  66% {
-    box-shadow:
-      0 0 0 1px rgba(117, 7, 135, 0.55),
-      0 0 12px 3px rgba(228, 3, 3, 0.24),
-      0 0 16px 5px rgba(255, 140, 0, 0.2),
-      0 0 10px 2px rgba(255, 237, 0, 0.2),
-      0 0 14px 4px rgba(0, 128, 38, 0.18);
+      0 0 0 2px #750787,
+      0 0 0 4px #004dff,
+      0 0 0 6px #008026,
+      0 0 0 8px #ffed00,
+      0 0 0 10px #ff8c00,
+      0 0 0 12px #e40303,
+      0 0 24px 10px rgba(0, 77, 255, 0.38),
+      0 0 30px 14px rgba(228, 3, 3, 0.28);
   }
 }
 
-[data-reduce-motion='true'] .poco-pride-male-voice-active {
+[data-reduce-motion='true'] .poco-pride-slay-glow {
   animation: none;
   box-shadow:
-    0 0 0 1px rgba(228, 3, 3, 0.45),
-    0 0 0 1px rgba(255, 140, 0, 0.35),
-    0 0 0 1px rgba(0, 128, 38, 0.35),
-    0 0 0 1px rgba(0, 77, 255, 0.35),
-    0 0 0 1px rgba(117, 7, 135, 0.45);
+    0 0 0 2px #e40303,
+    0 0 0 4px #ff8c00,
+    0 0 0 6px #ffed00,
+    0 0 0 8px #008026,
+    0 0 0 10px #004dff,
+    0 0 0 12px #750787;
 }
 
 .poco-pride-male-tap-pulse:active {
   box-shadow:
-    0 0 0 2px rgba(228, 3, 3, 0.45),
-    0 0 18px 6px rgba(117, 7, 135, 0.28);
+    0 0 0 2px rgba(228, 3, 3, 0.55),
+    0 0 0 4px rgba(255, 140, 0, 0.45),
+    0 0 0 6px rgba(0, 128, 38, 0.35),
+    0 0 16px 6px rgba(117, 7, 135, 0.35);
 }
 
 [data-reduce-motion='true'] .poco-pride-male-tap-pulse:active {

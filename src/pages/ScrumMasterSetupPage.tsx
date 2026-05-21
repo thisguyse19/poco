@@ -24,7 +24,7 @@ export function ScrumMasterSetupPage() {
   const [sprintTitle, setSprintTitle] = useState(cur.sprintTitle ?? '')
   const [sprintGoal, setSprintGoal] = useState(cur.sprintGoal ?? '')
 
-  const { unlocked: slayUnlocked, seg: maleSlaySeg, glow: maleSlayGlow, onMaleTap, resetProgress } = useSlayMaleVoiceSecret()
+  const { slayReveal, eggDisabled, seg: maleSlaySeg, glow: maleSlayGlow, onMaleTap, resetProgress } = useSlayMaleVoiceSecret()
 
   const names = useMemo(() => [...scrumNamesForGender(smGender)], [smGender])
 
@@ -89,7 +89,7 @@ export function ScrumMasterSetupPage() {
             <ScrumPersonalityPicker compact value={personality} onChange={setPersonality} />
           </div>
 
-          <div className="grid grid-cols-2 gap-0 overflow-hidden rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)]">
+          <div className="grid grid-cols-2 gap-0 overflow-visible rounded-none border border-[var(--border-subtle)] bg-[var(--bg-elevated)]">
             {(['female', 'male'] as ScrumMasterGender[]).map((g) => (
               <button
                 key={g}
@@ -97,7 +97,7 @@ export function ScrumMasterSetupPage() {
                 className={`poco-press flex h-11 min-h-[2.75rem] flex-1 flex-col items-center justify-center gap-0.5 border-r border-[var(--border-subtle)] px-2 py-1.5 text-xs font-semibold capitalize last:border-r-0 ${
                   smGender === g ? 'bg-[var(--accent-soft)] text-[var(--accent)]' : 'text-[var(--text-secondary)]'
                 } ${g === 'male' && maleSlayGlow ? 'poco-pride-male-tap-pulse' : ''} ${
-                  g === 'male' && slayUnlocked ? 'poco-pride-male-voice-active' : ''
+                  g === 'male' && slayReveal ? 'poco-pride-slay-glow' : ''
                 }`}
                 onClick={() => {
                   if (g === 'male') onMaleTap()
@@ -108,7 +108,7 @@ export function ScrumMasterSetupPage() {
                 }}
               >
                 <span className="capitalize">{g}</span>
-                {g === 'male' && maleSlaySeg > 0 && !slayUnlocked ? (
+                {g === 'male' && maleSlaySeg > 0 && !slayReveal && !eggDisabled ? (
                   <span className="flex w-full max-w-[4.5rem] gap-1 px-0.5" aria-hidden>
                     {[0, 1, 2, 3].map((i) => (
                       <span
